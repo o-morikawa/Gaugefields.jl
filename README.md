@@ -836,7 +836,7 @@ function test1()
     
     show(gauge_action)
 
-    Uout = evaluate_Gaugeaction_untraced(gauge_action,U,B)
+    Uout = evaluate_GaugeAction_untraced(gauge_action,U,B)
     println(tr(Uout))
 end
 
