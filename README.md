@@ -68,6 +68,8 @@ add Gaugefields.jl
 # How to use
 
 Please see the orginal docs in [Gaugefields.jl](https://github.com/akio-tomiya/Gaugefields.jl).
+Basically, you can use this package in a same way as the original code
+if the argument of any function, (..., U, ...), is rewritten by (..., U, B, ...).
 
 ## File loading
 ## ILDG format for SU(N) guage fields
