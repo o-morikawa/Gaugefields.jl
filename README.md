@@ -180,7 +180,7 @@ We can do the HMC simulations. The example code is as follows.
 ```julia
 
 using Random
-#using Gaugefields
+using Gaugefields
 using LinearAlgebra
 
 function calc_action(gauge_action,U,B,p)
@@ -346,7 +346,7 @@ The code is
 
 using Random
 using Test
-#using Gaugefields
+using Gaugefields
 using Wilsonloop
 
 function gradientflow_test_4D(NX,NY,NZ,NT,NC)
@@ -475,7 +475,7 @@ The sample code is written as
 ```julia
 
 using Random
-#using Gaugefields
+using Gaugefields
 using LinearAlgebra
 using MPI
 
@@ -812,7 +812,7 @@ We introduce the concenpt "Scalar-valued neural network", which is S(U) -> V, wh
 
 
 ```julia
-#using Gaugefields
+using Gaugefields
 using LinearAlgebra
 function test1()
     NX = 4
@@ -879,7 +879,7 @@ L"$U_{4}(n)U_{2}(n+e_{4})U^{\dagger}_{4}(n+e_{2})U^{\dagger}_{2}(n)$"
 L"$U_{4}(n)U_{3}(n+e_{4})U^{\dagger}_{4}(n+e_{3})U^{\dagger}_{3}(n)$"	
       -------------------------
 ----------------------------------------------
-9216.0 + 0.0im
+8928.0 + 0.0im
 
 ```
 
@@ -1140,7 +1140,7 @@ With the use of the matrix derivative, we can do the Hybrid Monte Carlo method.
 The simple code is as follows. 
 
 ```julia
-#using Gaugefields
+using Gaugefields
 using LinearAlgebra
 
 function MDtest!(gauge_action,U,B,Dim)
