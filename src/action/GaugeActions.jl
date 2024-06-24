@@ -148,9 +148,9 @@ function evaluate_GaugeAction_untraced(
 end
 function evaluate_GaugeAction_untraced(
     S::GaugeAction,
-    U::Vector{<:AbstractGaugefields{NC,Dim}},
-    B::Array{<:AbstractGaugefields{NC,Dim}, 2}
-) where {Dim,NC}
+    U::Vector{T},
+    B::Array{T,2}
+) where {Dim,NC,T<:AbstractGaugefields{NC,Dim}}
     uout = similar(U[1])
     clear_U!(uout)
 
