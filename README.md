@@ -1106,7 +1106,10 @@ function make_cloverloops_topo(μ, ν; Dim = 4)
     return loops
 end
 ```
-We can calculate the topological charge as ```Qplaq = calculate_topological_charge_plaq(U,temp_UμνTA,temps[1:6])```, ```Qclover = calculate_topological_charge_clover(U,temp_UμνTA,temps[1:6])```, ```Qimproved= calculate_topological_charge_improved(U,temp_UμνTA,Qclover,temps[1:6])```.
+We can calculate the topological charge as
+```Qplaq = calculate_topological_charge_plaq(U,B,temp_UμνTA,temps[1:6])```,
+```Qclover = calculate_topological_charge_clover(U,B,temp_UμνTA,temps[1:6])```,
+```Qimproved= calculate_topological_charge_improved(U,B,temp_UμνTA,Qclover,temps[1:6])```.
 
 
 # How to calculate derivatives
