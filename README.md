@@ -885,12 +885,6 @@ L"$U_{4}(n)U_{3}(n+e_{4})U^{\dagger}_{4}(n+e_{3})U^{\dagger}_{3}(n)$"
 
 ## Fractional topological charge
 ```julia
-function calculate_topological_charge_plaq(U::Array{T,1}, temp_UμνTA, temps) where {T}
-    UμνTA = temp_UμνTA
-    numofloops = calc_UμνTA!(UμνTA, "plaq", U, temps)
-    Q = calc_Q(UμνTA, numofloops, U)
-    return Q
-end
 function calculate_topological_charge_plaq(U::Array{T,1}, B::Array{T,2}, temp_UμνTA, temps) where {T}
     UμνTA = temp_UμνTA
     numofloops = calc_UμνTA!(UμνTA, "plaq", U, B, temps)
@@ -898,12 +892,6 @@ function calculate_topological_charge_plaq(U::Array{T,1}, B::Array{T,2}, temp_U�
     return Q
 end
 
-function calculate_topological_charge_clover(U::Array{T,1}, temp_UμνTA, temps) where {T}
-    UμνTA = temp_UμνTA
-    numofloops = calc_UμνTA!(UμνTA, "clover", U, temps)
-    Q = calc_Q(UμνTA, numofloops, U)
-    return Q
-end
 function calculate_topological_charge_clover(U::Array{T,1}, B::Array{T,2}, temp_UμνTA, temps) where {T}
     UμνTA = temp_UμνTA
     numofloops = calc_UμνTA!(UμνTA, "clover", U, B, temps)
@@ -911,23 +899,6 @@ function calculate_topological_charge_clover(U::Array{T,1}, B::Array{T,2}, temp_
     return Q
 end
 
-function calculate_topological_charge_improved(
-    U::Array{T,1},
-    temp_UμνTA,
-    Qclover,
-    temps,
-) where {T}
-    UμνTA = temp_UμνTA
-    #numofloops = calc_UμνTA!(UμνTA,"clover",U)
-    #Qclover = calc_Q(UμνTA,numofloops,U)
-
-    numofloops = calc_UμνTA!(UμνTA, "rect", U, temps)
-    Qrect = 2 * calc_Q(UμνTA, numofloops, U)
-    c1 = -1 / 12
-    c0 = 5 / 3
-    Q = c0 * Qclover + c1 * Qrect
-    return Q
-end
 function calculate_topological_charge_improved(
     U::Array{T,1},
     B::Array{T,2},
@@ -948,16 +919,6 @@ end
 function calc_UμνTA!(
     temp_UμνTA,
     name::String,
-    U::Array{<:AbstractGaugefields{NC,Dim},1},
-    temps,
-) where {NC,Dim}
-    loops_μν, numofloops = calc_loopset_μν_name(name, Dim)
-    calc_UμνTA!(temp_UμνTA, loops_μν, U, temps)
-    return numofloops
-end
-function calc_UμνTA!(
-    temp_UμνTA,
-    name::String,
     U::Array{T,1},
     B::Array{T,2},
     temps,
@@ -968,29 +929,6 @@ function calc_UμνTA!(
 end
 
 
-function calc_UμνTA!(
-    temp_UμνTA,
-    loops_μν,
-    U::Array{<:AbstractGaugefields{NC,Dim},1},
-    temps,
-) where {NC,Dim}
-    UμνTA = temp_UμνTA
-    for μ = 1:Dim
-        for ν = 1:Dim
-            if ν == μ
-                continue
-            end
-
-            evaluate_gaugelinks!(temps[1], loops_μν[μ, ν], U, temps[2:3])
-            Traceless_antihermitian!(UμνTA[μ, ν], temps[1])
-            #loopset = Loops(U,loops_μν[μ,ν])
-            #UμνTA[μ,ν] = evaluate_loops(loopset,U)
-
-            #UμνTA[μ,ν] = Traceless_antihermitian(UμνTA[μ,ν])
-        end
-    end
-    return
-end
 function calc_UμνTA!(
     temp_UμνTA,
     loops_μν,
