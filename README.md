@@ -711,7 +711,7 @@ As a mathematical expression, for matrix-valued fields ``A(n), B(n)``,
 we define "matrix-field matrix-field product" as,
 
 ```math
-A(n)B(n)]_{ij} = \sum_k [A(n)]_{ik} [B(n)]_{kj}
+[A(n)B(n)]_{ij} = \sum_k [A(n)]_{ik} [B(n)]_{kj}
 ```
 
 for all site index n.
@@ -736,7 +736,7 @@ This trace operation summing up all indecis, spacetime and color.
 
 # Applications
 
-This package and Wilsonloop.jl enable you to perform several calcurations.
+This package and Wilsonloop.jl enable you to perform several calculations.
 Here we demonstrate them.
 
 Some of them will be simplified in LatticeQCD.jl.
@@ -752,8 +752,9 @@ add Wilsonloop.jl
 For example, if you want to calculate the following quantity: 
 
 ```math
-U_{1}(n)U_{2}(n+\hat{1}) U^{\dagger}_{1}(n+\hat{2}) U^{\dagger}_2(n) e^{-2\pi B_{12}(n) / N}
+U_{1}(n)U_{2}(n+\hat{1}) U^{\dagger}_{1}(n+\hat{2}) U^{\dagger}_2(n) e^{-2\pi B_{12}(n) / N} ,
 ```
+which is SU(Nc) 0-form and Z(Nc) 1-form gauge invariant.
 
 You can use Wilsonloop.jl as follows
 
