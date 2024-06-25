@@ -156,10 +156,6 @@ B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NY,condition = "tflux")
 
 temp1 = similar(U[1])
 temp2 = similar(U[1])
-temp3 = similar(U[1])
-temp4 = similar(U[1])
-temp5 = similar(U[1])
-temp6 = similar(U[1])
 
 comb = 6
 factor = 1/(comb*U[1].NV*U[1].NC)
