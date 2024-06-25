@@ -45,7 +45,7 @@ and you are recommended to use it as a develop package
 if there's a possibility that you use the original Gaugefields.jl package
 or modify it.
 
-Download the code locally, then in Julia REPL in the package mode,
+Download the codes in "Gaugefields" directory locally, then in Julia REPL in the package mode,
 ```
 dev /<your full path>/Gaugefields
 ```
