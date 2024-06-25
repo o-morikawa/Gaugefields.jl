@@ -46,7 +46,7 @@ Autograd can be worked for general Wilson lines except for ones have overlaps.
 # Install
 
 This is a non-official package in Julia,
-and you are recommended to use it as a develop package
+and you are recommended to use it as a develop (dev) package
 if there's a possibility that you use the original Gaugefields.jl package
 or modify it.
 
