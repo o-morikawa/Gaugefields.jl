@@ -2300,12 +2300,25 @@ end
 function calculate_Plaquette(U::Array{T,1}) where {T<:AbstractGaugefields}
     error("calculate_Plaquette is not implemented in type $(typeof(U)) ")
 end
+function calculate_Plaquette(
+    U::Array{T,1},
+    B::Array{T,2},
+) where {T<:AbstractGaugefields}
+    error("calculate_Plaquette is not implemented in type $(typeof(U)) ")
+end
 
 function calculate_Plaquette(
     U::Array{T,1},
     temps::Array{T1,1},
 ) where {T<:AbstractGaugefields,T1<:AbstractGaugefields}
     return calculate_Plaquette(U, temps[1], temps[2])
+end
+function calculate_Plaquette(
+    U::Array{T,1},
+    B::Array{T,2},
+    temps::Array{T1,1},
+) where {T<:AbstractGaugefields,T1<:AbstractGaugefields}
+    return calculate_Plaquette(U, B, temps[1], temps[2])
 end
 
 function calculate_Plaquette(
@@ -2321,13 +2334,29 @@ function calculate_Plaquette(
         plaq += tr(temp)
 
     end
+    return real(plaq * 0.5)
+end
+function calculate_Plaquette(
+    U::Array{T,1},
+    B::Array{T,2},
+    temp::AbstractGaugefields{NC,Dim},
+    staple::AbstractGaugefields{NC,Dim},
+) where {NC,Dim,T<:AbstractGaugefields}
+    plaq = 0
+    V = staple
+    for μ = 1:Dim
+        construct_staple!(V, U, B, μ, temp)
+        mul!(temp, U[μ], V')
+        plaq += tr(temp)
 
-
-
+    end
     return real(plaq * 0.5)
 end
 
 function construct_staple!(staple::T, U, μ) where {T<:AbstractGaugefields}
+    error("construct_staple! is not implemented in type $(typeof(U)) ")
+end
+function construct_staple!(staple::T, U, B, μ) where {T<:AbstractGaugefields}
     error("construct_staple! is not implemented in type $(typeof(U)) ")
 end
 
@@ -2522,6 +2551,16 @@ function construct_double_staple!(
     #println(staple[1,1,1,1,1,1])
     #error("construct!!")
 end
+function construct_double_staple!(
+    staple::AbstractGaugefields{NC,Dim},
+    U::Array{T,1},
+    B::Array{T,2},
+    μ,
+    temps::Array{<:AbstractGaugefields{NC,Dim},1},
+) where {NC,Dim,T<:AbstractGaugefields}
+    loops = loops_staple_prime[(Dim, μ)]
+    evaluate_gaugelinks!(staple, loops, U, B, temps)
+end
 
 
 function construct_staple!(
@@ -2568,6 +2607,41 @@ function construct_staple!(
 
 
         #mul!(staple,U0,Uν,Uμ')
+    end
+    set_wing_U!(staple)
+end
+function construct_staple!(
+    staple::AbstractGaugefields{NC,Dim},
+    U::Array{T,1},
+    B::Array{T,2},
+    μ,
+    temp::AbstractGaugefields{NC,Dim},
+) where {NC,Dim,T<:AbstractGaugefields}
+    U1U2 = temp
+    firstterm = true
+
+    for ν = 1:Dim
+        if ν == μ
+            continue
+        end
+
+        U1 = U[ν]
+        if μ < ν
+            multiply_12!(U1, U[ν], B[μ,ν], 0, false, false)
+        else
+            multiply_12!(U1, U[ν], B[ν,μ], 0, false, false)
+        end
+        U2 = shift_U(U[μ], ν)
+        mul!(U1U2, U1, U2)
+
+        U3 = shift_U(U[ν], μ)
+        if firstterm
+            β = 0
+            firstterm = false
+        else
+            β = 1
+        end
+        mul!(staple, U1U2, U3', 1, β)
     end
     set_wing_U!(staple)
 end
