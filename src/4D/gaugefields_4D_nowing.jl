@@ -2782,6 +2782,7 @@ function thooftFlux_4D_B_at_bndry(
     FLUX,
     FLUXNUM,
     NN...;
+    verbose_level = 2,
 )
     dim = length(NN)
     if dim == 4
@@ -2791,7 +2792,7 @@ function thooftFlux_4D_B_at_bndry(
             NN[2],
             NN[3],
             NN[4],
-            verbose_level = 2,
+            verbose_level = verbose_level,
         )
         v = exp(-im * (2pi/NC) * FLUX)
       if FLUXNUM==1
