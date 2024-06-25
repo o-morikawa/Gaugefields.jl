@@ -686,6 +686,10 @@ function Initialize_Bfields(
     NDW,
     NN...;
     condition = "tflux",
+    mpi = false,
+    PEs = nothing,
+    mpiinit = nothing,
+    verbose_level = 2,
     randomnumber = "Random",
 )
 
@@ -698,6 +702,10 @@ function Initialize_Bfields(
             fluxnum,
             NDW,
             NN...,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
         )
     elseif condition == "random"
         u1 = B_RandomGauges(
@@ -706,6 +714,10 @@ function Initialize_Bfields(
             fluxnum,
             NDW,
             NN...,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
             randomnumber = randomnumber,
         )
     elseif condition == "hot"
@@ -713,10 +725,10 @@ function Initialize_Bfields(
             NC,
             NDW,
             NN...,
-            mpi = false,
-            PEs = nothing,
-            mpiinit = nothing,
-            verbose_level = 2,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
             randomnumber = "Random",
         )
     elseif condition == "identity"
@@ -724,10 +736,10 @@ function Initialize_Bfields(
             NC,
             NDW,
             NN...,
-            mpi = false,
-            PEs = nothing,
-            mpiinit = nothing,
-            verbose_level = 2,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
         )
     else
         error("not supported")
@@ -751,6 +763,10 @@ function Initialize_Bfields(
                 fluxnum,
                 NDW,
                 NN...,
+                mpi = mpi,
+                PEs = PEs,
+                mpiinit = mpiinit,
+                verbose_level = verbose_level,
             )
             U[ν,μ] = deepcopy(U[μ,ν])
             U[ν,μ][:,:,:,:,:,:] *= -1
@@ -761,6 +777,10 @@ function Initialize_Bfields(
                 fluxnum,
                 NDW,
                 NN...,
+                mpi = mpi,
+                PEs = PEs,
+                mpiinit = mpiinit,
+                verbose_level = verbose_level,
                 randomnumber = randomnumber,
             )
             U[ν,μ] = deepcopy(U[μ,ν])
@@ -770,10 +790,10 @@ function Initialize_Bfields(
                 NC,
                 NDW,
                 NN...,
-                mpi = false,
-                PEs = nothing,
-                mpiinit = nothing,
-                verbose_level = 2,
+                mpi = mpi,
+                PEs = PEs,
+                mpiinit = mpiinit,
+                verbose_level = verbose_level,
                 randomnumber = "Random",
             )
             U[ν,μ] = deepcopy(U[μ,ν])
@@ -783,10 +803,10 @@ function Initialize_Bfields(
                 NC,
                 NDW,
                 NN...,
-                mpi = false,
-                PEs = nothing,
-                mpiinit = nothing,
-                verbose_level = 2,
+                mpi = mpi,
+                PEs = PEs,
+                mpiinit = mpiinit,
+                verbose_level = verbose_level,
             )
             U[ν,μ] = deepcopy(U[μ,ν])
             U[ν,μ][:,:,:,:,:,:] *= -1
@@ -805,6 +825,10 @@ function B_RandomGauges(
     FluxNum,
     NDW,
     NN...;
+    mpi = false,
+    PEs = nothing,
+    mpiinit = nothing,
+    verbose_level = 2,
     randomnumber = "Random",
 )
     dim = length(NN)
@@ -818,16 +842,26 @@ function B_TfluxGauges(
     FluxNum,
     NDW,
     NN...;
+    mpi = false,
+    PEs = nothing,
+    mpiinit = nothing,
+    verbose_level = 2,
 )
     dim = length(NN)
-
+    if mpi
+        if PEs == nothing || mpiinit == nothing
+            error("not implemented yet!")
+        else
             if dim == 4
                 if NDW == 0
-                    U = thooftFlux_4D_B_at_bndry(
+                    U = thooftFlux_4D_B_at_bndry_mpi(
                         NC,
                         Flux,
                         FluxNum,
                         NN...,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
                     )
                 else
                     error("NDW is not implemented yet!")
@@ -835,6 +869,24 @@ function B_TfluxGauges(
             else
                 error("$dim dimension with $NDW  is not implemented yet! set NDW = 0")
             end
+        end
+    else
+        if dim == 4
+            if NDW == 0
+                U = thooftFlux_4D_B_at_bndry(
+                    NC,
+                    Flux,
+                    FluxNum,
+                    NN...,
+                    verbose_level = 2,
+                )
+            else
+                error("NDW is not implemented yet!")
+            end
+        else
+            error("$dim dimension with $NDW  is not implemented yet! set NDW = 0")
+        end
+    end
     return U
 end
 
