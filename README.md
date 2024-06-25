@@ -693,7 +693,7 @@ u'
 
 This is evaluated with the lazy evaluation. 
 So there is no memory copy. 
-This returms $U_\mu^dagger$ for all sites.
+This returms $U_\mu^\dagger$ for all sites.
 
 ## Shift operator
 If you want to shift the gauge fields, you can do like 
