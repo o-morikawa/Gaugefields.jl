@@ -6,7 +6,7 @@
 in order to implement higher-form gauge fields
  (i.e., 't Hooft twisted boundary condition/flux).]
 
-[NOTE: O.M. also provide a memory-safer code set than the original one.]
+[NOTE: O.M. also provides a memory-safer code set than the original one.]
 
 This is a package for lattice QCD codes.
 Treating gauge fields (links), gauge actions with MPI and autograd.
