@@ -2,7 +2,7 @@
 
 # Abstract
 
-[NOTE: This is a extended version by Okuto Morikawa,
+[NOTE: This is an extended version by Okuto Morikawa,
 in order to implement higher-form gauge fields
  (i.e., 't Hooft twisted boundary condition/flux).]
 
@@ -20,7 +20,7 @@ See also the orginal package in [Gaugefields.jl](https://github.com/akio-tomiya/
 This package has following functionarities
 
 - SU(Nc) (Nc > 1) gauge fields in 2 or 4 dimensions with arbitrary actions.
-- NEW: Z(Nc) 2-form gauge fields, which are non-dynamical and given as 't Hooft flux.
+- NEW: Z(Nc) 2-form gauge fields in 4 dimensions, which are non-dynamical and given as 't Hooft flux.
 - U(1) gauge fields in 2 dimensions with arbitrary actions. 
 - Configuration generation
     - Heatbath
@@ -28,6 +28,9 @@ This package has following functionarities
 - Gradient flow via RK3
 - I/O: ILDG and Bridge++ formats are supported ([c-lime](https://usqcd-software.github.io/c-lime/) will be installed implicitly with [CLIME_jll](https://github.com/JuliaBinaryWrappers/CLIME_jll.jl) )
 - MPI parallel computation (experimental. See documents.)
+
+The implementation of higher-form gauge fields is based on
+[arXiv:2303.10977 [hep-lat]](https://arxiv.org/abs/2303.10977).
 
 Dynamical fermions will be supported with [LatticeDiracOperators.jl](https://github.com/akio-tomiya/LatticeDiracOperators.jl).
 
