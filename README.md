@@ -167,7 +167,7 @@ factor = 1/(comb*U[1].NV*U[1].NC)
 g = Gradientflow(U, B)
 for itrj=1:100
     flow!(U,B,g)
-    @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     println("$itrj plaq_t = $plaq_t")
     poly = calculate_Polyakov_loop(U,temp1,temp2) 
     println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
@@ -273,7 +273,7 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 
     factor = 1/(comb*U[1].NV*U[1].NC)
 
-    @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     println("0 plaq_t = $plaq_t")
     poly = calculate_Polyakov_loop(U,temp1,temp2) 
     println("0 polyakov loop = $(real(poly)) $(imag(poly))")
@@ -306,11 +306,11 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
         end
         numaccepted += ifelse(accepted,1,0)
 
-        #plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+        #plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
         #println("$itrj plaq_t = $plaq_t")
         
         if itrj % 10 == 0
-            @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+            @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
             println("$itrj plaq_t = $plaq_t")
             poly = calculate_Polyakov_loop(U,temp1,temp2) 
             println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
@@ -375,7 +375,7 @@ function gradientflow_test_4D(NX,NY,NZ,NT,NC)
     factor = 1/(comb*U[1].NV*U[1].NC)
 
 
-    @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     println("0 plaq_t = $plaq_t")
     poly = calculate_Polyakov_loop(U,temp1,temp2) 
     println("0 polyakov loop = $(real(poly)) $(imag(poly))")
@@ -414,7 +414,7 @@ function gradientflow_test_4D(NX,NY,NZ,NT,NC)
     for itrj=1:10
         flow!(U,B,g)
         if itrj % 10 == 0
-            @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+            @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
             println("$itrj plaq_t = $plaq_t")
             poly = calculate_Polyakov_loop(U,temp1,temp2) 
             println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
@@ -591,7 +591,7 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 
     factor = 1/(comb*U[1].NV*U[1].NC)
 
-    @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     if get_myrank(U) == 0
         println("0 plaq_t = $plaq_t")
     end
@@ -628,11 +628,11 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
         end
         numaccepted += ifelse(accepted,1,0)
 
-        #plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+        #plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
         #println("$itrj plaq_t = $plaq_t")
         
         if itrj % 10 == 0
-            plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+            plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
             if get_myrank(U) == 0
                 println("$itrj plaq_t = $plaq_t")
             end
@@ -1159,7 +1159,7 @@ function MDtest!(gauge_action,U,B,Dim)
         accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
         numaccepted += ifelse(accepted,1,0)
 
-        plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+        plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
         println("$itrj plaq_t = $plaq_t")
         println("acceptance ratio ",numaccepted/itrj)
     end
