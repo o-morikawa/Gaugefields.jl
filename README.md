@@ -22,7 +22,7 @@ O.M. would like to thank Yuki Nagai and Akio Tomiya (the contributors of the ori
 This package has following functionarities
 
 - SU(Nc) (Nc > 1) gauge fields in 2 or 4 dimensions with arbitrary actions.
-- NEW: Z(Nc) 2-form gauge fields in 4 dimensions, which are non-dynamical and given as 't Hooft flux.
+- **Z(Nc) 2-form gauge fields in 4 dimensions, which are non-dynamical and given as 't Hooft flux.**
 - U(1) gauge fields in 2 dimensions with arbitrary actions. 
 - Configuration generation
     - Heatbath
