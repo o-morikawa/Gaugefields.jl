@@ -16,6 +16,8 @@ Treating gauge fields (links), gauge actions with MPI and autograd.
 This package will be used in [LatticeQCD.jl](https://github.com/akio-tomiya/LatticeQCD.jl). 
 See also the orginal package in [Gaugefields.jl](https://github.com/akio-tomiya/Gaugefields.jl).
 
+O.M. would like to thank Yuki Nagai and Akio Tomiya (the contributors of the original package). O.M. is also grateful to Hiroshi Suzuki.
+
 # What this package can do:
 This package has following functionarities
 
