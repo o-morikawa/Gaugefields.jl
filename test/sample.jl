@@ -722,7 +722,7 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 
     factor = 1/(comb*U[1].NV*U[1].NC)
 
-    @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     println("0 plaq_t = $plaq_t")
 #    poly = calculate_Polyakov_loop(U,temp1,temp2) 
 #    println("0 polyakov loop = $(real(poly)) $(imag(poly))")
@@ -756,11 +756,11 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
         end
         numaccepted += ifelse(accepted,1,0)
 
-        #plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+        #plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
         #println("$itrj plaq_t = $plaq_t")
         
         if itrj % 10 == 0
-            @time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+            @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
             println("$itrj plaq_t = $plaq_t")
 #            poly = calculate_Polyakov_loop(U,temp1,temp2) 
 #            println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
