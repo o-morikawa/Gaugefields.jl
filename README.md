@@ -568,10 +568,11 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     if mpi
         PEs = pes#(1,1,1,2)
         U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "hot",mpi=true,PEs = PEs,mpiinit = false) 
+        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = false)
     else
         U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "hot")
+        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
     end
-    B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
 
     if get_myrank(U) == 0
         println(typeof(U))
