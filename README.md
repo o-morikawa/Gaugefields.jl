@@ -45,7 +45,7 @@ and you are recommended to use it as a develop package
 if there's a possibility that you use the original Gaugefields.jl package
 or modify it.
 
-Download the codes in "Gaugefields" directory locally, then in Julia REPL in the package mode,
+Download the code locally, then in Julia REPL in the package mode,
 ```
 dev /<your full path>/Gaugefields
 ```
@@ -100,7 +100,7 @@ temp2 = similar(U[1])
 
 comb = 6
 factor = 1/(comb*U[1].NV*U[1].NC)
-@time plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
+@time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
 println("plaq_t = $plaq_t")
 poly = calculate_Polyakov_loop(U,temp1,temp2) 
 println("polyakov loop = $(real(poly)) $(imag(poly))")
