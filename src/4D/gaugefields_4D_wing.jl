@@ -3028,4 +3028,128 @@ function lambda_k_mul!(b::Gaugefields_4D_wing{NC},a::Gaugefields_4D_wing{NC},k,g
     return
 end
 
+
+
+
+
+
+
+function zerosGaugefields_4D_wing(NC, NX, NY, NZ, NT, NDW; verbose_level = 2)
+    U = Gaugefields_4D_wing(NC, NDW, NX, NY, NZ, NT, verbose_level = verbose_level)
+
+    for it = 1:NT
+        for iz = 1:NZ
+            for iy = 1:NY
+                for ix = 1:NX
+                    @simd for ic = 1:NC
+                        U[ic, ic, ix, iy, iz, it] = 0
+                    end
+                end
+            end
+        end
+    end
+    set_wing_U!(U)
+    return U
+end
+
+function thooftFlux_4D_B_at_bndry_wing(
+    NC,
+    NDW,
+    FLUX,
+    FLUXNUM,
+    NN...;
+    verbose_level = 2,
+)
+    dim = length(NN)
+    if dim == 4
+        U = identityGaugefields_4D_wing(
+            NC,
+            NN[1],
+            NN[2],
+            NN[3],
+            NN[4],
+            NDW,
+            verbose_level = verbose_level,
+        )
+        v = exp(-im * (2pi/NC) * FLUX)
+      if FLUXNUM==1
+        for it = 1:NN[4]
+            for iz = 1:NN[3]
+                #for iy = 1:NN[2]
+                    #for ix = 1:NN[1]
+                        @simd for ic = 1:NC
+                            U[ic,ic,NN[1],NN[2],iz,it] *= v
+                        end
+                    #end
+                #end
+            end
+        end
+      elseif FLUXNUM==2
+        for it = 1:NN[4]
+            #for iz = 1:NN[3]
+                for iy = 1:NN[2]
+                    #for ix = 1:NN[1]
+                        @simd for ic = 1:NC
+                            U[ic,ic,NN[1],iy,NN[3],it] *= v
+                        end
+                    #end
+                end
+            #end
+        end
+      elseif FLUXNUM==3
+        #for it = 1:NN[4]
+            for iz = 1:NN[3]
+                for iy = 1:NN[2]
+                    #for ix = 1:NN[1]
+                        @simd for ic = 1:NC
+                            U[ic,ic,NN[1],iy,iz,NN[4]] *= v
+                        end
+                    #end
+                end
+            end
+        #end
+      elseif FLUXNUM==4
+        for it = 1:NN[4]
+            #for iz = 1:NN[3]
+                #for iy = 1:NN[2]
+                    for ix = 1:NN[1]
+                        @simd for ic = 1:NC
+                            U[ic,ic,ix,NN[2],NN[3],it] *= v
+                        end
+                    end
+                #end
+            #end
+        end
+      elseif FLUXNUM==5
+        #for it = 1:NN[4]
+            for iz = 1:NN[3]
+                #for iy = 1:NN[2]
+                    for ix = 1:NN[1]
+                        @simd for ic = 1:NC
+                            U[ic,ic,ix,NN[2],iz,NN[4]] *= v
+                        end
+                    end
+                #end
+            end
+        #end
+      elseif FLUXNUM==6
+        #for it = 1:NN[4]
+            #for iz = 1:NN[3]
+                for iy = 1:NN[2]
+                    for ix = 1:NN[1]
+                        @simd for ic = 1:NC
+                            U[ic,ic,ix,iy,NN[3],NN[4]] *= v
+                        end
+                    end
+                end
+            #end
+        #end
+      else
+          error("NumofFlux is out")
+      end
+    end
+    return U
+end
+
+
 # end

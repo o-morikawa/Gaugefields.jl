@@ -3290,7 +3290,7 @@ function thooftFlux_4D_B_at_bndry_mpi(
     randomnumber = "Random",
     comm = MPI.COMM_WORLD,
 )
-    dim = length(NN)
+    dim = 4
     if dim == 4
         U = identityGaugefields_4D_nowing_mpi(
             NC,
