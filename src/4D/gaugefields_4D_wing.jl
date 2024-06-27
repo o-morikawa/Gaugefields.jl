@@ -3148,6 +3148,7 @@ function thooftFlux_4D_B_at_bndry_wing(
           error("NumofFlux is out")
       end
     end
+    set_wing_U!(U)
     return U
 end
 

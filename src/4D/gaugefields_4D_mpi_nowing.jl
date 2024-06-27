@@ -3378,6 +3378,7 @@ function thooftFlux_4D_B_at_bndry_mpi(
             #end
         #end
       end
+    set_wing_U!(U)
     return U
 end
 
