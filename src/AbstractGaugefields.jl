@@ -832,7 +832,8 @@ function B_RandomGauges(
     randomnumber = "Random",
 )
     dim = length(NN)
-    U = B_TfluxGauges(NC,Flux,FluxNum,NDW,NN...)
+    println("Not implemented yet! In what follows, let us use B_TfluxGauges.")
+    U = B_TfluxGauges(NC,Flux,FluxNum,NDW,NN...,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level)
     return U
 end
 
@@ -858,16 +859,31 @@ function B_TfluxGauges(
                         NC,
                         Flux,
                         FluxNum,
-                        NN...,
+                        NN[1],
+                        NN[2],
+                        NN[3],
+                        NN[4],
                         PEs = PEs,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
                     )
                 else
-                    error("NDW is not implemented yet!")
+                    U = thooftFlux_4D_B_at_bndry_wing_mpi(
+                        NC,
+                        NDW,
+                        Flux,
+                        FluxNum,
+                        NN[1],
+                        NN[2],
+                        NN[3],
+                        NN[4],
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                    )
                 end
             else
-                error("$dim dimension with $NDW  is not implemented yet! set NDW = 0")
+                error("$dim dimension is not implemented yet!")
             end
         end
     else
@@ -877,14 +893,27 @@ function B_TfluxGauges(
                     NC,
                     Flux,
                     FluxNum,
-                    NN...,
+                    NN[1],
+                    NN[2],
+                    NN[3],
+                    NN[4],
                     verbose_level = 2,
                 )
             else
-                error("NDW is not implemented yet!")
+                U = thooftFlux_4D_B_at_bndry_wing(
+                    NC,
+                    NDW,
+                    Flux,
+                    FluxNum,
+                    NN[1],
+                    NN[2],
+                    NN[3],
+                    NN[4],
+                    verbose_level = 2,
+                )
             end
         else
-            error("$dim dimension with $NDW  is not implemented yet! set NDW = 0")
+            error("$dim dimension is not implemented yet!")
         end
     end
     return U
