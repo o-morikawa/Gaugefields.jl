@@ -748,73 +748,73 @@ function Initialize_Bfields(
     U = Array{typeof(u1),2}(undef, Dim,Dim)
 
     U[1,2] = u1
-    U[2,1] = deepcopy(u1)
-    U[2,1][:,:,:,:,:,:] *= -1
+    #U[2,1] = deepcopy(u1)
+    #U[2,1][:,:,:,:,:,:] *= -1
 
 
     for μ = 1:Dim
-    for ν = μ+1:Dim
-    if (μ,ν) != (1,2)
-        fluxnum += 1
-        if condition == "tflux"
-            U[μ,ν] = B_TfluxGauges(
-                NC,
-                Flux[fluxnum],
-                fluxnum,
-                NDW,
-                NN...,
-                mpi = mpi,
-                PEs = PEs,
-                mpiinit = mpiinit,
-                verbose_level = verbose_level,
-            )
-            U[ν,μ] = deepcopy(U[μ,ν])
-            U[ν,μ][:,:,:,:,:,:] *= -1
-        elseif condition == "random"
-            U[μ,ν] = B_RandomGauges(
-                NC,
-                Flux[fluxnum],
-                fluxnum,
-                NDW,
-                NN...,
-                mpi = mpi,
-                PEs = PEs,
-                mpiinit = mpiinit,
-                verbose_level = verbose_level,
-                randomnumber = randomnumber,
-            )
-            U[ν,μ] = deepcopy(U[μ,ν])
-            U[ν,μ][:,:,:,:,:,:] *= -1
-        elseif condition == "hot"
-            U[μ,ν] = RandomGauges(
-                NC,
-                NDW,
-                NN...,
-                mpi = mpi,
-                PEs = PEs,
-                mpiinit = mpiinit,
-                verbose_level = verbose_level,
-                randomnumber = "Random",
-            )
-            U[ν,μ] = deepcopy(U[μ,ν])
-            U[ν,μ][:,:,:,:,:,:] *= -1
-        elseif condition == "identity"
-            U[μ,ν] = IdentityGauges(
-                NC,
-                NDW,
-                NN...,
-                mpi = mpi,
-                PEs = PEs,
-                mpiinit = mpiinit,
-                verbose_level = verbose_level,
-            )
-            U[ν,μ] = deepcopy(U[μ,ν])
-            U[ν,μ][:,:,:,:,:,:] *= -1
-        else
-            error("not supported")
+        for ν = μ+1:Dim
+            if (μ,ν) != (1,2)
+                fluxnum += 1
+                if condition == "tflux"
+                    U[μ,ν] = B_TfluxGauges(
+                        NC,
+                        Flux[fluxnum],
+                        fluxnum,
+                        NDW,
+                        NN...,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                    )
+                    #U[ν,μ] = deepcopy(U[μ,ν])
+                    #U[ν,μ][:,:,:,:,:,:] *= -1
+                elseif condition == "random"
+                    U[μ,ν] = B_RandomGauges(
+                        NC,
+                        Flux[fluxnum],
+                        fluxnum,
+                        NDW,
+                        NN...,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                        randomnumber = randomnumber,
+                    )
+                    #U[ν,μ] = deepcopy(U[μ,ν])
+                    #U[ν,μ][:,:,:,:,:,:] *= -1
+                elseif condition == "hot"
+                    U[μ,ν] = RandomGauges(
+                        NC,
+                        NDW,
+                        NN...,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                        randomnumber = "Random",
+                    )
+                    #U[ν,μ] = deepcopy(U[μ,ν])
+                    #U[ν,μ][:,:,:,:,:,:] *= -1
+                elseif condition == "identity"
+                    U[μ,ν] = IdentityGauges(
+                        NC,
+                        NDW,
+                        NN...,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                    )
+                    #U[ν,μ] = deepcopy(U[μ,ν])
+                    #U[ν,μ][:,:,:,:,:,:] *= -1
+                else
+                    error("not supported")
+                end
+            end
         end
-    end
-    end
     end
     return U
 end
@@ -2707,7 +2707,11 @@ function construct_staple!(
         end
 
         U1 = U[ν]
-        multiply_12!(U1, U[ν], B[μ,ν], 0, false, false)
+        if μ < ν
+            multiply_12!(U1, U[ν], B[μ,ν], 0, false, false)
+        else
+            multiply_12!(U1, U[ν], B[ν,μ], 0, false, false)
+        end
         U2 = shift_U(U[μ], ν)
         mul!(U1U2, U1, U2)
 
