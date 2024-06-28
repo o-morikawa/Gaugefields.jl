@@ -702,6 +702,19 @@ function Initialize_Bfields(
             fluxnum,
             NDW,
             NN...,
+            overallminus = false,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
+        )
+        u2 = B_TfluxGauges(
+            NC,
+            Flux[fluxnum],
+            fluxnum,
+            NDW,
+            NN...,
+            overallminus = true,
             mpi = mpi,
             PEs = PEs,
             mpiinit = mpiinit,
@@ -714,33 +727,30 @@ function Initialize_Bfields(
             fluxnum,
             NDW,
             NN...,
+            overallminus = false,
             mpi = mpi,
             PEs = PEs,
             mpiinit = mpiinit,
             verbose_level = verbose_level,
             randomnumber = randomnumber,
         )
-    elseif condition == "hot"
-        u1 = RandomGauges(
+        u2 = B_RandomGauges(
             NC,
+            Flux[fluxnum],
+            fluxnum,
             NDW,
             NN...,
+            overallminus = true,
             mpi = mpi,
             PEs = PEs,
             mpiinit = mpiinit,
             verbose_level = verbose_level,
-            randomnumber = "Random",
+            randomnumber = randomnumber,
         )
-    elseif condition == "identity"
-        u1 = IdentityGauges(
-            NC,
-            NDW,
-            NN...,
-            mpi = mpi,
-            PEs = PEs,
-            mpiinit = mpiinit,
-            verbose_level = verbose_level,
-        )
+    # elseif condition == "hot"
+    #     u1 = RandomGauges(NC,NDW,NN...,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level,randomnumber = "Random")
+    # elseif condition == "identity"
+    #     u1 = IdentityGauges(NC,NDW,NN...,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level)
     else
         error("not supported")
     end
@@ -748,9 +758,7 @@ function Initialize_Bfields(
     U = Array{typeof(u1),2}(undef, Dim,Dim)
 
     U[1,2] = u1
-    #U[2,1] = deepcopy(u1)
-    #U[2,1][:,:,:,:,:,:] *= -1
-
+    U[2,1] = u2
 
     for μ = 1:Dim
         for ν = μ+1:Dim
@@ -763,13 +771,24 @@ function Initialize_Bfields(
                         fluxnum,
                         NDW,
                         NN...,
+                        overallminus = false,
                         mpi = mpi,
                         PEs = PEs,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
                     )
-                    #U[ν,μ] = deepcopy(U[μ,ν])
-                    #U[ν,μ][:,:,:,:,:,:] *= -1
+                    U[ν,μ] = B_TfluxGauges(
+                        NC,
+                        Flux[fluxnum],
+                        fluxnum,
+                        NDW,
+                        NN...,
+                        overallminus = true,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                    )
                 elseif condition == "random"
                     U[μ,ν] = B_RandomGauges(
                         NC,
@@ -777,39 +796,30 @@ function Initialize_Bfields(
                         fluxnum,
                         NDW,
                         NN...,
+                        overallminus = false,
                         mpi = mpi,
                         PEs = PEs,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
                         randomnumber = randomnumber,
                     )
-                    #U[ν,μ] = deepcopy(U[μ,ν])
-                    #U[ν,μ][:,:,:,:,:,:] *= -1
-                elseif condition == "hot"
-                    U[μ,ν] = RandomGauges(
+                    U[ν,μ] = B_RandomGauges(
                         NC,
+                        Flux[fluxnum],
+                        fluxnum,
                         NDW,
                         NN...,
+                        overallminus = true,
                         mpi = mpi,
                         PEs = PEs,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
-                        randomnumber = "Random",
+                        randomnumber = randomnumber,
                     )
-                    #U[ν,μ] = deepcopy(U[μ,ν])
-                    #U[ν,μ][:,:,:,:,:,:] *= -1
-                elseif condition == "identity"
-                    U[μ,ν] = IdentityGauges(
-                        NC,
-                        NDW,
-                        NN...,
-                        mpi = mpi,
-                        PEs = PEs,
-                        mpiinit = mpiinit,
-                        verbose_level = verbose_level,
-                    )
-                    #U[ν,μ] = deepcopy(U[μ,ν])
-                    #U[ν,μ][:,:,:,:,:,:] *= -1
+                # elseif condition == "hot"
+                #     U[μ,ν] = RandomGauges(NC,NDW,NN...,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level,randomnumber = "Random")
+                # elseif condition == "identity"
+                #     U[μ,ν] = IdentityGauges(NC,NDW,NN...,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level)
                 else
                     error("not supported")
                 end
@@ -825,6 +835,7 @@ function B_RandomGauges(
     FluxNum,
     NDW,
     NN...;
+    overallminus = false,
     mpi = false,
     PEs = nothing,
     mpiinit = nothing,
@@ -833,7 +844,7 @@ function B_RandomGauges(
 )
     dim = length(NN)
     println("Not implemented yet! In what follows, let us use B_TfluxGauges.")
-    U = B_TfluxGauges(NC,Flux,FluxNum,NDW,NN...,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level)
+    U = B_TfluxGauges(NC,Flux,FluxNum,NDW,NN...,overallminus = overallminus,mpi = mpi,PEs = PEs,mpiinit = mpiinit,verbose_level = verbose_level)
     return U
 end
 
@@ -843,6 +854,7 @@ function B_TfluxGauges(
     FluxNum,
     NDW,
     NN...;
+    overallminus = false,
     mpi = false,
     PEs = nothing,
     mpiinit = nothing,
@@ -864,6 +876,7 @@ function B_TfluxGauges(
                         NN[3],
                         NN[4],
                         PEs = PEs,
+                        overallminus = overallminus,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
                     )
@@ -878,6 +891,7 @@ function B_TfluxGauges(
                         NN[3],
                         NN[4],
                         PEs = PEs,
+                        overallminus = overallminus,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
                     )
@@ -897,6 +911,7 @@ function B_TfluxGauges(
                     NN[2],
                     NN[3],
                     NN[4],
+                    overallminus = overallminus,
                     verbose_level = 2,
                 )
             else
@@ -909,6 +924,7 @@ function B_TfluxGauges(
                     NN[2],
                     NN[3],
                     NN[4],
+                    overallminus = overallminus,
                     verbose_level = 2,
                 )
             end
@@ -916,6 +932,7 @@ function B_TfluxGauges(
             error("$dim dimension is not implemented yet!")
         end
     end
+    set_wing_U!(U)
     return U
 end
 
@@ -2707,11 +2724,7 @@ function construct_staple!(
         end
 
         U1 = U[ν]
-        if μ < ν
-            multiply_12!(U1, U[ν], B[μ,ν], 0, false, false)
-        else
-            multiply_12!(U1, U[ν], B[ν,μ], 0, false, false)
-        end
+        multiply_12!(U1, U[ν], B[μ,ν], 0, false, false)
         U2 = shift_U(U[μ], ν)
         mul!(U1U2, U1, U2)
 
