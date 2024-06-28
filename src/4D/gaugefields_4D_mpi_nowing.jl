@@ -3233,7 +3233,7 @@ end
 
 
 
-function zerosGaugefields_4D_nowing_mpi(
+function minusidentityGaugefields_4D_nowing_mpi(
     NC,
     NX,
     NY,
@@ -3256,7 +3256,7 @@ function zerosGaugefields_4D_nowing_mpi(
         verbose_level = verbose_level,
         comm = comm,
     )
-    v = 0
+    v = -1
 
     for it = 1:U.PN[4]
         for iz = 1:U.PN[3]
@@ -3285,6 +3285,7 @@ function thooftFlux_4D_B_at_bndry_mpi(
     NZ,
     NT,
     PEs;
+    overallminus = false,
     mpiinit = true,
     verbose_level = 2,
     randomnumber = "Random",
@@ -3292,19 +3293,39 @@ function thooftFlux_4D_B_at_bndry_mpi(
 )
     dim = 4
     if dim == 4
-        U = identityGaugefields_4D_nowing_mpi(
-            NC,
-            NX,
-            NY,
-            NZ,
-            NT,
-            PEs,
-            mpiinit = mpiinit,
-            verbose_level = verbose_level,
-            randomnumber = randomnumber,
-            comm = comm,
-        )
-        v = exp(-im * (2pi/NC) * FLUX)
+        if overallminus
+            U = minusidentityGaugefields_4D_nowing_mpi(
+                NC,
+                NX,
+                NY,
+                NZ,
+                NT,
+                PEs,
+                mpiinit = mpiinit,
+                verbose_level = verbose_level,
+                randomnumber = randomnumber,
+                comm = comm,
+            )
+        else
+            U = identityGaugefields_4D_nowing_mpi(
+                NC,
+                NX,
+                NY,
+                NZ,
+                NT,
+                PEs,
+                mpiinit = mpiinit,
+                verbose_level = verbose_level,
+                randomnumber = randomnumber,
+                comm = comm,
+            )
+        end
+        
+        if overallminus
+            v = exp(-im * (2pi/NC) * FLUX)
+        else
+            v = - exp(-im * (2pi/NC) * FLUX)
+        end
       if FLUXNUM==1
         for it = 1:U.PN[4]
             for iz = 1:U.PN[3]

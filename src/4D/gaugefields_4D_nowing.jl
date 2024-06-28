@@ -2758,7 +2758,7 @@ end
 
 
 
-function zerosGaugefields_4D_nowing(NC, NX, NY, NZ, NT; verbose_level = 2)
+function minusidentityGaugefields_4D_nowing(NC, NX, NY, NZ, NT; verbose_level = 2)
     U = Gaugefields_4D_nowing(NC, NX, NY, NZ, NT, verbose_level = verbose_level)
 
     for it = 1:NT
@@ -2766,7 +2766,7 @@ function zerosGaugefields_4D_nowing(NC, NX, NY, NZ, NT; verbose_level = 2)
             for iy = 1:NY
                 for ix = 1:NX
                     @simd for ic = 1:NC
-                        U[ic, ic, ix, iy, iz, it] = 0
+                        U[ic, ic, ix, iy, iz, it] = -1
                     end
                 end
             end
@@ -2782,18 +2782,31 @@ function thooftFlux_4D_B_at_bndry(
     FLUX,
     FLUXNUM,
     NN...;
+    overallminus = false,
     verbose_level = 2,
 )
     dim = length(NN)
     if dim == 4
-        U = identityGaugefields_4D_nowing(
-            NC,
-            NN[1],
-            NN[2],
-            NN[3],
-            NN[4],
-            verbose_level = verbose_level,
-        )
+        if overallminus
+            U = minusidentityGaugefields_4D_nowing(
+                NC,
+                NN[1],
+                NN[2],
+                NN[3],
+                NN[4],
+                verbose_level = verbose_level,
+            )
+        else
+            U = identityGaugefields_4D_nowing(
+                NC,
+                NN[1],
+                NN[2],
+                NN[3],
+                NN[4],
+                verbose_level = verbose_level,
+            )
+        end
+        
         v = exp(-im * (2pi/NC) * FLUX)
       if FLUXNUM==1
         for it = 1:NN[4]
