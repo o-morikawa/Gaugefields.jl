@@ -20,8 +20,8 @@ function __init__()
     @require MPI = "da04e1cc-30fd-572f-bb4f-1f8673147195" begin
         import .AbstractGaugefields_module:
             identityGaugefields_4D_wing_mpi,
-            zerosGaugefields_4D_wing_mpi,
-            thooftFlux_4D_B_at_bndry,
+            minusidentityGaugefields_4D_wing_mpi,
+            thooftFlux_4D_B_at_bndry_wing_mpi,
             Gaugefields_4D_wing_mpi,
             calc_rank_and_indices,
             barrier,
