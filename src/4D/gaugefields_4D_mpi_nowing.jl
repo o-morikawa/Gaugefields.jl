@@ -2531,7 +2531,7 @@ function LinearAlgebra.mul!(
     c::Gaugefields_4D_nowing_mpi{3},
     a::T1,
     b::T2,
-) where {NC,T1<:Abstractfields,T2<:Abstractfields}
+) where {T1<:Abstractfields,T2<:Abstractfields}
     #@assert NC != 2 && NC != 3 "This function is for NC != 2,3"
 
     NT = c.NT
@@ -2594,7 +2594,7 @@ function LinearAlgebra.mul!(
     a::T1,
     b::T2,
     iseven::Bool,
-) where {NC,T1<:Abstractfields,T2<:Abstractfields}
+) where {T1<:Abstractfields,T2<:Abstractfields}
     #@assert NC != 2 && NC != 3 "This function is for NC != 2,3"
     NT = c.NT
     NZ = c.NZ
@@ -2658,7 +2658,7 @@ function LinearAlgebra.mul!(
     c::Gaugefields_4D_nowing_mpi{2},
     a::T1,
     b::T2,
-) where {NC,T1<:Abstractfields,T2<:Abstractfields}
+) where {T1<:Abstractfields,T2<:Abstractfields}
     #@assert NC != 2 && NC != 3 "This function is for NC != 2,3"
     NT = c.NT
     NZ = c.NZ
@@ -2707,7 +2707,7 @@ function LinearAlgebra.mul!(
     a::T1,
     b::T2,
     iseven::Bool,
-) where {NC,T1<:Abstractfields,T2<:Abstractfields}
+) where {T1<:Abstractfields,T2<:Abstractfields}
     #@assert NC != 2 && NC != 3 "This function is for NC != 2,3"
     NT = c.NT
     NZ = c.NZ
@@ -2802,7 +2802,7 @@ function LinearAlgebra.mul!(
     b::T2,
     α::Ta,
     β::Tb,
-) where {NC,T1<:Abstractfields,T2<:Abstractfields,Ta<:Number,Tb<:Number}
+) where {T1<:Abstractfields,T2<:Abstractfields,Ta<:Number,Tb<:Number}
     #@assert NC != 2 && NC != 3 "This function is for NC != 2,3"
     NT = c.NT
     NZ = c.NZ
@@ -2855,7 +2855,7 @@ function LinearAlgebra.mul!(
     b::T2,
     α::Ta,
     β::Tb,
-) where {NC,T1<:Abstractfields,T2<:Abstractfields,Ta<:Number,Tb<:Number}
+) where {T1<:Abstractfields,T2<:Abstractfields,Ta<:Number,Tb<:Number}
     #@assert NC != 2 && NC != 3 "This function is for NC != 2,3"
     NT = c.NT
     NZ = c.NZ
@@ -3403,4 +3403,4 @@ function thooftFlux_4D_B_at_bndry_mpi(
     return U
 end
 
-#end
+end
