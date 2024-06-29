@@ -482,7 +482,7 @@ export PATH="/<your home path>/.julia/bin/:$PATH"
 
 The command is like:
 ```
-mpiexecjl -np 2 julia --project="Gaugefields" mpi_sample.jl 1 1 1 2 true
+mpiexecjl --project="Gaugefields" -np 2 julia mpi_sample.jl 1 1 1 2 true
 ```
 ```1 1 1 2``` means ```PEX PEY PEZ PET```. In this case, the time-direction is diveded by 2. 
 
