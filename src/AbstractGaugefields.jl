@@ -867,7 +867,7 @@ function B_TfluxGauges(
         else
             if dim == 4
                 if NDW == 0
-                    U = thooftFlux_4D_B_at_bndry_mpi(
+                    U = thooftFlux_4D_B_at_bndry_nowing_mpi(
                         NC,
                         Flux,
                         FluxNum,
