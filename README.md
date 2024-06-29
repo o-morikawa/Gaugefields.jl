@@ -465,10 +465,24 @@ end
 
 ## HMC with MPI
 Here, we show the HMC with MPI.
-the REPL and Jupyternotebook can not be used when one wants to use MPI. 
+the REPL and Jupyternotebook can not be used when one wants to use MPI.
+At first, in Julia REPL in the package mode,
+```
+add MPI
+```
+Then,
+```julia
+using MPI
+MPI.install_mpiexecjl()
+```
+and
+```
+export PATH="/<your home path>/.julia/bin/:$PATH"
+```
+
 The command is like:
 ```
-mpirun -np 2 julia exe.jl 1 1 1 2 true
+mpiexecjl -np 2 julia --project="Gaugefields" mpi_sample.jl 1 1 1 2 true
 ```
 ```1 1 1 2``` means ```PEX PEY PEZ PET```. In this case, the time-direction is diveded by 2. 
 
@@ -497,7 +511,7 @@ function calc_action(gauge_action,U,B,p)
 end
 
 function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
-    Δτ = 1/MDsteps
+    Δτ = 1.0/MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action,U,B,p)
     substitute_U!(Uold,U)
@@ -561,7 +575,6 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     Nwing = 0
 
     flux = Flux
-    println("Flux : ", flux)
 
     Random.seed!(123)
 
@@ -572,6 +585,10 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     else
         U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "hot")
         B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+    end
+
+    if get_myrank(U) == 0
+        println("Flux : ", flux)
     end
 
     if get_myrank(U) == 0
