@@ -3276,7 +3276,7 @@ function minusidentityGaugefields_4D_nowing_mpi(
 end
 
 
-function thooftFlux_4D_B_at_bndry_mpi(
+function thooftFlux_4D_B_at_bndry_nowing_mpi(
     NC,
     FLUX,
     FLUXNUM,
