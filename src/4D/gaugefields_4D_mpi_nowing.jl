@@ -2941,6 +2941,37 @@ end
 
 
 
+function LinearAlgebra.tr(
+    a::Gaugefields_4D_nowing_mpi{NC},
+    b::Gaugefields_4D_nowing_mpi{NC},
+) where {NC}
+    NX = a.NX
+    NY = a.NY
+    NZ = a.NZ
+    NT = a.NT
+    PN = a.PN
+
+    s = 0
+    for it = 1:PN[4]
+        for iz = 1:PN[3]
+            for iy = 1:PN[2]
+                for ix = 1:PN[1]
+                    for k = 1:NC
+                        for k2 = 1:NC
+                            s += getvalue(a, k, k2, ix, iy, iz, it) * getvalue(b, k2, k, ix, iy, iz, it)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    s = MPI.Allreduce(s, MPI.SUM, comm)
+
+    #println(3*NT*NZ*NY*NX*NC)
+    return s
+end
+
 
 
 
@@ -2965,7 +2996,7 @@ function LinearAlgebra.tr(a::Gaugefields_4D_nowing_mpi{NC}) where {NC}
         end
     end
 
-    s = MPI.Allreduce(s, MPI.SUM, a.comm)
+    s = MPI.Allreduce(s, MPI.SUM, comm)
 
     #println(3*NT*NZ*NY*NX*NC)
     return s

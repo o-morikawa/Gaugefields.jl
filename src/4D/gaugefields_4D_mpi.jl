@@ -845,6 +845,7 @@ function exptU!(
             end
         end
     end
+    set_wing_U!(uout)
     #error("exptU! is not implemented in type $(typeof(u)) ")
 end
 
@@ -911,6 +912,7 @@ function exptU!(
             end
         end
     end
+    set_wing_U!(uout)
 end
 
 const tinyvalue = 1e-100
@@ -1183,6 +1185,8 @@ function exptU!(
     #mul!(v,w',ww)
     mul!(uout, w', ww)
 
+    set_wing_U!(uout)
+
     #error("exptU! is not implemented in type $(typeof(u)) ")
 end
 # =#
@@ -1283,7 +1287,7 @@ function Traceless_antihermitian!(
         end
     end
 
-
+    set_wing_U!(vout)
 end
 
 
@@ -1328,6 +1332,7 @@ function Traceless_antihermitian!(
         end
     end
 
+    set_wing_U!(vout)
 end
 
 
@@ -1383,7 +1388,7 @@ function Traceless_antihermitian!(
         end
     end
 
-
+    set_wing_U!(vout)
 end
 
 
@@ -1420,7 +1425,7 @@ function Antihermitian!(
         end
     end
 
-
+    set_wing_U!(vout)
 end
 #=
 function Antihermitian!(
@@ -1477,7 +1482,36 @@ end
 
 
 
+function LinearAlgebra.tr(
+    a::Gaugefields_4D_wing_mpi{NC},
+    b::Gaugefields_4D_wing_mpi{NC},
+) where {NC}
+    NX = a.NX
+    NY = a.NY
+    NZ = a.NZ
+    NT = a.NT
+    PN = a.PN
 
+    s = 0
+    for it = 1:PN[4]
+        for iz = 1:PN[3]
+            for iy = 1:PN[2]
+                for ix = 1:PN[1]
+                    for k = 1:NC
+                        for k2 = 1:NC
+                            s += getvalue(a, k, k2, ix, iy, iz, it) * getvalue(b, k2, k, ix, iy, iz, it)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    s = MPI.Allreduce(s, MPI.SUM, comm)
+
+    #println(3*NT*NZ*NY*NX*NC)
+    return s
+end
 
 
 
