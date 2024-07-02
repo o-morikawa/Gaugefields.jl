@@ -2322,10 +2322,10 @@ function exptU!(
     NX = u.NX
     V0 = zeros(ComplexF64, NC, NC)
     V1 = zeros(ComplexF64, NC, NC)
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                for ix = 1:NX
+    for it = 1:u.PN[4]
+        for iz = 1:u.PN[3]
+            for iy = 1:u.PN[2]
+                for ix = 1:u.PN[1]
                     for k2 = 1:NC
                         for k1 = 1:NC
                             @inbounds V0[k1, k2] = im * t * getvalue(u, k1, k2, ix, iy, iz, it)
@@ -2359,10 +2359,10 @@ function exptU!(
     NX = v.NX
 
 
-    @inbounds for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                for ix = 1:NX
+    @inbounds for it = 1:v.PN[4]
+        for iz = 1:v.PN[3]
+            for iy = 1:v.PN[2]
+                for ix = 1:v.PN[1]
                     v11 = getvalue(v, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(v, 2, 2, ix, iy, iz, it)
 
@@ -2431,10 +2431,10 @@ function exptU!(
     NX = v.NX
     #t = 1
 
-    @inbounds for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                for ix = 1:NX
+    @inbounds for it = 1:v.PN[4]
+        for iz = 1:v.PN[3]
+            for iy = 1:v.PN[2]
+                for ix = 1:v.PN[1]
                     v11 = getvalue(v, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(v, 2, 2, ix, iy, iz, it)
                     v33 = getvalue(v, 3, 3, ix, iy, iz, it)
@@ -2726,10 +2726,10 @@ function Traceless_antihermitian!(
     NZ = vin.NZ
     NT = vin.NT
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     v11 = getvalue(vin, 1, 1, ix, iy, iz, it)
                     v21 = getvalue(vin, 2, 1, ix, iy, iz, it)
                     v31 = getvalue(vin, 3, 1, ix, iy, iz, it)
@@ -2814,10 +2814,10 @@ function Traceless_antihermitian!(
     NT = vin.NT
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
 
                     v11 = getvalue(vin, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(vin, 2, 2, ix, iy, iz, it)
@@ -2863,10 +2863,10 @@ function Traceless_antihermitian!(
     NZ = vin.NZ
     NT = vin.NT
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     tri = 0.0
                     @simd for k = 1:NC
                         v = getvalue(vin, k, k, ix, iy, iz, it)
@@ -2883,10 +2883,10 @@ function Traceless_antihermitian!(
     end
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     for k1 = 1:NC
                         @simd for k2 = k1+1:NC
                             v12 = getvalue(vin, k1, k2, ix, iy, iz, it)
@@ -2920,10 +2920,10 @@ function Antihermitian!(
 
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     for k1 = 1:NC
                         #@simd for k2 = k1+1:NC
                         @simd for k2 = k1:NC
@@ -2960,10 +2960,10 @@ function Antihermitian!(
 
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     z11 = getvalue(vin, 1,1,ix,iy,iz,it) - conj(getvalue(vin, 1,1,ix,iy,iz,it) ) 
                     z12 = getvalue(vin, 1,2,ix,iy,iz,it) - conj(getvalue(vin, 2,1,ix,iy,iz,it) ) 
                     z13 = getvalue(vin, 1,3,ix,iy,iz,it) - conj(getvalue(vin, 3,1,ix,iy,iz,it) ) 
