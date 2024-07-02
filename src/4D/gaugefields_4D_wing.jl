@@ -129,6 +129,19 @@ function substitute_U!(
         substitute_U!(a[μ], b[μ])
     end
 end
+function substitute_U!(
+    a::Array{T1,2},
+    b::Array{T2,2},
+) where {T1<:Gaugefields_4D_wing,T2<:Gaugefields_4D_wing}
+    for μ = 1:4
+        for ν = 1:4
+            if μ == ν
+                continue
+            end
+            substitute_U!(a[μ,ν], b[μ,ν])
+        end
+    end
+end
 
 function substitute_U!(
     a::Array{T1,1},
@@ -137,6 +150,20 @@ function substitute_U!(
 ) where {T1<:Gaugefields_4D_wing,T2<:Gaugefields_4D_wing}
     for μ = 1:4
         substitute_U!(a[μ], b[μ], iseven)
+    end
+end
+function substitute_U!(
+    a::Array{T1,2},
+    b::Array{T2,2},
+    iseven,
+) where {T1<:Gaugefields_4D_wing,T2<:Gaugefields_4D_wing}
+    for μ = 1:4
+        for ν = 1:4
+            if μ == ν
+                continue
+            end
+            substitute_U!(a[μ,ν], b[μ,ν], iseven)
+        end
     end
 end
 
@@ -172,6 +199,15 @@ function Base.similar(U::Array{T,1}) where {T<:Gaugefields_4D_wing}
     Uout = Array{T,1}(undef, 4)
     for μ = 1:4
         Uout[μ] = similar(U[μ])
+    end
+    return Uout
+end
+function Base.similar(U::Array{T,2}) where {T<:Gaugefields_4D_wing}
+    Uout = Array{T,2}(undef, 4, 4)
+    for μ = 1:4
+        for ν = 1:4
+            Uout[μ,ν] = similar(U[μ,ν])
+        end
     end
     return Uout
 end

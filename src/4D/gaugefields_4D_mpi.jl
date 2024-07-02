@@ -549,6 +549,19 @@ function substitute_U!(
         substitute_U!(a[μ], b[μ])
     end
 end
+function substitute_U!(
+    a::Array{T1,2},
+    b::Array{T2,2},
+) where {T1<:Gaugefields_4D_wing_mpi,T2<:Gaugefields_4D_wing_mpi}
+    for μ = 1:4
+        for ν = 1:4
+            if μ == ν
+                continue
+            end
+            substitute_U!(a[μ,ν], b[μ,ν])
+        end
+    end
+end
 
 function substitute_U!(
     a::Array{T1,1},
@@ -557,6 +570,20 @@ function substitute_U!(
 ) where {T1<:Gaugefields_4D_wing_mpi,T2<:Gaugefields_4D_wing_mpi}
     for μ = 1:4
         substitute_U!(a[μ], b[μ], iseven)
+    end
+end
+function substitute_U!(
+    a::Array{T1,2},
+    b::Array{T2,2},
+    iseven,
+) where {T1<:Gaugefields_4D_wing_mpi,T2<:Gaugefields_4D_wing_mpi}
+    for μ = 1:4
+        for ν = 1:4
+            if μ == ν
+                continue
+            end
+            substitute_U!(a[μ,ν], b[μ,ν], iseven)
+        end
     end
 end
 
@@ -802,6 +829,15 @@ function Base.similar(U::Array{T,1}) where {T<:Gaugefields_4D_wing_mpi}
     end
     return Uout
 end
+function Base.similar(U::Array{T,2}) where {T<:Gaugefields_4D_wing_mpi}
+    Uout = Array{T,2}(undef, 4, 4)
+    for μ = 1:4
+        for ν = 1:4
+            Uout[μ,ν] = similar(U[μ,ν])
+        end
+    end
+    return Uout
+end
 
 
 
@@ -825,10 +861,10 @@ function exptU!(
     NX = u.NX
     V0 = zeros(ComplexF64, NC, NC)
     V1 = zeros(ComplexF64, NC, NC)
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                for ix = 1:NX
+    for it = 1:u.PN[4]
+        for iz = 1:u.PN[3]
+            for iy = 1:u.PN[2]
+                for ix = 1:u.PN[1]
                     for k2 = 1:NC
                         for k1 = 1:NC
                             @inbounds V0[k1, k2] = im * t * getvalue(u, k1, k2, ix, iy, iz, it)
@@ -863,10 +899,10 @@ function exptU!(
     NX = v.NX
 
 
-    @inbounds for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                for ix = 1:NX
+    @inbounds for it = 1:v.PN[4]
+        for iz = 1:v.PN[3]
+            for iy = 1:v.PN[2]
+                for ix = 1:v.PN[1]
                     v11 = getvalue(v, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(v, 2, 2, ix, iy, iz, it)
 
@@ -903,10 +939,14 @@ function exptU!(
                     a2 = u2 * sR
                     a3 = u3 * sR
 
-                    setvalue!(uout, cos(R) + im * a3, 1, 1, ix, iy, iz, it)
-                    setvalue!(uout, im * a1 + a2,     1, 2, ix, iy, iz, it)
-                    setvalue!(uout, im * a1 - a2,     2, 1, ix, iy, iz, it)
-                    setvalue!(uout, cos(R) - im * a3, 2, 2, ix, iy, iz, it)
+                    v = cos(R) + im * a3
+                    setvalue!(uout, v, 1, 1, ix, iy, iz, it)
+                    v = im * a1 + a2
+                    setvalue!(uout, v, 1, 2, ix, iy, iz, it)
+                    v = im * a1 - a2
+                    setvalue!(uout, v, 2, 1, ix, iy, iz, it)
+                    v = cos(R) - im * a3
+                    setvalue!(uout, v, 2, 2, ix, iy, iz, it)
 
                 end
             end
@@ -936,10 +976,10 @@ function exptU!(
     NX = v.NX
     #t = 1
 
-    @inbounds for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                for ix = 1:NX
+    @inbounds for it = 1:v.PN[4]
+        for iz = 1:v.PN[3]
+            for iy = 1:v.PN[2]
+                for ix = 1:v.PN[1]
                     v11 = getvalue(v, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(v, 2, 2, ix, iy, iz, it)
                     v33 = getvalue(v, 3, 3, ix, iy, iz, it)
@@ -1152,25 +1192,43 @@ function exptU!(
                     ww17 = w17 * c3 - w18 * s3
                     ww18 = w18 * c3 + w17 * s3
 
-                    setvalue!(w, w1 + im * w2  , 1, 1, ix, iy, iz, it)
-                    setvalue!(w, w3 + im * w4  , 1, 2, ix, iy, iz, it)
-                    setvalue!(w, w5 + im * w6  , 1, 3, ix, iy, iz, it)
-                    setvalue!(w, w7 + im * w8  , 2, 1, ix, iy, iz, it)
-                    setvalue!(w, w9 + im * w10 , 2, 2, ix, iy, iz, it)
-                    setvalue!(w, w11 + im * w12, 2, 3, ix, iy, iz, it)
-                    setvalue!(w, w13 + im * w14, 3, 1, ix, iy, iz, it)
-                    setvalue!(w, w15 + im * w16, 3, 2, ix, iy, iz, it)
-                    setvalue!(w, w17 + im * w18, 3, 3, ix, iy, iz, it)
+                    v = w1 + im * w2
+                    setvalue!(w, v, 1, 1, ix, iy, iz, it)
+                    v = w3 + im * w4
+                    setvalue!(w, v, 1, 2, ix, iy, iz, it)
+                    v = w5 + im * w6
+                    setvalue!(w, v, 1, 3, ix, iy, iz, it)
+                    v = w7 + im * w8
+                    setvalue!(w, v, 2, 1, ix, iy, iz, it)
+                    v = w9 + im * w10
+                    setvalue!(w, v, 2, 2, ix, iy, iz, it)
+                    v = w11 + im * w12
+                    setvalue!(w, v, 2, 3, ix, iy, iz, it)
+                    v = w13 + im * w14
+                    setvalue!(w, v, 3, 1, ix, iy, iz, it)
+                    v = w15 + im * w16
+                    setvalue!(w, v, 3, 2, ix, iy, iz, it)
+                    v = w17 + im * w18
+                    setvalue!(w, v, 3, 3, ix, iy, iz, it)
 
-                    setvalue!(ww, ww1 + im * ww2  , 1, 1, ix, iy, iz, it)
-                    setvalue!(ww, ww3 + im * ww4  , 1, 2, ix, iy, iz, it)
-                    setvalue!(ww, ww5 + im * ww6  , 1, 3, ix, iy, iz, it)
-                    setvalue!(ww, ww7 + im * ww8  , 2, 1, ix, iy, iz, it)
-                    setvalue!(ww, ww9 + im * ww10 , 2, 2, ix, iy, iz, it)
-                    setvalue!(ww, ww11 + im * ww12, 2, 3, ix, iy, iz, it)
-                    setvalue!(ww, ww13 + im * ww14, 3, 1, ix, iy, iz, it)
-                    setvalue!(ww, ww15 + im * ww16, 3, 2, ix, iy, iz, it)
-                    setvalue!(ww, ww17 + im * ww18, 3, 3, ix, iy, iz, it)
+                    v = ww1 + im * ww2
+                    setvalue!(ww, v, 1, 1, ix, iy, iz, it)
+                    v = ww3 + im * ww4
+                    setvalue!(ww, v, 1, 2, ix, iy, iz, it)
+                    v = ww5 + im * ww6
+                    setvalue!(ww, v, 1, 3, ix, iy, iz, it)
+                    v = ww7 + im * ww8
+                    setvalue!(ww, v, 2, 1, ix, iy, iz, it)
+                    v = ww9 + im * ww10
+                    setvalue!(ww, v, 2, 2, ix, iy, iz, it)
+                    v = ww11 + im * ww12
+                    setvalue!(ww, v, 2, 3, ix, iy, iz, it)
+                    v = ww13 + im * ww14
+                    setvalue!(ww, v, 3, 1, ix, iy, iz, it)
+                    v = ww15 + im * ww16
+                    setvalue!(ww, v, 3, 2, ix, iy, iz, it)
+                    v = ww17 + im * ww18
+                    setvalue!(ww, v, 3, 3, ix, iy, iz, it)
 
                     #a = ww[:,:,ix,iy,iz,it]
                     #b = w[:,:,ix,iy,iz,it]
@@ -1215,10 +1273,10 @@ function Traceless_antihermitian!(
     NZ = vin.NZ
     NT = vin.NT
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     v11 = getvalue(vin, 1, 1, ix, iy, iz, it)
                     v21 = getvalue(vin, 2, 1, ix, iy, iz, it)
                     v31 = getvalue(vin, 3, 1, ix, iy, iz, it)
@@ -1303,10 +1361,10 @@ function Traceless_antihermitian!(
     NT = vin.NT
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
 
                     v11 = getvalue(vin, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(vin, 2, 2, ix, iy, iz, it)
@@ -1323,10 +1381,14 @@ function Traceless_antihermitian!(
 
                     x21 = -conj(x12)
 
-                    setvalue!(vout, (imag(v11) - tri) * im, 1, 1, ix, iy, iz, it)
-                    setvalue!(vout, 0.5 * x12             , 1, 2, ix, iy, iz, it)
-                    setvalue!(vout, 0.5 * x21             , 2, 1, ix, iy, iz, it)
-                    setvalue!(vout, (imag(v22) - tri) * im, 2, 2, ix, iy, iz, it)
+                    v = (imag(v11) - tri) * im
+                    setvalue!(vout, v, 1, 1, ix, iy, iz, it)
+                    v = 0.5 * x12
+                    setvalue!(vout, v, 1, 2, ix, iy, iz, it)
+                    v = 0.5 * x21
+                    setvalue!(vout, v, 2, 1, ix, iy, iz, it)
+                    v = (imag(v22) - tri) * im
+                    setvalue!(vout, v, 2, 2, ix, iy, iz, it)
                 end
             end
         end
@@ -1349,18 +1411,19 @@ function Traceless_antihermitian!(
     NZ = vin.NZ
     NT = vin.NT
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     tri = 0.0
                     @simd for k = 1:NC
-                        tri += imag(getvalue(vin, k, k, ix, iy, iz, it))
+                        v = getvalue(vin, k, k, ix, iy, iz, it)
+                        tri += imag(v)
                     end
                     tri *= fac1N
                     @simd for k = 1:NC
-                        setvalue!(vout, (imag(getvalue(vin, k, k, ix, iy, iz, it)) - tri) * im, k, k, ix, iy, iz, it)
-                            
+                        v = (imag(getvalue(vin, k, k, ix, iy, iz, it)) - tri) * im
+                        setvalue!(vout, v, k, k, ix, iy, iz, it)
                     end
                 end
             end
@@ -1368,17 +1431,15 @@ function Traceless_antihermitian!(
     end
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     for k1 = 1:NC
                         @simd for k2 = k1+1:NC
-                            vv =
-                                0.5 * (
-                                    getvalue(vin, k1, k2, ix, iy, iz, it) -
-                                    conj(getvalue(vin, k2, k1, ix, iy, iz, it))
-                                )
+                            v12 = getvalue(vin, k1, k2, ix, iy, iz, it)
+                            v21 = getvalue(vin, k2, k1, ix, iy, iz, it)
+                            vv = 0.5 * ( v12 - conj(v21) )
                             setvalue!(vout, vv       , k1, k2, ix, iy, iz, it)
                             setvalue!(vout, -conj(vv), k2, k1, ix, iy, iz, it)
                         end
@@ -1406,14 +1467,15 @@ function Antihermitian!(
 
 
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     for k1 = 1:NC
                         @simd for k2 = k1:NC
-                            vv = getvalue(vin, k1, k2, ix, iy, iz, it) -
-                                    conj(getvalue(vin, k2, k1, ix, iy, iz, it))
+                            v12 = getvalue(vin, k1, k2, ix, iy, iz, it)
+                            v21 = getvalue(vin, k2, k1, ix, iy, iz, it)
+                            vv = v12 - conj(v21)
                             setvalue!(vout, vv*factor, k1, k2, ix, iy, iz, it)
                             if k1 != k2
                                 setvalue!(vout, -conj(vv)*factor, k2, k1, ix, iy, iz, it)

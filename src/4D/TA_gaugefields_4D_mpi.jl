@@ -307,10 +307,10 @@ function Traceless_antihermitian!(
     NZ = vin.NZ
     NT = vin.NT
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     v11 = getvalue(vin, 1, 1, ix, iy, iz, it)
                     v22 = getvalue(vin, 2, 2, ix, iy, iz, it)
                     v33 = getvalue(vin, 3, 3, ix, iy, iz, it)
@@ -385,10 +385,10 @@ function Traceless_antihermitian!(
     NZ = vin.NZ
     NT = vin.NT
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     v11 = vin[1, 1, ix, iy, iz, it]
                     v22 = vin[2, 2, ix, iy, iz, it]
 
@@ -437,28 +437,27 @@ function Traceless_antihermitian!(
     matrix = zeros(ComplexF64, NC, NC)
     a = zeros(ComplexF64, length(g))
 
-    for it = 1:NT
-        for iz = 1:NZ
-            for iy = 1:NY
-                @simd for ix = 1:NX
+    for it = 1:vin.PN[4]
+        for iz = 1:vin.PN[3]
+            for iy = 1:vin.PN[2]
+                @simd for ix = 1:vin.PN[1]
                     tri = 0.0
                     @simd for k = 1:NC
-                        tri += imag(getvalue(vin, k, k, ix, iy, iz, it))
+                        v = getvalue(vin, k, k, ix, iy, iz, it)
+                        tri += imag(v)
                     end
                     tri *= fac1N
                     @simd for k = 1:NC
                         #vout[k,k,ix,iy,iz,it] = (imag(getvalue(vin,k,k,ix,iy,iz,it))-tri)*im
-                        matrix[k, k] =
-                            (imag(getvalue(vin, k, k, ix, iy, iz, it)) - tri) * im
+                        v = getvalue(vin, k, k, ix, iy, iz, it)
+                        matrix[k, k] = (imag(v) - tri) * im
                     end
 
                     for k1 = 1:NC
                         @simd for k2 = k1+1:NC
-                            vv =
-                                0.5 * (
-                                    getvalue(vin, k1, k2, ix, iy, iz, it) -
-                                    conj(getvalue(vin, k2, k1, ix, iy, iz, it))
-                                )
+                            v12 = getvalue(vin, k1, k2, ix, iy, iz, it)
+                            v21 = getvalue(vin, k2, k1, ix, iy, iz, it)
+                            vv = 0.5 * ( v12 - conj(v21) )
                             #vout[k1,k2,ix,iy,iz,it] = vv
                             #vout[k2,k1,ix,iy,iz,it] = -conj(vv)
                             matrix[k1, k2] = vv
@@ -506,22 +505,21 @@ function Traceless_antihermitian_add!(
                 @simd for ix = 1:vin.PN[1]
                     tri = 0.0
                     @simd for k = 1:NC
-                        tri += imag(getvalue(vin, k, k, ix, iy, iz, it))
+                        v = getvalue(vin, k, k, ix, iy, iz, it)
+                        tri += imag(v)
                     end
                     tri *= fac1N
                     @simd for k = 1:NC
                         #vout[k,k,ix,iy,iz,it] = (imag(getvalue(vin,k,k,ix,iy,iz,it))-tri)*im
-                        matrix[k, k] =
-                            (imag(getvalue(vin, k, k, ix, iy, iz, it)) - tri) * im
+                        v = getvalue(vin, k, k, ix, iy, iz, it)
+                        matrix[k, k] = (imag(v) - tri) * im
                     end
 
                     for k1 = 1:NC
                         @simd for k2 = k1+1:NC
-                            vv =
-                                0.5 * (
-                                    getvalue(vin, k1, k2, ix, iy, iz, it) -
-                                    conj(getvalue(vin, k2, k1, ix, iy, iz, it))
-                                )
+                            v12 = getvalue(vin, k1, k2, ix, iy, iz, it)
+                            v21 = getvalue(vin, k2, k1, ix, iy, iz, it)
+                            vv = 0.5 * ( v12 - conj(v21) )
                             #vout[k1,k2,ix,iy,iz,it] = vv
                             #vout[k2,k1,ix,iy,iz,it] = -conj(vv)
                             matrix[k1, k2] = vv
