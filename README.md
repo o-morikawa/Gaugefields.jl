@@ -22,7 +22,7 @@ O.M. would like to thank Yuki Nagai and Akio Tomiya (the contributors of the ori
 This package has following functionarities
 
 - SU(Nc) (Nc > 1) gauge fields in 2 or 4 dimensions with arbitrary actions.
-- **Z(Nc) 2-form gauge fields in 4 dimensions, which are non-dynamical and given as 't Hooft flux.**
+- **Z(Nc) 2-form gauge fields in 4 dimensions, which are given as 't Hooft flux.**
 - U(1) gauge fields in 2 dimensions with arbitrary actions. 
 - Configuration generation
     - Heatbath
@@ -118,6 +118,25 @@ filename = "hoge.ildg"
 save_binarydata(U,filename)
 ```
 
+## Text format for Bridge++
+Gaugefields.jl also supports a text format for [Bridge++](https://bridge.kek.jp/Lattice-code/index_e.html). 
+
+### File loading
+
+```julia
+using Gaugefields
+
+filename = "testconf.txt"
+load_BridgeText!(filename,U,L,NC)
+```
+
+### File saving
+
+```julia
+filename = "testconf.txt"
+save_textdata(U,filename)
+```
+
 ## Format for Z(N) 2-form gauge fields
 
 SU(N) gauge fields possess Z(N) center symmetry,
@@ -182,6 +201,7 @@ We can do the HMC simulations. The example code is as follows.
 
 using Random
 using Gaugefields
+using Wilsonloop
 using LinearAlgebra
 
 function calc_action(gauge_action,U,B,p)
@@ -334,6 +354,193 @@ function main()
     Flux = [0,0,1,1,0,0]
     #HMC_test_4D(NX,NY,NZ,NT,NC,β)
     HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
+end
+main()
+```
+
+## Hybrid Monte Carlo with dynamical B fields
+HMC simulations with dynamical B fields are as follows:
+```julia
+
+using Random
+using Gaugefields
+using Wilsonloop
+using LinearAlgebra
+
+function calc_action(gauge_action,U,B,p)
+    NC = U[1].NC
+    Sg = -evaluate_GaugeAction(gauge_action,U,B)/NC
+    Sp = p*p/2
+    S = Sp + Sg
+    return real(S)
+end
+
+function MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold)
+    Δτ = 1.0/MDsteps
+    gauss_distribution!(p)
+    Sold = calc_action(gauge_action,U,B,p)
+    substitute_U!(Uold,U)
+    substitute_U!(Bold,B)
+    flux_old = deepcopy(flux)
+
+    Flux_update!(B,flux)
+
+    for itrj=1:MDsteps
+        U_update!(U,p,0.5,Δτ,Dim,gauge_action)
+
+        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
+
+        U_update!(U,p,0.5,Δτ,Dim,gauge_action)
+    end
+    Snew = calc_action(gauge_action,U,B,p)
+    println("Sold = $Sold, Snew = $Snew")
+    println("Snew - Sold = $(Snew-Sold)")
+    ratio = min(1,exp(-Snew+Sold)) # bug is fixed
+    if rand() > ratio
+        substitute_U!(U,Uold)
+        substitute_U!(B,Bold)
+        flux = deepcopy(flux_old)
+        return false
+    else
+        return true
+    end
+end
+
+function Flux_update!(B,flux)
+    NC  = B[1,1].NC
+    NDW = B[1,1].NDW
+    NX  = B[1,1].NX
+    NY  = B[1,1].NY
+    NZ  = B[1,1].NZ
+    NT  = B[1,1].NT
+
+    i = rand(1:6)
+    flux[i] += rand(-1:1)
+    flux[i] %= NC
+    flux[i] += (flux[i] < 0) ? NC : 0
+#    flux = rand(0:NC-1,6)
+    B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
+
+end
+
+function U_update!(U,p,ϵ,Δτ,Dim,gauge_action)
+    temps = get_temporary_gaugefields(gauge_action)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    expU = temps[3]
+    W = temps[4]
+
+    for μ=1:Dim
+        exptU!(expU,ϵ*Δτ,p[μ],[temp1,temp2])
+        mul!(W,expU,U[μ])
+        substitute_U!(U[μ],W)
+        
+    end
+end
+
+function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
+    NC = U[1].NC
+    temp  = gauge_action._temp_U[end]
+    dSdUμ = similar(U[1])
+    factor =  -ϵ*Δτ/(NC)
+
+    for μ=1:Dim
+        calc_dSdUμ!(dSdUμ,gauge_action,μ,U,B)
+        mul!(temp,U[μ],dSdUμ) # U*dSdUμ
+        Traceless_antihermitian_add!(p[μ],factor,temp)
+    end
+end
+
+
+function HMC_test_4D_Bfields(NX,NY,NZ,NT,NC,β)
+    Dim = 4
+    Nwing = 0
+
+    Random.seed!(123)
+
+    flux = rand(0:NC-1,6)
+    println("Flux : ", flux)
+
+
+    U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
+    B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+
+    temp1 = similar(U[1])
+    temp2 = similar(U[1])
+
+    if Dim == 4
+        comb = 6 #4*3/2
+    elseif Dim == 3
+        comb = 3
+    elseif Dim == 2
+        comb = 1
+    else
+        error("dimension $Dim is not supported")
+    end
+
+    factor = 1/(comb*U[1].NV*U[1].NC)
+
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
+    println("0 plaq_t = $plaq_t")
+    poly = calculate_Polyakov_loop(U,temp1,temp2) 
+    println("0 polyakov loop = $(real(poly)) $(imag(poly))")
+
+    gauge_action = GaugeAction(U,B)
+    plaqloop = make_loops_fromname("plaquette")
+    append!(plaqloop,plaqloop')
+    β = β/2
+    push!(gauge_action,β,plaqloop)
+    
+    #show(gauge_action)
+
+    p = initialize_TA_Gaugefields(U) #This is a traceless-antihermitian gauge fields. This has NC^2-1 real coefficients. 
+    Uold = similar(U)
+    substitute_U!(Uold,U)
+    Bold = deepcopy(B)
+
+    MDsteps = 50
+    temp1 = similar(U[1])
+    temp2 = similar(U[1])
+    comb = 6
+    factor = 1/(comb*U[1].NV*U[1].NC)
+    numaccepted = 0
+
+    numtrj = 100
+    for itrj = 1:numtrj
+        t = @timed begin
+            accepted = MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold)
+        end
+        if get_myrank(U) == 0
+             println("Flux : ", flux)
+#            println("elapsed time for MDsteps: $(t.time) [s]")
+        end
+        numaccepted += ifelse(accepted,1,0)
+
+        #plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
+        #println("$itrj plaq_t = $plaq_t")
+        
+        if itrj % 10 == 0
+            @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
+            println("$itrj plaq_t = $plaq_t")
+            poly = calculate_Polyakov_loop(U,temp1,temp2)
+            println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
+            println("acceptance ratio ",numaccepted/itrj)
+        end
+
+    end
+    return plaq_t,numaccepted/numtrj
+
+end
+
+
+function main()
+    β = 5.7
+    NX = 4
+    NY = 4
+    NZ = 4
+    NT = 4
+    NC = 3
+    HMC_test_4D_Bfields(NX,NY,NZ,NT,NC,β)
 end
 main()
 ```
@@ -491,6 +698,7 @@ The sample code is written as
 
 using Random
 using Gaugefields
+using Wilsonloop
 using LinearAlgebra
 using MPI
 
