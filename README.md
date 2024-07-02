@@ -367,7 +367,7 @@ function MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold)
     if rand() > ratio
         substitute_U!(U,Uold)
         substitute_U!(B,Bold)
-        flux = deepcopy(flux_old)
+        flux[:] = flux_old[:]
         return false
     else
         return true
