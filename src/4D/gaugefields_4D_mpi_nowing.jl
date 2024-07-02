@@ -2292,6 +2292,9 @@ function Base.similar(U::Array{T,2}) where {T<:Gaugefields_4D_nowing_mpi}
     Uout = Array{T,2}(undef, 4, 4)
     for μ = 1:4
         for ν = 1:4
+            if μ == ν
+                continue
+            end
             Uout[μ,ν] = similar(U[μ,ν])
         end
     end
