@@ -2724,12 +2724,12 @@ function construct_staple!(
         end
 
         U1 = U[ν]
-        mul!(U1, U[ν], B[μ,ν])
-        # if μ < ν
-        #     mul!(U1, U[ν], B[μ,ν])
-        # else
-        #     mul!(U1, U[ν], B[ν,μ])
-        # end
+        # mul!(U1, U[ν], B[μ,ν]')
+        if μ < ν
+            mul!(U1, U[ν], B[μ,ν]')
+        else
+            mul!(U1, U[ν], B[μ,ν])
+        end
         U2 = shift_U(U[μ], ν)
         mul!(U1U2, U1, U2)
 
