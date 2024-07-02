@@ -76,7 +76,7 @@ Please see the orginal docs in [Gaugefields.jl](https://github.com/akio-tomiya/G
 Basically, you can use this package in a same way as the original code
 if the argument of any function, (..., U, ...), is rewritten by (..., U, B, ...).
 
-## File loading
+# Generating configurations and File loading
 ## ILDG format for SU(N) guage fields
 [ILDG](https://www-zeuthen.desy.de/~pleiter/ildg/ildg-file-format-1.1.pdf) format is one of standard formats for LatticeQCD configurations.
 
@@ -137,7 +137,7 @@ filename = "testconf.txt"
 save_textdata(U,filename)
 ```
 
-## Format for Z(N) 2-form gauge fields
+## Z(N) 2-form gauge fields
 
 SU(N) gauge fields possess Z(N) center symmetry,
 which is called 1-form global symmetry, a type of generalized symmetry.
@@ -162,40 +162,8 @@ println("Initial conf of B at [1,2][2,2,:,:,NZ,NT]")
 display(B1[1,2][2,2,:,:,NZ,NT])
 ```
 
-## Gradient flow
-We can use Lüscher's gradient flow.
-
-```julia
-NX = 4
-NY = 4
-NZ = 4
-NT = 4
-Nwing = 0
-NC = 3
-
-flux=[1,0,0,0,0,1] # FLUX=[Z12,Z13,Z14,Z23,Z24,Z34]
-
-U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "hot")
-B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NY,condition = "tflux")
-
-temp1 = similar(U[1])
-temp2 = similar(U[1])
-
-comb = 6
-factor = 1/(comb*U[1].NV*U[1].NC)
-
-g = Gradientflow(U, B)
-for itrj=1:100
-    flow!(U,B,g)
-    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
-    println("$itrj plaq_t = $plaq_t")
-    poly = calculate_Polyakov_loop(U,temp1,temp2) 
-    println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
-end
-
-```
-
-## Hybrid Monte Carlo
+# Hybrid Monte Carlo
+## Non-dynamical higher-form gauge fields
 We can do the HMC simulations. The example code is as follows.
 ```julia
 
@@ -358,7 +326,7 @@ end
 main()
 ```
 
-## Hybrid Monte Carlo with dynamical B fields
+## Dynamical higher-form gauge fields
 HMC simulations with dynamical B fields are as follows:
 ```julia
 
@@ -545,6 +513,40 @@ end
 main()
 ```
 
+# Gradient flow
+## A simple case
+We can use Lüscher's gradient flow.
+
+```julia
+NX = 4
+NY = 4
+NZ = 4
+NT = 4
+Nwing = 0
+NC = 3
+
+flux=[1,0,0,0,0,1] # FLUX=[Z12,Z13,Z14,Z23,Z24,Z34]
+
+U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "hot")
+B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NY,condition = "tflux")
+
+temp1 = similar(U[1])
+temp2 = similar(U[1])
+
+comb = 6
+factor = 1/(comb*U[1].NV*U[1].NC)
+
+g = Gradientflow(U, B)
+for itrj=1:100
+    flow!(U,B,g)
+    @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
+    println("$itrj plaq_t = $plaq_t")
+    poly = calculate_Polyakov_loop(U,temp1,temp2) 
+    println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
+end
+
+```
+
 ## Gradient flow with general terms
 We can do the gradient flow with general terms with the use of Wilsonloop.jl, which is shown below.
 The coefficient of the action can be complex. The complex conjugate of the action defined here is added automatically to make the total action hermitian.   
@@ -670,7 +672,7 @@ println("4D system")
 end
 ```
 
-## HMC with MPI
+# HMC with MPI (work in progress)
 Here, we show the HMC with MPI.
 the REPL and Jupyternotebook can not be used when one wants to use MPI.
 At first, in Julia REPL in the package mode,
@@ -1340,7 +1342,7 @@ We can calculate the topological charge as
 ```Qimproved= calculate_topological_charge_improved(U,B,temp_UμνTA,Qclover,temps[1:6])```.
 
 
-# How to calculate derivatives
+# Appendix: How to calculate derivatives
 We can easily calculate the matrix derivative of the actions. The matrix derivative is defined as 
 
 ```math
