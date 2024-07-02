@@ -375,12 +375,12 @@ function MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold)
 end
 
 function Flux_update!(B,flux)
-    NC  = B[1,1].NC
-    NDW = B[1,1].NDW
-    NX  = B[1,1].NX
-    NY  = B[1,1].NY
-    NZ  = B[1,1].NZ
-    NT  = B[1,1].NT
+    NC  = B[1,2].NC
+    NDW = B[1,2].NDW
+    NX  = B[1,2].NX
+    NY  = B[1,2].NY
+    NZ  = B[1,2].NZ
+    NT  = B[1,2].NT
 
     i = rand(1:6)
     flux[i] += rand(-1:1)
