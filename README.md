@@ -420,18 +420,20 @@ function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
 end
 
 
-function HMC_test_4D_Bfields(NX,NY,NZ,NT,NC,β)
+function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
     Dim = 4
     Nwing = 0
 
     Random.seed!(123)
 
-    flux = rand(0:NC-1,6)
-    println("Flux : ", flux)
-
+    flux = [2,1,1,0,0,1]
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
     B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+
+    L = [NX,NY,NZ,NT]
+    filename = "test/confs/U_beta6.0_L8_F211001_2000.txt"
+    load_BridgeText!(filename,U,L,NC)
 
     temp1 = similar(U[1])
     temp2 = similar(U[1])
@@ -508,7 +510,7 @@ function main()
     NZ = 4
     NT = 4
     NC = 3
-    HMC_test_4D_Bfields(NX,NY,NZ,NT,NC,β)
+    HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
 end
 main()
 ```
