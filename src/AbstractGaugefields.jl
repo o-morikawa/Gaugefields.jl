@@ -2679,7 +2679,7 @@ function construct_staple!(
                 x+nu temp2
                 .---------.
                 I         I
-        temp1 I         I
+          temp1 I         I
                 I         I
                 .         .
                 x        x+mu
