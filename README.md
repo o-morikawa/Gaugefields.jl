@@ -426,13 +426,13 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
 
     Random.seed!(123)
 
-    flux = [2,1,1,0,0,1]
+    flux = [1,1,1,1,2,0]
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
     B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
 
     L = [NX,NY,NZ,NT]
-    filename = "test/confs/U_beta6.0_L8_F211001_2000.txt"
+    filename = "test/confs/U_beta6.0_L8_F111120_4000.txt"
     load_BridgeText!(filename,U,L,NC)
 
     temp1 = similar(U[1])
@@ -504,11 +504,11 @@ end
 
 
 function main()
-    β = 5.7
-    NX = 4
-    NY = 4
-    NZ = 4
-    NT = 4
+    β = 6.0
+    NX = 8
+    NY = 8
+    NZ = 8
+    NT = 8
     NC = 3
     HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
 end
