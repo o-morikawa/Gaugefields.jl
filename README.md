@@ -738,7 +738,7 @@ function calc_action(gauge_action,U,B,p)
     return real(S)
 end
 
-function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
+function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold,temp1,temp2)
     Δτ = 1.0/MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action,U,B,p)
@@ -747,7 +747,7 @@ function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
     for itrj=1:MDsteps
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
+        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action,temp1,temp2)
 
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
     end
@@ -785,11 +785,11 @@ function U_update!(U,p,ϵ,Δτ,Dim,gauge_action)
     end
 end
 
-function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
+function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*U*dSdUμ
     NC = U[1].NC
-    temp  = gauge_action._temp_U[end]
-    dSdUμ = similar(U[1])
-    factor =  -ϵ*Δτ/(NC)
+    temp  = temp1
+    dSdUμ = temp2
+    factor = -ϵ*Δτ/(NC)
 
     for μ=1:Dim
         calc_dSdUμ!(dSdUμ,gauge_action,μ,U,B)
@@ -868,7 +868,7 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     numtrj = 100
     for itrj = 1:numtrj
         t = @timed begin
-            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
+            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold,temp1,temp2)
         end
         if get_myrank(U) == 0
             println("elapsed time for MDsteps: $(t.time) [s]")
