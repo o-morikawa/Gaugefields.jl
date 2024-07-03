@@ -774,88 +774,91 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
             println("acceptance ratio ",numaccepted/itrj)
         end
 
-###############
-
         if itrj % 50 == 0
-
-            flow_number = 10
-
-            dt = 0.1
-
-            #    flow_times = dt:dt:flow_number*dt
-
-            substitute_U!(U_copy,U)
-            substitute_U!(B_copy,B)
-
-            topo_values_plaq = []
-            topo_values_clover = []
-            topo_values_improved = []
-
-            for μ=1:Dim
-                for ν=1:Dim
-                    temp_UμνTA[μ,ν] = similar(U_copy[1])
-                end
-            end
-
-            #Plaquette term
-            loops_p = Wilsonline{Dim}[]
-            for μ=1:Dim
-                for ν=μ:Dim
-                    if ν == μ
-                        continue
-                    end
-                    loop1 = Wilsonline([(μ,1),(ν,1),(μ,-1),(ν,-1)],Dim = Dim)
-                    push!(loops_p,loop1)
-                end
-            end
-
-            #Rectangular term
-            loops = Wilsonline{Dim}[]
-            for μ=1:Dim
-                for ν=μ:Dim
-                    if ν == μ
-                        continue
-                    end
-                    loop1 = Wilsonline([(μ,1),(ν,2),(μ,-1),(ν,-2)],Dim = Dim)
-                    push!(loops,loop1)
-                    loop1 = Wilsonline([(μ,2),(ν,1),(μ,-2),(ν,-1)],Dim = Dim)
-        
-                    push!(loops,loop1)
-                end
-            end
-
-            listloops = [loops_p,loops]
-            listvalues = [1+im,0.1]
-
-            g = Gradientflow_general(U_copy,B_copy,listloops,listvalues,eps = dt)
-
-            Qplaq = 0.0
-            Qclover = 0.0
-            Qimproved = 0.0
-
-            for iflow=1:flow_number
-                flow!(U_copy, B_copy, g)
-                if iflow % 10 == 0
- 
-                    Qplaq = calculate_topological_charge_plaq(U_copy,B_copy,temp_UμνTA,[temp1,temp2,temp3,temp4,temp5,temp6])
-                    Qclover = calculate_topological_charge_clover(U_copy,B_copy,temp_UμνTA,[temp1,temp2,temp3,temp4,temp5,temp6])
-                    Qimproved= calculate_topological_charge_improved(U_copy,B_copy,temp_UμνTA,Qclover,[temp1,temp2,temp3,temp4,temp5,temp6])
-                    println("$itrj $(NC*Qplaq) $(NC*Qclover) $(NC*Qimproved) # itrj NC*Qplaq NC*Qclover NC*Qimproved ")  
-                    push!(topo_values_plaq, Qplaq)
-                    push!(topo_values_clover, Qclover)
-                    push!(topo_values_improved, Qimproved)
-
-                end
-            end
-
+            calc_fracQ_gradflow!(U_copy,B_copy,U,B,temp_UμνTA,[temp1,temp2,temp3,temp4,temp5,temp6])
         end
-###########
 
     end
     return plaq_t,numaccepted/numtrj
 
 end
 
+
+function calc_fracQ_gradflow!(U_copy,B_copy,U,B,temp_UμνTA,temps)
+    Dim = 4
+    NC = U[1].NC
+
+    flow_number = 10
+
+    dt = 0.1
+
+    #    flow_times = dt:dt:flow_number*dt
+
+    substitute_U!(U_copy,U)
+    substitute_U!(B_copy,B)
+
+    topo_values_plaq = []
+    topo_values_clover = []
+    topo_values_improved = []
+
+    for μ=1:Dim
+        for ν=1:Dim
+            temp_UμνTA[μ,ν] = similar(U_copy[1])
+        end
+    end
+
+    #Plaquette term
+    loops_p = Wilsonline{Dim}[]
+    for μ=1:Dim
+        for ν=μ:Dim
+            if ν == μ
+                continue
+            end
+            loop1 = Wilsonline([(μ,1),(ν,1),(μ,-1),(ν,-1)],Dim = Dim)
+            push!(loops_p,loop1)
+        end
+    end
+
+    #Rectangular term
+    loops = Wilsonline{Dim}[]
+    for μ=1:Dim
+        for ν=μ:Dim
+            if ν == μ
+                continue
+            end
+            loop1 = Wilsonline([(μ,1),(ν,2),(μ,-1),(ν,-2)],Dim = Dim)
+            push!(loops,loop1)
+            loop1 = Wilsonline([(μ,2),(ν,1),(μ,-2),(ν,-1)],Dim = Dim)
+            
+            push!(loops,loop1)
+        end
+    end
+
+    listloops = [loops_p,loops]
+    listvalues = [1+im,0.1]
+
+    g = Gradientflow_general(U_copy,B_copy,listloops,listvalues,eps = dt)
+
+    Qplaq = 0.0
+    Qclover = 0.0
+    Qimproved = 0.0
+
+    for iflow=1:flow_number
+        flow!(U_copy, B_copy, g)
+        if iflow % 10 == 0
+            
+            Qplaq = calculate_topological_charge_plaq(U_copy,B_copy,temp_UμνTA,temps)
+            Qclover = calculate_topological_charge_clover(U_copy,B_copy,temp_UμνTA,temps)
+            Qimproved= calculate_topological_charge_improved(U_copy,B_copy,temp_UμνTA,Qclover,temps)
+            println("$(flow_number*dt) $(NC*Qplaq) $(NC*Qclover) $(NC*Qimproved) # t NC*Qplaq NC*Qclover NC*Qimproved ")
+            
+            push!(topo_values_plaq, Qplaq)
+            push!(topo_values_clover, Qclover)
+            push!(topo_values_improved, Qimproved)
+        end
+    end
+    return topo_values_plaq, topo_values_clover, topo_values_improved
+end
 
 
 function main()
