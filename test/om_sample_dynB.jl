@@ -60,7 +60,7 @@ function Flux_update!(B,flux)
 
     i = rand(1:6)
     flux[i] += rand(-1:1)
-    flux[i] = flux[i] % NC
+    flux[i] %= NC
     flux[i] += (flux[i] < 0) ? NC : 0
 #    flux = rand(0:NC-1,6)
     B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
