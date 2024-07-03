@@ -180,7 +180,7 @@ function calc_action(gauge_action,U,B,p)
     return real(S)
 end
 
-function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
+function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold,temp1,temp2)
     Δτ = 1.0/MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action,U,B,p)
@@ -189,7 +189,7 @@ function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
     for itrj=1:MDsteps
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
+        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action,temp1,temp2)
 
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
     end
@@ -220,10 +220,10 @@ function U_update!(U,p,ϵ,Δτ,Dim,gauge_action)
     end
 end
 
-function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
+function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*U*dSdUμ
     NC = U[1].NC
-    temp  = gauge_action._temp_U[end]
-    dSdUμ = similar(U[1])
+    temp  = temp1
+    dSdUμ = temp2
     factor =  -ϵ*Δτ/(NC)
 
     for μ=1:Dim
@@ -288,7 +288,7 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     numtrj = 100
     for itrj = 1:numtrj
         t = @timed begin
-            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
+            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold,temp1,temp2)
         end
         if get_myrank(U) == 0
 #            println("elapsed time for MDsteps: $(t.time) [s]")
@@ -343,20 +343,20 @@ function calc_action(gauge_action,U,B,p)
     return real(S)
 end
 
-function MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold)
+function MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temp1,temp2)
     Δτ = 1.0/MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action,U,B,p)
     substitute_U!(Uold,U)
     substitute_U!(Bold,B)
-    flux_old = deepcopy(flux)
+    flux_old[:] = flux[:]
 
     Flux_update!(B,flux)
 
     for itrj=1:MDsteps
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
+        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action,temp1,temp2)
 
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
     end
@@ -386,7 +386,7 @@ function Flux_update!(B,flux)
     flux[i] += rand(-1:1)
     flux[i] %= NC
     flux[i] += (flux[i] < 0) ? NC : 0
-#    flux = rand(0:NC-1,6)
+#    flux[:] = rand(0:NC-1,6)
     B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
 
 end
@@ -406,10 +406,10 @@ function U_update!(U,p,ϵ,Δτ,Dim,gauge_action)
     end
 end
 
-function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
+function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*U*dSdUμ
     NC = U[1].NC
-    temp  = gauge_action._temp_U[end]
-    dSdUμ = similar(U[1])
+    temp  = temp1
+    dSdUμ = temp2
     factor =  -ϵ*Δτ/(NC)
 
     for μ=1:Dim
@@ -463,10 +463,13 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
     
     #show(gauge_action)
 
-    p = initialize_TA_Gaugefields(U) #This is a traceless-antihermitian gauge fields. This has NC^2-1 real coefficients. 
+    p = initialize_TA_Gaugefields(U) #This is a traceless-antihermitian gauge fields. This has NC^2-1 real coefficients.
+
     Uold = similar(U)
     substitute_U!(Uold,U)
-    Bold = deepcopy(B)
+    Bold = similar(B)
+    substitute_U!(Bold,B)
+    flux_old = zeros(Int, 6)
 
     MDsteps = 50
     temp1 = similar(U[1])
@@ -478,7 +481,20 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
     numtrj = 100
     for itrj = 1:numtrj
         t = @timed begin
-            accepted = MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold)
+            accepted = MDstep!(
+                gauge_action,
+                U,
+                B,
+                flux,
+                p,
+                MDsteps,
+                Dim,
+                Uold,
+                Bold,
+                flux_old,
+                temp1,
+                temp2
+            )
         end
         if get_myrank(U) == 0
              println("Flux : ", flux)
