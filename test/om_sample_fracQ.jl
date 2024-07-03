@@ -544,6 +544,12 @@ function HMC_test_4D(NX,NY,NZ,NT,NC,β)
     temp1 = similar(U[1])
     temp2 = similar(U[1])
 
+    ## for gradient flow
+    temp3 = similar(U[1])
+    temp_UμνTA= Matrix{typeof(U_copy[1])}(undef,Dim,Dim)
+
+    U_copy = similar(U)
+
     if Dim == 4
         comb = 6 #4*3/2
     elseif Dim == 3
@@ -611,21 +617,12 @@ function HMC_test_4D(NX,NY,NZ,NT,NC,β)
 
             #    flow_times = dt:dt:flow_number*dt
 
-            U_copy = deepcopy(U)
-
-            temp1 = []
-            temp2 = []
-            temp3 = []
-        
-            temp1 = similar(U_copy[1])
-            temp2 = similar(U_copy[1])
-            temp3 = similar(U_copy[1])
+            substitute_U!(U_copy,U)
 
             topo_values_plaq = []
             topo_values_clover = []
             topo_values_improved = []
 
-            temp_UμνTA= Matrix{typeof(U_copy[1])}(undef,Dim,Dim)
             for μ=1:Dim
                 for ν=1:Dim
                     temp_UμνTA[μ,ν] = similar(U_copy[1])
@@ -710,6 +707,16 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     temp1 = similar(U[1])
     temp2 = similar(U[1])
 
+    ## for gradien flow
+    temp3 = similar(U[1])
+    temp4 = similar(U[1])
+    temp5 = similar(U[1])
+    temp6 = similar(U[1])
+    temp_UμνTA= Matrix{typeof(U[1])}(undef,Dim,Dim)
+
+    U_copy = similar(U)
+    B_copy = similar(B)
+
     if Dim == 4
         comb = 6 #4*3/2
     elseif Dim == 3
@@ -749,7 +756,7 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 
     for itrj = 1:numtrj
         t = @timed begin
-            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
+            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold,temp1,temp2)
         end
         if get_myrank(U) == 0
 #            println("elapsed time for MDsteps: $(t.time) [s]")
@@ -777,28 +784,13 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 
             #    flow_times = dt:dt:flow_number*dt
 
-            U_copy = deepcopy(U)
-            B_copy = deepcopy(B)
-
-            temp1 = []
-            temp2 = []
-            temp3 = []
-            temp4 = []
-            temp5 = []
-            temp6 = []
-        
-            temp1 = similar(U_copy[1])
-            temp2 = similar(U_copy[1])
-            temp3 = similar(U_copy[1])
-            temp4 = similar(U_copy[1])
-            temp5 = similar(U_copy[1])
-            temp6 = similar(U_copy[1])
+            substitute_U!(U_copy,U)
+            substitute_U!(B_copy,B)
 
             topo_values_plaq = []
             topo_values_clover = []
             topo_values_improved = []
 
-            temp_UμνTA= Matrix{typeof(U_copy[1])}(undef,Dim,Dim)
             for μ=1:Dim
                 for ν=1:Dim
                     temp_UμνTA[μ,ν] = similar(U_copy[1])
@@ -878,6 +870,3 @@ function main()
     HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 end
 main()
-
-
-
