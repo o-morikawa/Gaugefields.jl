@@ -690,7 +690,7 @@ println("4D system")
 end
 ```
 
-# HMC with MPI (work in progress)
+# HMC with MPI
 Here, we show the HMC with MPI.
 the REPL and Jupyternotebook can not be used when one wants to use MPI.
 At first, in Julia REPL in the package mode,
