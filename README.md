@@ -37,6 +37,7 @@ This package has following functionarities
     - **Gradient flow for SU(Nc)/Z(Nc) gauge theory**
 - I/O: ILDG and Bridge++ formats are supported ([c-lime](https://usqcd-software.github.io/c-lime/) will be installed implicitly with [CLIME_jll](https://github.com/JuliaBinaryWrappers/CLIME_jll.jl) )
 - MPI parallel computation (experimental. See documents.)
+    - **quenched HMC with MPI being subject to 't Hooft twisted b.c.**
 
 **The implementation of higher-form gauge fields is based on
 [arXiv:2303.10977 [hep-lat]](https://arxiv.org/abs/2303.10977).**
