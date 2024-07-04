@@ -27,7 +27,14 @@ This package has following functionarities
 - Configuration generation
     - Heatbath
     - quenched Hybrid Monte Carlo
+    - **quenched Hybrid Monte Carlo being subject to 't Hooft twisted b.c.**
+        - **with external (non-dynamical) Z(Nc) 2-form gauge fields**
+    - **quenched Hybrid Monte Carlo for SU(Nc)/Z(Nc) gauge theory**
+        - **with dynamical Z(Nc) 2-form gauge fields**
 - Gradient flow via RK3
+    - Yang-Mills gradient flow
+    - **Yang-Mills gradient flow being subject to 't Hooft twisted b.c.**
+    - **Gradient flow for SU(Nc)/Z(Nc) gauge theory**
 - I/O: ILDG and Bridge++ formats are supported ([c-lime](https://usqcd-software.github.io/c-lime/) will be installed implicitly with [CLIME_jll](https://github.com/JuliaBinaryWrappers/CLIME_jll.jl) )
 - MPI parallel computation (experimental. See documents.)
 
