@@ -53,10 +53,22 @@ Autograd can be worked for general Wilson lines except for ones have overlaps.
 
 # Install
 
+```
+add Wilsonloop
+add https://github.com/o-morikawa/Gaugefields.jl.git
+```
+
+## Development mode
 This is a non-official package in Julia,
 and you are recommended to use it as a develop (dev) package
 if there's a possibility that you use the original Gaugefields.jl package
 or modify it.
+
+To install the oringinal package,
+in Julia REPL in the package mode,
+```
+add Gaugefields.jl
+```
 
 Download the code locally, then in Julia REPL in the package mode,
 ```
@@ -72,11 +84,6 @@ or, when in command line,
 julia --project="Gaugefields" test.jl
 ```
 
-(To install the oringinal one)
-In Julia REPL in the package mode,
-```
-add Gaugefields.jl
-```
 
 # How to use
 
