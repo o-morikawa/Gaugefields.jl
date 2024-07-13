@@ -119,7 +119,7 @@ function HMC_test_4D_dynamicalB(
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
 
-    #filename = "U_beta6.0_L8_F111120_4000.txt"
+    ##filename = "U_beta6.0_L8_F111120_4000.txt"
     if !isdir("confs")
         Base.run(`mkdir confs`)
         isInitial = true
@@ -168,9 +168,9 @@ function HMC_test_4D_dynamicalB(
     factor = 1/(comb*U[1].NV*U[1].NC)
 
     @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
-    println("0 plaq_t = $plaq_t")
+    println("$strtrj plaq_t = $plaq_t")
 #    poly = calculate_Polyakov_loop(U,temp1,temp2) 
-#    println("0 polyakov loop = $(real(poly)) $(imag(poly))")
+#    println("$strtrj polyakov loop = $(real(poly)) $(imag(poly))")
 
     gauge_action = GaugeAction(U,B)
     plaqloop = make_loops_fromname("plaquette")
