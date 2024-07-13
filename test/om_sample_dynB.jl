@@ -95,7 +95,7 @@ function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*
     end
 end
 
-function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β;isInitial=true)
+function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β;isInitial=true,num_τ=2000)
 
     Dim = 4
     Nwing = 0
@@ -171,7 +171,7 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β;isInitial=true)
     factor = 1/(comb*U[1].NV*U[1].NC)
     numaccepted = 0
 
-    numtrj = 2000 + strtrj
+    numtrj = num_τ + strtrj
 
     for itrj = (strtrj+1):numtrj
 
@@ -228,7 +228,7 @@ function main()
     NZ = 8
     NT = 8
     NC = 3
-    HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β,isInitial=false)
+    HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β,isInitial=false,num_τ=4000)
 
 end
 main()
