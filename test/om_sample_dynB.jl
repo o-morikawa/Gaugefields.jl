@@ -95,7 +95,17 @@ function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*
     end
 end
 
-function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β;isInitial=true,num_τ=2000)
+function HMC_test_4D_dynamicalB(
+    NX,
+    NY,
+    NZ,
+    NT,
+    NC,
+    β;
+    isInitial=true,
+    num_τ=2000,
+    save_step=100,
+)
 
     Dim = 4
     Nwing = 0
@@ -209,7 +219,7 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β;isInitial=true,num_τ=2000)
             println("acceptance ratio ",numaccepted/(itrj-strtrj))
         end
 
-        if itrj % 100 == 0
+        if itrj % save_step == 0
             filename = "confs/U_beta$(2β)_L$(NX)_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
             save_textdata(U,filename)
             println("Save conf: itrj=", itrj)
@@ -228,7 +238,17 @@ function main()
     NZ = 8
     NT = 8
     NC = 3
-    HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β,isInitial=false,num_τ=4000)
+    HMC_test_4D_dynamicalB(
+        NX,
+        NY,
+        NZ,
+        NT,
+        NC,
+        β,
+        isInitial=false,
+        num_τ=4000,
+        save_step=10
+    )
 
 end
 main()
