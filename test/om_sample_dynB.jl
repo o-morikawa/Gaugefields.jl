@@ -5,6 +5,9 @@ using Gaugefields
 using LinearAlgebra
 #using Wilsonloop
 
+import Base.read
+import Base.run
+
 function calc_action(gauge_action,U,B,p)
     NC = U[1].NC
     Sg = -evaluate_GaugeAction(gauge_action,U,B)/NC
@@ -102,7 +105,6 @@ function HMC_test_4D_dynamicalB(
     NT,
     NC,
     β;
-    isInitial=true,
     num_τ=2000,
     save_step=100,
 )
@@ -117,12 +119,24 @@ function HMC_test_4D_dynamicalB(
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
 
+    #filename = "U_beta6.0_L8_F111120_4000.txt"
+    if !isdir("confs")
+        Base.run(`mkdir confs`)
+        isInitial = true
+    else
+        filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
+        if filename == ""
+            isInitial = true
+        else
+            isInitial = false
+        end
+    end
+
     if isInitial
         flux = rand(0:NC-1,6)
         println("Flux : ", flux)
         B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
     else
-        filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
         idx = findfirst("_F",filename)[2]
         for i = 1:6
             flux[i] = parse(Int,filename[idx+i])
