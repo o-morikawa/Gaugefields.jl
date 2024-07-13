@@ -95,28 +95,38 @@ function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*
     end
 end
 
-function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
+function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β;isInitial=true)
 
     Dim = 4
     Nwing = 0
 
-    #Flux=rand(0:NC-1,6)
-    #println("Flux : ", Flux)
-
-    strtrj = 4000
-    flux = [1,1,1,1,2,0]
-
-    #println("Flux : ", flux)
-
     Random.seed!(123)
 
-    U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
-    B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+    flux = zeros(Int, 6)
+    strtrj = 0
 
-    L = [NX,NY,NZ,NT]
-    filename = "confs/U_beta6.0_L8_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$strtrj.txt"
-    load_BridgeText!(filename,U,L,NC)
-    println("Load file: ", filename)
+    U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
+
+    if isInitial
+        flux = rand(0:NC-1,6)
+        println("Flux : ", flux)
+        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+    else
+        filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
+        idx = findfirst("_F",filename)[2]
+        for i = 1:6
+            flux[i] = parse(Int,filename[idx+i])
+        end
+        idy = findfirst(".txt",filename)[1]
+        strtrj = parse(Int, filename[idx+8:idy-1])
+
+        println("Flux : ", flux)
+
+        L = [NX,NY,NZ,NT]
+        load_BridgeText!(filename,U,L,NC)
+        println("Load file: ", filename)
+        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+    end
 
     temp1 = similar(U[1])
     temp2 = similar(U[1])
@@ -167,7 +177,20 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
 
         t = @timed begin
 #            accepted = MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold,temp1,temp2)
-            accepted = MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temp1,temp2)
+            accepted = MDstep!(
+                gauge_action,
+                U,
+                B,
+                flux,
+                p,
+                MDsteps,
+                Dim,
+                Uold,
+                Bold,
+                flux_old,
+                temp1,
+                temp2
+            )
         end
         if get_myrank(U) == 0
 #            println("elapsed time for MDsteps: $(t.time) [s]")
@@ -205,10 +228,7 @@ function main()
     NZ = 8
     NT = 8
     NC = 3
-    HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
+    HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β,isInitial=false)
 
 end
 main()
-
-
-
