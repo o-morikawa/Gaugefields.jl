@@ -119,17 +119,30 @@ function HMC_test_4D_dynamicalB(
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
 
-    ##filename = "U_beta6.0_L8_F111120_4000.txt"
+    #filename = "U_beta6.0_L8_F111120_4000.txt"
+    filename = ""
     if !isdir("confs")
         Base.run(`mkdir confs`)
+        Base.run(`mkdir conf_name`)
+        isInitial = true
+    elseif !isdir("conf_name")
+        Base.run(`mkdir conf_name`)
+        isInitial = true
+    elseif !isfile("./conf_name/U_beta$(β)_L$(NX).txt")
+        Base.run(`touch conf_name/U_beta$(β)_L$(NX).txt`)
         isInitial = true
     else
-        filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
-        if filename == ""
-            isInitial = true
-        else
-            isInitial = false
+        open("./conf_name/U_beta$(β)_L$(NX).txt", "r") do f
+            filename *= readline(f)
         end
+        isInitial = false
+    #else
+    #    filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
+    #    if filename == ""
+    #        isInitial = true
+    #    else
+    #        isInitial = false
+    #    end
     end
 
     if isInitial
@@ -147,8 +160,8 @@ function HMC_test_4D_dynamicalB(
         println("Flux : ", flux)
 
         L = [NX,NY,NZ,NT]
-        load_BridgeText!(filename,U,L,NC)
         println("Load file: ", filename)
+        load_BridgeText!(filename,U,L,NC)
         B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
     end
 
@@ -170,7 +183,7 @@ function HMC_test_4D_dynamicalB(
     @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     println("$strtrj plaq_t = $plaq_t")
 #    poly = calculate_Polyakov_loop(U,temp1,temp2) 
-#    println("$strtrj polyakov loop = $(real(poly)) $(imag(poly))")
+#    println("0 polyakov loop = $(real(poly)) $(imag(poly))")
 
     gauge_action = GaugeAction(U,B)
     plaqloop = make_loops_fromname("plaquette")
@@ -236,6 +249,9 @@ function HMC_test_4D_dynamicalB(
         if itrj % save_step == 0
             filename = "confs/U_beta$(2β)_L$(NX)_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
             save_textdata(U,filename)
+            open("./conf_name/U_beta$(2β)_L$(NX).txt", "w") do f
+                write(f, filename)
+            end
             println("Save conf: itrj=", itrj)
         end
     end
@@ -247,11 +263,14 @@ end
 
 function main()
     β = 6.0
-    NX = 8
-    NY = 8
-    NZ = 8
-    NT = 8
+    L = 8
+
+    NX = L
+    NY = L
+    NZ = L
+    NT = L
     NC = 3
+
     HMC_test_4D_dynamicalB(
         NX,
         NY,
@@ -259,7 +278,6 @@ function main()
         NT,
         NC,
         β,
-        isInitial=false,
         num_τ=4000,
         save_step=10
     )
