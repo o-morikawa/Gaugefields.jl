@@ -576,7 +576,7 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
     substitute_U!(Bold,B)
     flux_old = zeros(Int, 6)
 
-    MDsteps = 50
+    MDsteps = 50 # even integer!!!
     temp1 = similar(U[1])
     temp2 = similar(U[1])
     comb = 6
