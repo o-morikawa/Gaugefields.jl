@@ -691,6 +691,9 @@ function Initialize_Bfields(
     mpiinit = nothing,
     verbose_level = 2,
     randomnumber = "Random",
+    tloop_pos  = [1,1,1,1],
+    tloop_dir  = [1,2],
+    tloop_size = 1,
 )
 
     Dim = length(NN)
@@ -719,6 +722,37 @@ function Initialize_Bfields(
             PEs = PEs,
             mpiinit = mpiinit,
             verbose_level = verbose_level,
+        )
+    elseif condition == "tloop"
+        u1 = B_TloopGauges(
+            NC,
+            Flux[fluxnum],
+            fluxnum,
+            NDW,
+            NN...,
+            overallminus = false,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
+            tloop_pos  = tloop_pos,
+            tloop_dir  = tloop_dir,
+            tloop_dis  = tloop_dis,
+        )
+        u2 = B_TloopGauges(
+            NC,
+            Flux[fluxnum],
+            fluxnum,
+            NDW,
+            NN...,
+            overallminus = true,
+            mpi = mpi,
+            PEs = PEs,
+            mpiinit = mpiinit,
+            verbose_level = verbose_level,
+            tloop_pos  = tloop_pos,
+            tloop_dir  = tloop_dir,
+            tloop_dis  = tloop_dis,
         )
     elseif condition == "random"
         u1 = B_RandomGauges(
@@ -788,6 +822,37 @@ function Initialize_Bfields(
                         PEs = PEs,
                         mpiinit = mpiinit,
                         verbose_level = verbose_level,
+                    )
+                elseif condition == "tloop"
+                    U[μ,ν] = B_TloopGauges(
+                        NC,
+                        Flux[fluxnum],
+                        fluxnum,
+                        NDW,
+                        NN...,
+                        overallminus = false,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                        tloop_pos  = tloop_pos,
+                        tloop_dir  = tloop_dir,
+                        tloop_dis  = tloop_dis,
+                    )
+                    U[ν,μ] = B_TloopGauges(
+                        NC,
+                        Flux[fluxnum],
+                        fluxnum,
+                        NDW,
+                        NN...,
+                        overallminus = true,
+                        mpi = mpi,
+                        PEs = PEs,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                        tloop_pos  = tloop_pos,
+                        tloop_dir  = tloop_dir,
+                        tloop_dis  = tloop_dis,
                     )
                 elseif condition == "random"
                     U[μ,ν] = B_RandomGauges(
@@ -926,6 +991,131 @@ function B_TfluxGauges(
                     NN[4],
                     overallminus = overallminus,
                     verbose_level = 2,
+                )
+            end
+        else
+            error("$dim dimension is not implemented yet!")
+        end
+    end
+    set_wing_U!(U)
+    return U
+end
+
+function B_TloopGauges(
+    NC,
+    Flux,
+    FluxNum,
+    NDW,
+    NN...;
+    overallminus = false,
+    mpi = false,
+    PEs = nothing,
+    mpiinit = nothing,
+    verbose_level = 2,
+    tloop_pos  = [1,1,1,1],
+    tloop_dir  = [1,4],
+    tloop_size = 1,
+)
+    # pos = position of Polyakov loop
+    # dir = [1-dir shift of anti-Polyakov loop,temporal 4-dir]
+    # dis = distance between two loops in 1-dir with sign
+    #
+    # Polyakov loop at [ix,iy+1/2,iz+1/2,:]
+    # anti-Polyakov loop at [ix+dis,iy+1/2,iz+1/2,end:1]
+    #
+    #           NT |     |
+    #              |     |
+    #              |     |
+    # Polyakovloop |     | antiPolyakovloop
+    #              |     |
+    #              |     |
+    #           1  |     |
+    #              x     x+dis
+    # and
+    #         ----
+    #        /   /
+    #   ----/  ----- t
+    #      /   /
+    #     ----  y-z plaquette
+    #
+    dim = length(NN)
+    if mpi
+        if PEs == nothing || mpiinit == nothing
+            error("not implemented yet!")
+        else
+            if dim == 4
+                if NDW == 0
+                    U = thooftLoop_4D_B_temporal_nowing_mpi(
+                        NC,
+                        Flux,
+                        FluxNum,
+                        NN[1],
+                        NN[2],
+                        NN[3],
+                        NN[4],
+                        PEs,
+                        overallminus = overallminus,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                        tloop_pos  = tloop_pos,
+                        tloop_dir  = tloop_dir,
+                        tloop_dis  = tloop_dis,
+                    )
+                else
+                    U = thooftLoop_4D_B_temporal_wing_mpi(
+                        NC,
+                        NDW,
+                        Flux,
+                        FluxNum,
+                        NN[1],
+                        NN[2],
+                        NN[3],
+                        NN[4],
+                        PEs,
+                        overallminus = overallminus,
+                        mpiinit = mpiinit,
+                        verbose_level = verbose_level,
+                        tloop_pos  = tloop_pos,
+                        tloop_dir  = tloop_dir,
+                        tloop_dis  = tloop_dis,
+                    )
+                end
+            else
+                error("$dim dimension is not implemented yet!")
+            end
+        end
+    else
+        if dim == 4
+            if NDW == 0
+                U = thooftLoop_4D_B_temporal(
+                    NC,
+                    Flux,
+                    FluxNum,
+                    NN[1],
+                    NN[2],
+                    NN[3],
+                    NN[4],
+                    overallminus = overallminus,
+                    verbose_level = 2,
+                    tloop_pos  = tloop_pos,
+                    tloop_dir  = tloop_dir,
+                    tloop_dis  = tloop_dis,
+                )
+            else
+                U = thooftLoop_4D_B_temporal_wing(
+                    NC,
+                    NDW,
+                    Flux,
+                    FluxNum,
+                    NN[1],
+                    NN[2],
+                    NN[3],
+                    NN[4],
+                    overallminus = overallminus,
+                    verbose_level = 2,
+                    tloop_pos  = tloop_pos,
+                    tloop_dir  = tloop_dir,
+                    tloop_dis  = tloop_dis,
                 )
             end
         else
