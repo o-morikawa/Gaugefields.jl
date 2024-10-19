@@ -1,6 +1,7 @@
 #using LatticeQCD
 
 using Random
+using Dates
 using Gaugefields
 using LinearAlgebra
 using Wilsonloop
@@ -534,7 +535,10 @@ function HMC_test_4D(NX,NY,NZ,NT,NC,β)
     Dim = 4
     Nwing = 0
 
-    Random.seed!(123)
+    #Random.seed!(123)
+    t0 = Dates.DateTime(2024,1,1,16,10,7)
+    t  = Dates.now()
+    Random.seed!(Dates.value(t-t0))
 
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
