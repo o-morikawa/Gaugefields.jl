@@ -692,7 +692,7 @@ function Initialize_Bfields(
     verbose_level = 2,
     randomnumber = "Random",
     tloop_pos  = [1,1,1,1],
-    tloop_dir  = [1,2],
+    tloop_dir  = [1,4],
     tloop_size = 1,
 )
 
