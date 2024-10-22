@@ -693,7 +693,7 @@ function Initialize_Bfields(
     randomnumber = "Random",
     tloop_pos  = [1,1,1,1],
     tloop_dir  = [1,4],
-    tloop_size = 1,
+    tloop_dis  = 1,
 )
 
     Dim = length(NN)
@@ -1014,7 +1014,7 @@ function B_TloopGauges(
     verbose_level = 2,
     tloop_pos  = [1,1,1,1],
     tloop_dir  = [1,4],
-    tloop_size = 1,
+    tloop_dis  = 1,
 )
     # pos = position of Polyakov loop
     # dir = [1-dir shift of anti-Polyakov loop,temporal 4-dir]
