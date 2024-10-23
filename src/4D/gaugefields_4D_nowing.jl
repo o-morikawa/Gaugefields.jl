@@ -2927,7 +2927,6 @@ function thooftFlux_4D_B_at_bndry(
     return U
 end
 
-
 function thooftLoop_4D_B_temporal(
     NC,
     FLUX,
@@ -3009,7 +3008,7 @@ function thooftLoop_4D_B_temporal(
                   for iy = spatial_strpos:spatial_endpos
                       #for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,NN[1],iy,NN[3],it] *= v
+                          U[ic,ic,tloop_pos[1],iy,tloop_pos[3],it] *= v
                       end
                       #end
                   end
@@ -3021,7 +3020,7 @@ function thooftLoop_4D_B_temporal(
                   for iy = 1:NN[2]
                       #for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,NN[1],iy,NN[3],it] *= v
+                          U[ic,ic,tloop_pos[1],iy,tloop_pos[3],it] *= v
                       end
                       #end
                   end
@@ -3035,7 +3034,7 @@ function thooftLoop_4D_B_temporal(
                   for iy = spatial_strpos:spatial_endpos
                       #for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,NN[1],iy,iz,NN[4]] *= v
+                          U[ic,ic,tloop_pos[1],iy,iz,tloop_pos[4]] *= v
                       end
                       #end
                   end
@@ -3047,7 +3046,7 @@ function thooftLoop_4D_B_temporal(
                   for iy = 1:NN[2]
                       #for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,NN[1],iy,iz,NN[4]] *= v
+                          U[ic,ic,tloop_pos[1],iy,iz,tloop_pos[4]] *= v
                       end
                       #end
                   end
@@ -3061,7 +3060,7 @@ function thooftLoop_4D_B_temporal(
                   #for iy = 1:NN[2]
                   for ix = spatial_strpos:spatial_endpos
                       @simd for ic = 1:NC
-                          U[ic,ic,ix,NN[2],NN[3],it] *= v
+                          U[ic,ic,ix,tloop_pos[2],tloop_pos[3],it] *= v
                       end
                   end
                   #end
@@ -3073,7 +3072,7 @@ function thooftLoop_4D_B_temporal(
                   #for iy = 1:NN[2]
                   for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,ix,NN[2],NN[3],it] *= v
+                          U[ic,ic,ix,tloop_pos[2],tloop_pos[3],it] *= v
                       end
                   end
                   #end
@@ -3087,7 +3086,7 @@ function thooftLoop_4D_B_temporal(
                   #for iy = 1:NN[2]
                   for ix = spatial_strpos:spatial_endpos
                       @simd for ic = 1:NC
-                          U[ic,ic,ix,NN[2],iz,NN[4]] *= v
+                          U[ic,ic,ix,tloop_pos[2],iz,tloop_pos[4]] *= v
                       end
                   end
                   #end
@@ -3099,7 +3098,7 @@ function thooftLoop_4D_B_temporal(
                   #for iy = 1:NN[2]
                   for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,ix,NN[2],iz,NN[4]] *= v
+                          U[ic,ic,ix,tloop_pos[2],iz,tloop_pos[4]] *= v
                       end
                   end
                   #end
@@ -3113,7 +3112,7 @@ function thooftLoop_4D_B_temporal(
               for iy = 1:NN[2]
                   for ix = spatial_strpos:spatial_endpos
                       @simd for ic = 1:NC
-                          U[ic,ic,ix,iy,NN[3],NN[4]] *= v
+                          U[ic,ic,ix,iy,tloop_pos[3],tloop_pos[4]] *= v
                       end
                   end
               end
@@ -3125,7 +3124,7 @@ function thooftLoop_4D_B_temporal(
               for iy = spatial_strpos:spatial_endpos
                   for ix = 1:NN[1]
                       @simd for ic = 1:NC
-                          U[ic,ic,ix,iy,NN[3],NN[4]] *= v
+                          U[ic,ic,ix,iy,tloop_pos[3],tloop_pos[4]] *= v
                       end
                   end
               end
