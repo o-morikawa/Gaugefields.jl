@@ -1222,6 +1222,9 @@ function evaluate_gaugelinks_evenodd!(
     #clear_U!(uout)
     origin = Tuple(zeros(Int64, Dim))
 
+    Ushift1 = temps[2]
+    Ushift2 = temps[3]
+
     glinks = w
     numlinks = length(glinks)
     if numlinks == 0
@@ -1285,6 +1288,9 @@ function evaluate_gaugelinks!(
     #Utemp2 = temps[2]
     #clear_U!(uout)
     origin = Tuple(zeros(Int64, Dim))
+
+    Ushift1 = temps[2]
+    Ushift2 = temps[3]
 
     glinks = w
     numlinks = length(glinks)
@@ -1383,6 +1389,9 @@ function evaluate_gaugelinks!(
 ) where {T<:AbstractGaugefields,Dim}
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
+
+    Ushift1 = temps[2]
+    Ushift2 = temps[3]
 
     glinks = w
     numlinks = length(glinks)
@@ -1852,17 +1861,16 @@ function evaluate_gaugelinks_evenodd!(
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
     num = length(w)
-    temp1 = temps[1]
-    temp2 = temps[2]
+    temp4 = temps[4]
 
     #ix,iy,iz,it=(2,2,2,2)
 
     clear_U!(xout, iseven)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks_evenodd!(temp2, glinks, U, [temp1], iseven)
+        evaluate_gaugelinks_evenodd!(temp4, glinks, U, temp[1:3], iseven)
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
-        add_U!(xout, temp2, iseven)
+        add_U!(xout, temp4, iseven)
         #println("xout ", xout[:,:,ix,iy,iz,it])
     end
 
@@ -1879,8 +1887,7 @@ function evaluate_gaugelinks!(
     temps::Array{T,1},
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
     num = length(w)
-    temp1 = temps[1]
-    temp2 = temps[2]
+    temp4 = temps[4]
 
     #ix,iy,iz,it=(2,2,2,2)
     #ix,iy,iz,it=(1,1,1,1)
@@ -1888,9 +1895,9 @@ function evaluate_gaugelinks!(
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp2, glinks, U, [temp1])
+        evaluate_gaugelinks!(temp4, glinks, U, temp[1:3])
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
-        add_U!(xout, temp2)
+        add_U!(xout, temp4)
         #println("xout ", xout[:,:,ix,iy,iz,it])
     end
 
