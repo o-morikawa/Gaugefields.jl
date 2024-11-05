@@ -70,7 +70,7 @@ function calc_dSdUμ(
 end
 
 function calc_dSdUμ!(
-    dSdUμ::T,
+    dSdUμ::T, # dSdUμ -> S._temp_U[end] or other-temp
     S::GaugeAction,
     μ,
     U::Vector{T},
@@ -93,7 +93,7 @@ function calc_dSdUμ!(
 
 end
 function calc_dSdUμ!(
-    dSdUμ::T,
+    dSdUμ::T, # dSdUμ -> S._temp_U[end] or other-temp
     S::GaugeAction,
     μ,
     U::Vector{T},
