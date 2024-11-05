@@ -1212,7 +1212,7 @@ function evaluate_gaugelinks_evenodd!(
     uout::T,
     w::Wilsonline{Dim},
     U::Array{T,1},
-    temps::Array{T,1},
+    temps::Array{T,1}, # length >= 3
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
 
@@ -1279,7 +1279,7 @@ function evaluate_gaugelinks!(
     uout::T,
     w::Wilsonline{Dim},
     U::Array{T,1},
-    temps::Array{T,1},
+    temps::Array{T,1}, # length >= 3
 ) where {T<:AbstractGaugefields,Dim}
     #println_verbose_level3(uout,"evaluating Wilson loops")
     #Uold = temps[1]
@@ -1385,7 +1385,7 @@ function evaluate_gaugelinks!(
     w::Wilsonline{Dim},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1},
+    temps::Array{T,1}, # length >= 3
 ) where {T<:AbstractGaugefields,Dim}
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
@@ -1477,7 +1477,7 @@ function sweepaway_4D_Bplaquettes!(
     uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
-    temps::Array{T,1}, # length(temps) > 4
+    temps::Array{T,1}, # length(temps) >= 4
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
     Unew = temps[1]
@@ -1857,7 +1857,7 @@ function evaluate_gaugelinks_evenodd!(
     xout::T,
     w::Array{<:Wilsonline{Dim},1},
     U::Array{T,1},
-    temps::Array{T,1},
+    temps::Array{T,1}, # length >= 4
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
     num = length(w)
@@ -1868,7 +1868,7 @@ function evaluate_gaugelinks_evenodd!(
     clear_U!(xout, iseven)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks_evenodd!(temp4, glinks, U, temp[1:3], iseven)
+        evaluate_gaugelinks_evenodd!(temp4, glinks, U, temp[1:3], iseven) # length >= 3
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
         add_U!(xout, temp4, iseven)
         #println("xout ", xout[:,:,ix,iy,iz,it])
@@ -1884,7 +1884,7 @@ function evaluate_gaugelinks!(
     xout::T,
     w::Array{WL,1},
     U::Array{T,1},
-    temps::Array{T,1},
+    temps::Array{T,1}, # length >= 4
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
     num = length(w)
     temp4 = temps[4]
@@ -1895,7 +1895,7 @@ function evaluate_gaugelinks!(
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp4, glinks, U, temp[1:3])
+        evaluate_gaugelinks!(temp4, glinks, U, temp[1:3]) # length >= 3
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
         add_U!(xout, temp4)
         #println("xout ", xout[:,:,ix,iy,iz,it])
@@ -1912,7 +1912,7 @@ function evaluate_gaugelinks!(
     w::Array{WL,1},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1},
+    temps::Array{T,1}, # length >= 5
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
     num = length(w)
     temp1 = temps[5]
@@ -1920,7 +1920,7 @@ function evaluate_gaugelinks!(
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:4])
+        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:4]) # length >= 4
         add_U!(xout, temp1)
     end
 
@@ -1998,7 +1998,7 @@ function evaluate_gaugelinks_eachsite!(
     uout_mat::T1,
     w::Array{<:Wilsonline{Dim},1},
     U::Array{<:AbstractGaugefields{NC,Dim},1},
-    temps,
+    temps, # length >= 4
     indices...,
 ) where {Dim,T1<:Matrix{ComplexF64},NC}
 
@@ -2012,7 +2012,7 @@ function evaluate_gaugelinks_eachsite!(
     uout_mat .= 0
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks_eachsite!(temp, glinks, U, view(temps, 1:3), indices...)
+        evaluate_gaugelinks_eachsite!(temp, glinks, U, view(temps, 1:3), indices...) # length >= 3
 
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
         uout_mat .+= temp
@@ -2030,7 +2030,7 @@ function evaluate_gaugelinks_eachsite!(
     uout_mat::T1,
     w::Wilsonline{Dim},
     U::Array{<:AbstractGaugefields{NC,Dim},1},
-    temps,
+    temps, # length >= 3
     indices...,
 ) where {Dim,T1<:Matrix{ComplexF64},NC}
     _, _, NN... = size(U[1])
@@ -2211,7 +2211,7 @@ function evaluate_gaugelinks_eachsite!(
     uout_mat::T1,
     w::Wilsonline{4},
     U::Array{<:AbstractGaugefields{NC,4},1},
-    temps,
+    temps, # length >= 3
     indices...,
 ) where {T1<:Matrix{ComplexF64},NC}
     #NN = NN_4_temp
