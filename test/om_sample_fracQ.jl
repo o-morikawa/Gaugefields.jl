@@ -1,6 +1,7 @@
 #using LatticeQCD
 
 using Random
+using Dates
 using Gaugefields
 using LinearAlgebra
 using Wilsonloop
@@ -346,8 +347,6 @@ function epsilon_tensor(mu::Int, nu::Int, rho::Int, sigma::Int)
     return epsilon[mu, nu, rho, sigma] * sign
 end
 
-
-
 function calc_loopset_μν_name(name, Dim)
     loops_μν = Array{Vector{Wilsonline{Dim}},2}(undef, Dim, Dim)
     if name == "plaq"
@@ -420,6 +419,160 @@ function make_cloverloops_topo(μ, ν; Dim = 4)
     push!(loops, loop_rightbottom)
     push!(loops, loop_leftbottom)
     return loops
+end
+
+# Gauge coupling
+function calculate_gauge_coupling_plaq(U::Array{T,1}, temp_UμνTA, temps) where {T}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "plaq", U, temps)
+    E = calc_E(UμνTA, numofloops, U)
+    return E
+end
+function calculate_gauge_coupling_plaq(U::Array{T,1}, B::Array{T,2}, temp_UμνTA, temps) where {T}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "plaq", U, B, temps)
+    E = calc_E(UμνTA, numofloops, U)
+    return E
+end
+
+function calculate_gauge_coupling_clover(U::Array{T,1}, temp_UμνTA, temps) where {T}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "clover", U, temps)
+    E = calc_E(UμνTA, numofloops, U)
+    return E
+end
+function calculate_gauge_coupling_clover(U::Array{T,1}, B::Array{T,2}, temp_UμνTA, temps) where {T}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "clover", U, B, temps)
+    E = calc_E(UμνTA, numofloops, U)
+    return E
+end
+
+function calc_E(UμνTA, numofloops, U::Array{<:AbstractGaugefields{NC,Dim},1}) where {NC,Dim}
+    NX = U[1].NX
+    NY = U[1].NY
+    NZ = U[1].NZ
+    NT = U[1].NT
+    Vol = NX*NY*NZ*NT
+
+    #UU = similar(UμνTA[1,1])
+
+    E = 0.0
+    for μ = 1:Dim
+        for ν = 1:Dim
+            if μ == ν
+                continue
+            end
+            Uμν = UμνTA[μ, ν]
+            #mul!(UU, Uμν, Uμν)
+            #s = tr(UU)
+            s = tr(Uμν, Uμν)
+            E += s / numofloops^2
+        end
+    end
+
+    return - E / (2Vol)
+end
+
+# Energy density
+function make_cloverloops(μ,ν;Dim=4)
+    loops = Wilsonline{Dim}[]
+    loop_righttop = Wilsonline([(μ,1),(ν,1),(μ,-1),(ν,-1)])
+    loop_lefttop = Wilsonline([(ν,1),(μ,-1),(ν,-1),(μ,1)])
+    loop_rightbottom = Wilsonline([(ν,-1),(μ,1),(ν,1),(μ,-1)])
+    loop_leftbottom= Wilsonline([(μ,-1),(ν,-1),(μ,1),(ν,1)])
+    push!(loops,loop_righttop)
+    push!(loops,loop_lefttop)
+    push!(loops,loop_rightbottom)
+    push!(loops,loop_leftbottom)
+    return loops
+end
+
+function cloverloops(Dim)
+    loops_μν= Matrix{Vector{Wilsonline{Dim}}}(undef,Dim,Dim)
+    for μ=1:Dim
+        for ν=1:Dim
+            loops_μν[μ,ν] = Wilsonline{Dim}[]
+            if ν == μ
+                continue
+            end
+            loops_μν[μ,ν] = make_cloverloops(μ,ν,Dim=Dim)
+        end
+    end
+    return  loops_μν
+end
+
+function make_energy_density!(Wmat,U::Vector{<: AbstractGaugefields{NC,Dim}},temps) where {NC,Dim}
+    W_operator = cloverloops(Dim)
+    calc_wilson_loop!(Wmat,W_operator,U,temps)
+    return 
+end
+function make_energy_density!(Wmat,U::Array{T,1},B::Array{T,2},temps
+                              ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    W_operator = cloverloops(Dim)
+    calc_wilson_loop!(Wmat,W_operator,U,B,temps)
+    return 
+end
+
+function calc_wilson_loop!(W,W_operator,U::Vector{<: AbstractGaugefields{NC,Dim}},temps) where {NC,Dim}
+    for μ=1:Dim
+        for ν=1:Dim
+            if μ == ν
+                continue
+            end
+            evaluate_gaugelinks!(W[μ,ν],W_operator[μ,ν],U,temps)
+            W[μ,ν] = Traceless_antihermitian(W[μ,ν])
+        end
+    end
+    return 
+end
+function calc_wilson_loop!(W,W_operator,U::Array{T,1},B::Array{T,2},temps
+                           ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    for μ=1:Dim
+        for ν=1:Dim
+            if μ == ν
+                continue
+            end
+            evaluate_gaugelinks!(W[μ,ν],W_operator[μ,ν],U,B,temps)
+            W[μ,ν] = Traceless_antihermitian(W[μ,ν])
+        end
+    end
+    return 
+end
+
+function  make_energy_density_core(Wmat::Matrix{<: AbstractGaugefields{NC,Dim}}) where {NC,Dim}
+    @assert Dim == 4
+    W = 0.0 + 0.0im
+    for μ=1:Dim # all directions
+        for ν=1:Dim
+            if μ == ν
+                continue
+            end
+            W += -tr(Wmat[μ,ν],Wmat[μ,ν])/2
+        end
+    end
+    return W
+end
+
+function calculate_energy_density(U::Array{T,1}, Wmat,temps) where T <: AbstractGaugefields
+    # Making a ( Ls × Lt) Wilson loop operator for potential calculations
+    WL = 0.0+0.0im
+    NV = U[1].NV
+    NC = U[1].NC
+    make_energy_density!(Wmat,U,temps) # make wilon loop operator and evaluate as a field, not traced.
+    WL =  make_energy_density_core(Wmat) # tracing over color and average over spacetime and x,y,z.
+    NDir = 4.0*3.0/2 # choice of 2 axis from 4.
+    return real(WL)/(NV*4^2)
+end
+function calculate_energy_density(U::Array{T,1},B::Array{T,2}, Wmat,temps) where T <: AbstractGaugefields
+    # Making a ( Ls × Lt) Wilson loop operator for potential calculations
+    WL = 0.0+0.0im
+    NV = U[1].NV
+    NC = U[1].NC
+    make_energy_density!(Wmat,U,B,temps) # make wilon loop operator and evaluate as a field, not traced.
+    WL =  make_energy_density_core(Wmat) # tracing over color and average over spacetime and x,y,z.
+    NDir = 4.0*3.0/2 # choice of 2 axis from 4.
+    return real(WL)/(NV*4^2)
 end
 
 #################################################################################################
@@ -626,11 +779,14 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 
     println("Flux : ", flux)
 
-    Random.seed!(123)
-
+    #Random.seed!(123)
+    t0 = Dates.DateTime(2024,1,1,16,10,7)
+    t  = Dates.now()
+    Random.seed!(Dates.value(t-t0))
 
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
     B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+    #B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tloop",tloop_dis=2)
 
     temp1 = similar(U[1])
     temp2 = similar(U[1])
@@ -656,6 +812,14 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
     end
 
     factor = 1/(comb*U[1].NV*U[1].NC)
+
+    # for calc energy density
+    W_temp = Matrix{typeof(U[1])}(undef,Dim,Dim)
+    for μ=1:Dim
+        for ν=1:Dim
+            W_temp[μ,ν] = similar(U[1])
+        end
+    end
 
     @time plaq_t = calculate_Plaquette(U,B,temp1,temp2)*factor
     println("0 plaq_t = $plaq_t")
@@ -703,7 +867,10 @@ function HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
         end
 
         if itrj % 50 == 0
-            calc_Q_gradflow!(U_copy,B_copy,U,B,temp_UμνTA,[temp1,temp2,temp3,temp4,temp5,temp6])
+            #res1,res2,res3=
+            calc_Q_gradflow!(U_copy,B_copy,U,B,temp_UμνTA,W_temp,
+                             [temp1,temp2,temp3,temp4,temp5,temp6],
+                             conditions=["Qclover","Qimproved","Eclover","Energydensity"])
         end
 
     end
@@ -714,10 +881,13 @@ end
 
 function calc_Q_gradflow!(
     U_copy,
-    U,temp_UμνTA,
+    U,
+    temp_UμνTA,
+    W_temp,
     temps;
     Δt = 0.1,
     tstep = 100,
+    conditions = ["Qimproved"],
 )
     Dim = 4
 
@@ -729,9 +899,45 @@ function calc_Q_gradflow!(
 
     substitute_U!(U_copy,U)
 
-    topo_values_plaq = []
-    topo_values_clover = []
-    topo_values_improved = []
+    numofobs=0
+    if "Qplaq" in conditions
+        topo_values_plaq = []
+        Qplaq = 0.0
+        numofobs+=1
+    end
+    if "Qclover" in conditions
+        topo_values_clover = []
+        Qclover = 0.0
+        numofobs+=1
+    end
+    if "Qimproved" in conditions
+        topo_values_improved = []
+        Qclover = 0.0
+        Qimproved = 0.0
+        numofobs+=1
+    end
+    if "Eplaq" in conditions
+        gauge_values_plaq = []
+        Eplaq = 0.0
+        numofobs+=1
+    end
+    if "Eclover" in conditions
+        gauge_values_clover = []
+        Eclover = 0.0
+        numofobs+=1
+    end
+    if "Energydensity" in conditions
+        energy_density_values = []
+        E = 0.0
+        numofobs+=1
+    end
+
+    if !(numofobs == length(conditions))
+        println("Not matched condition name!")
+        return
+    elseif numofobs==0
+        return
+    end
 
     for μ=1:Dim
         for ν=1:Dim
@@ -771,25 +977,61 @@ function calc_Q_gradflow!(
 
     g = Gradientflow_general(U_copy,listloops,listvalues,eps = dt)
 
-    Qplaq = 0.0
-    Qclover = 0.0
-    Qimproved = 0.0
-
     for iflow=1:flow_number
         flow!(U_copy, g)
         if iflow % 10 == 0
-            
-            Qplaq = calculate_topological_charge_plaq(U_copy,temp_UμνTA,temps)
-            Qclover = calculate_topological_charge_clover(U_copy,temp_UμνTA,temps)
-            Qimproved= calculate_topological_charge_improved(U_copy,temp_UμνTA,Qclover,temps)
-            println("$(iflow*dt) $Qplaq $Qclover $Qimproved # t Qplaq Qclover Qimproved")
-            
-            push!(topo_values_plaq, Qplaq)
-            push!(topo_values_clover, Qclover)
-            push!(topo_values_improved, Qimproved)
+            println("Flowtime $(iflow*dt)")
+
+            for i=1:numofobs
+                if conditions[i]=="Qplaq"
+                    Qplaq = calculate_topological_charge_plaq(U_copy,temp_UμνTA,temps)
+                    push!(topo_values_plaq, Qplaq)
+                    println("Qplaq:         $Qplaq")
+                elseif conditions[i]=="Qclover"
+                    Qclover = calculate_topological_charge_clover(U_copy,temp_UμνTA,temps)
+                    push!(topo_values_clover, Qclover)
+                    println("Qclover:       $Qclover")
+                elseif conditions[i]=="Qimproved"
+                    Qclover = calculate_topological_charge_clover(U_copy,temp_UμνTA,temps)
+                    Qimproved= calculate_topological_charge_improved(U_copy,temp_UμνTA,Qclover,temps)
+                    push!(topo_values_improved, Qimproved)
+                    println("Qimproved:     $Qimproved")
+                elseif conditions[i]=="Eplaq"
+                    Eplaq = calculate_gauge_coupling_plaq(U_copy,temp_UμνTA,temps)
+                    push!(gauge_values_plaq, Eplaq)
+                    println("Eplaq:         $Eplaq")
+                elseif conditions[i]=="Eclover"
+                    Eclover = calculate_gauge_coupling_clover(U_copy,temp_UμνTA,temps)
+                    push!(gauge_values_clover, Eclover)
+                    println("Eclover:       $Eclover")
+                elseif conditions[i]=="Energydensity"
+                    E = calculate_energy_density(U_copy,W_temp,temps)
+                    push!(energy_density_values, E)
+                    println("Energydensity: $E")
+                end
+            end
+
         end
     end
-    return topo_values_plaq, topo_values_clover, topo_values_improved
+
+    values = []
+    for i=1:numofobs
+        if conditions[i]=="Qplaq"
+            push!(values, topo_values_plaq)
+        elseif conditions[i]=="Qclover"
+            push!(values, topo_values_clover)
+        elseif conditions[i]=="Qimproved"
+            push!(values, topo_values_improved)
+        elseif conditions[i]=="Eplaq"
+            push!(values, gauge_values_plaq)
+        elseif conditions[i]=="Eclover"
+            push!(values, gauge_values_clover)
+        elseif conditions[i]=="Energydensity"
+            push!(values, energy_density_values)
+        end
+    end
+
+    return Tuple(values[i] for i=1:numofobs)
 end
 function calc_Q_gradflow!(
     U_copy,
@@ -797,9 +1039,11 @@ function calc_Q_gradflow!(
     U,
     B,
     temp_UμνTA,
+    W_temp,
     temps;
     Δt = 0.1,
     tstep = 10,
+    conditions = ["Qimproved"],
 )
     Dim = 4
     NC = U[1].NC
@@ -813,9 +1057,45 @@ function calc_Q_gradflow!(
     substitute_U!(U_copy,U)
     substitute_U!(B_copy,B)
 
-    topo_values_plaq = []
-    topo_values_clover = []
-    topo_values_improved = []
+    numofobs=0
+    if "Qplaq" in conditions
+        topo_values_plaq = []
+        Qplaq = 0.0
+        numofobs+=1
+    end
+    if "Qclover" in conditions
+        topo_values_clover = []
+        Qclover = 0.0
+        numofobs+=1
+    end
+    if "Qimproved" in conditions
+        topo_values_improved = []
+        Qclover = 0.0
+        Qimproved = 0.0
+        numofobs+=1
+    end
+    if "Eplaq" in conditions
+        gauge_values_plaq = []
+        Eplaq = 0.0
+        numofobs+=1
+    end
+    if "Eclover" in conditions
+        gauge_values_clover = []
+        Eclover = 0.0
+        numofobs+=1
+    end
+    if "Energydensity" in conditions
+        energy_density_values = []
+        E = 0.0
+        numofobs+=1
+    end
+
+    if !(numofobs == length(conditions))
+        println("Not matched condition name!")
+        return
+    elseif numofobs==0
+        return
+    end
 
     for μ=1:Dim
         for ν=1:Dim
@@ -855,36 +1135,72 @@ function calc_Q_gradflow!(
 
     g = Gradientflow_general(U_copy,B_copy,listloops,listvalues,eps = dt)
 
-    Qplaq = 0.0
-    Qclover = 0.0
-    Qimproved = 0.0
-
     for iflow=1:flow_number
         flow!(U_copy, B_copy, g)
         if iflow % 10 == 0
-            
-            Qplaq = calculate_topological_charge_plaq(U_copy,B_copy,temp_UμνTA,temps)
-            Qclover = calculate_topological_charge_clover(U_copy,B_copy,temp_UμνTA,temps)
-            Qimproved= calculate_topological_charge_improved(U_copy,B_copy,temp_UμνTA,Qclover,temps)
-            println("$(iflow*dt) $(NC*Qplaq) $(NC*Qclover) $(NC*Qimproved) # t NC*Qplaq NC*Qclover NC*Qimproved ")
-            
-            push!(topo_values_plaq, Qplaq)
-            push!(topo_values_clover, Qclover)
-            push!(topo_values_improved, Qimproved)
+            println("Flow time t $(iflow*dt)")
+
+            for i=1:numofobs
+                if conditions[i]=="Qplaq"
+                    Qplaq = calculate_topological_charge_plaq(U_copy,B_copy,temp_UμνTA,temps)
+                    push!(topo_values_plaq, Qplaq)
+                    println("Qplaq:         $Qplaq")
+                elseif conditions[i]=="Qclover"
+                    Qclover = calculate_topological_charge_clover(U_copy,B_copy,temp_UμνTA,temps)
+                    push!(topo_values_clover, Qclover)
+                    println("Qclover:       $Qclover")
+                elseif conditions[i]=="Qimproved"
+                    Qclover = calculate_topological_charge_clover(U_copy,B_copy,temp_UμνTA,temps)
+                    Qimproved= calculate_topological_charge_improved(U_copy,B_copy,temp_UμνTA,Qclover,temps)
+                    push!(topo_values_improved, Qimproved)
+                    println("Qimproved:     $Qimproved")
+                elseif conditions[i]=="Eplaq"
+                    Eplaq = calculate_gauge_coupling_plaq(U_copy,B_copy,temp_UμνTA,temps)
+                    push!(gauge_values_plaq, Eplaq)
+                    println("Eplaq:         $Eplaq")
+                elseif conditions[i]=="Eclover"
+                    Eclover = calculate_gauge_coupling_clover(U_copy,B_copy,temp_UμνTA,temps)
+                    push!(gauge_values_clover, Eclover)
+                    println("Eclover:       $Eclover")
+                elseif conditions[i]=="Energydensity"
+                    E = calculate_energy_density(U_copy,B_copy,W_temp,temps)
+                    push!(energy_density_values, E)
+                    println("Energydensity: $E")
+                end
+            end
+
         end
     end
-    return topo_values_plaq, topo_values_clover, topo_values_improved
+
+    values = []
+    for i=1:numofobs
+        if conditions[i]=="Qplaq"
+            push!(values, topo_values_plaq)
+        elseif conditions[i]=="Qclover"
+            push!(values, topo_values_clover)
+        elseif conditions[i]=="Qimproved"
+            push!(values, topo_values_improved)
+        elseif conditions[i]=="Eplaq"
+            push!(values, gauge_values_plaq)
+        elseif conditions[i]=="Eclover"
+            push!(values, gauge_values_clover)
+        elseif conditions[i]=="Energydensity"
+            push!(values, energy_density_values)
+        end
+    end
+
+    return Tuple(values[i] for i=1:numofobs)
 end
 
 
 function main()
-    β = 5.7
+    β = 2.45
     NX = 4
     NY = 4
     NZ = 4
     NT = 4
-    NC = 3
-    Flux = [0,0,1,1,0,0]
+    NC = 2
+    Flux = [0,0,0,1,0,0]
     #HMC_test_4D(NX,NY,NZ,NT,NC,β)
     HMC_test_4D_tHooft(NX,NY,NZ,NT,NC,Flux,β)
 end
