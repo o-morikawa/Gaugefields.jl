@@ -131,13 +131,15 @@ import .Bridge_format: save_textdata, load_BridgeText!
 import Wilsonloop: loops_staple
 import .Abstractsmearing_module:
     STOUT_Layer,
-    STOUT_Layer_fast,
+    #STOUT_Layer_fast,
     CovNeuralnet,
     calc_smearedU,
     construct_smearing,
-    set_parameters,
+    set_parameters!,
     get_parameter_derivatives,
-    apply_smearing_U
+    apply_smearing_U,
+    zero_grad!,
+    get_parameters
 import .SUN_generator: Generator
 import .Gradientflow_module: Gradientflow, Gradientflow_general, flow!, get_tempG, get_eps
 #import .Verbose_print:Verbose_level,Verbose_3,Verbose_2,Verbose_1,println_verbose3,println_verbose2,println_verbose1,
@@ -233,7 +235,9 @@ export exptU!,
 export Initialize_Gaugefields, back_prop
 export Initialize_4DGaugefields
 export Initialize_Bfields
-export set_parameters, get_parameter_derivatives, apply_smearing_U
+export set_parameters!, get_parameter_derivatives, apply_smearing_U,
+    zero_grad!,
+    get_parameters
 export construct_Adjoint_rep_Gaugefields
 export get_myrank, getvalue, get_nprocs, Gradientflow_general
 export Heatbath_update

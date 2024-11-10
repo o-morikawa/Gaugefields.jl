@@ -1868,7 +1868,7 @@ function evaluate_gaugelinks_evenodd!(
     clear_U!(xout, iseven)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks_evenodd!(temp4, glinks, U, temp[1:3], iseven) # length >= 3
+        evaluate_gaugelinks_evenodd!(temp4, glinks, U, temps[1:3], iseven) # length >= 3
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
         add_U!(xout, temp4, iseven)
         #println("xout ", xout[:,:,ix,iy,iz,it])
@@ -1895,7 +1895,7 @@ function evaluate_gaugelinks!(
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp4, glinks, U, temp[1:3]) # length >= 3
+        evaluate_gaugelinks!(temp4, glinks, U, temps[1:3]) # length >= 3
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
         add_U!(xout, temp4)
         #println("xout ", xout[:,:,ix,iy,iz,it])
