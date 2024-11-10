@@ -1,7 +1,6 @@
 #using LatticeQCD
 
 using Random
-using Dates
 using Gaugefields
 using LinearAlgebra
 #using Wilsonloop
@@ -198,10 +197,7 @@ function HMC_test_4D_dynamicalB(
     Dim = 4
     Nwing = 0
 
-    #Random.seed!(123)
-    t0 = Dates.DateTime(2024,1,1,16,10,7)
-    t  = Dates.now()
-    Random.seed!(Dates.value(t-t0))
+    Random.seed!(123)
 
     flux = zeros(Int, 6)
     strtrj = 0
@@ -290,7 +286,7 @@ function HMC_test_4D_dynamicalB(
     substitute_U!(Bold,B)
     flux_old = zeros(Int, 6)
 
-    MDsteps = 50
+    MDsteps = 50 # even integer!!!
     temp1 = similar(U[1])
     temp2 = similar(U[1])
     comb = 6
