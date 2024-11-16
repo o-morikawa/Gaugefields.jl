@@ -17,7 +17,7 @@ function MDtest!(gauge_action,U,Dim)
 
     numtrj = 100
     for itrj = 1:numtrj
-        accepted = MDstep!(gauge_action,U,p,MDsteps,Dim,Uold,temp1,temp2)
+        accepted = MDstep!(gauge_action,U,p,MDsteps,Dim,Uold)
         numaccepted += ifelse(accepted,1,0)
 
         plaq_t = calculate_Plaquette(U,temp1,temp2)*factor
@@ -35,7 +35,7 @@ function calc_action(gauge_action,U,p)
 end
 
 
-function MDstep!(gauge_action,U,p,MDsteps,Dim,Uold,temp1,temp2)
+function MDstep!(gauge_action,U,p,MDsteps,Dim,Uold)
     Δτ = 1/MDsteps
     NC,_,NN... = size(U[1])
     for μ=1:Dim
@@ -51,14 +51,14 @@ function MDstep!(gauge_action,U,p,MDsteps,Dim,Uold,temp1,temp2)
     for itrj=1:MDsteps
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
 
-        P_update!(U,p,1.0,Δτ,Dim,gauge_action,temp1,temp2)
+        P_update!(U,p,1.0,Δτ,Dim,gauge_action)
 
         U_update!(U,p,0.5,Δτ,Dim,gauge_action)
     end
     Snew = calc_action(gauge_action,U,p)
     println("Sold = $Sold, Snew = $Snew")
     println("Snew - Sold = $(Snew-Sold)")
-    ratio = min(1,exp(-Snew+Sold))
+    ratio = min(1,exp(Snew-Sold))
     if rand() > ratio
         substitute_U!(U,Uold)
         return false
@@ -82,16 +82,16 @@ function U_update!(U,p,ϵ,Δτ,Dim,gauge_action)
     end
 end
 
-function P_update!(U,p,ϵ,Δτ,Dim,gauge_action,temp1,temp2) # p -> p +factor*U*dSdUμ
+function P_update!(U,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
     NC = U[1].NC
-    temp  = temp1
-    dSdUμ = temp2
+    temps = get_temporary_gaugefields(gauge_action)
+    dSdUμ = temps[end]
     factor =  -ϵ*Δτ/(NC)
 
     for μ=1:Dim
         calc_dSdUμ!(dSdUμ,gauge_action,μ,U)
-        mul!(temp,U[μ],dSdUμ) # U*dSdUμ
-        Traceless_antihermitian_add!(p[μ],factor,temp)
+        mul!(temps[1],U[μ],dSdUμ) # U*dSdUμ
+        Traceless_antihermitian_add!(p[μ],factor,temps[1])
     end
 end
 
@@ -104,7 +104,7 @@ function test1()
     Dim = 4
     NC = 3
 
-    U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold")
+    U  =Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold")
     filename = "./conf_00000008.ildg"
     ildg = ILDG(filename)
     i = 1
