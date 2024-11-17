@@ -101,43 +101,6 @@ function MDstep!(snet,U,p,MDsteps,Dim,Uold)
     end
 end
 
-function U_update!(U,p,ϵ,Δτ,Dim,snet)
-    temps = get_temp(snet._temp_U)
-    temp1, it_temp1 = get_temp(temps)
-    temp2, it_temp2 = get_temp(temps)
-    expU, it_expU = get_temp(temps)
-    W, it_W = get_temp(temps)
-
-    for μ=1:Dim
-        exptU!(expU,ϵ*Δτ,p[μ],[temp1,temp2])
-        mul!(W,expU,U[μ])
-        substitute_U!(U[μ],W)
-        
-    end
-    unused!(temps, it_temp1)
-    unused!(temps, it_temp2)
-    unused!(temps, it_expU)
-    unused!(temps, it_W)
-end
-
-function P_update!(U,p,ϵ,Δτ,Dim,snet) # p -> p +factor*U*dSdUμ
-    NC = U[1].NC
-    temps = get_temp(snet._temp_U)
-    temp1, it_temp1 = get_temp(temps)
-    dSdUμ, it_dSdUμ = get_temp(temps)
-    factor =  -ϵ*Δτ/(NC)
-
-    for μ=1:Dim
-        calc_dSdUμ!(dSdUμ,snet,μ,U)
-        #println("dSdU = ",getvalue(dSdUμ,1,1,1,1,1,1))
-        mul!(temp1,U[μ],dSdUμ) # U*dSdUμ
-        Traceless_antihermitian_add!(p[μ],factor,temp1)
-    end
-    unused!(temps, it_dSdUμ)
-    unused!(temps, it_temp1)
-end
-
-
 
 function test1()
     NX = 8
