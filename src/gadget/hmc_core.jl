@@ -2,9 +2,10 @@ module HMC_core_module
 
 using Requires
 
-import ..AbstractGaugefields_module: Initialize_Bfields
+import ..AbstractGaugefields_module
 import ..GaugeAction_module
-import ..Abstractsmearing_module: calc_smearedU, back_prop
+import ..HMC_module
+import ..Abstractsmearing_module
 import ..Temporalfields_module
 
 include("./hmc_mdstep.jl")
@@ -36,189 +37,38 @@ function MDstep!(gauge_action, U, B, p, MDsteps, Dim, Uold, temps;
     end
 end
 
+# Halfway-updating HMC
+function MDstep!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps;
+                 mpi=false)
+    if mpi
+        MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps)
+    else
+        MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps)
+    end
+end
+# Double-tesing HMC
+function MDstep!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
+                      Uold1,Uold2,Bold,flux_old,temps)
+    if mpi
+        MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
+                         Uold1,Uold2,Bold,flux_old,temps)
+    else
+        MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
+                     Uold1,Uold2,Bold,flux_old,temps)
+    end
+end
 
 function MDstep!(gauge_action, U, p, MDsteps, Dim, Uold, nn, dSdU, temps;
-                 displayon=false)
-    Δτ = 1.0 / MDsteps
-    gauss_distribution!(p)
-
-    Uout, Uout_multi, _ = calc_smearedU(U, nn)
-    Sold = calc_action(gauge_action, Uout, p)
-
-    substitute_U!(Uold, U)
-
-    for itrj = 1:MDsteps
-        U_update!(U, p, 0.5, Δτ, Dim, gauge_action, temps)
-
-        P_update!(U, p, 1.0, Δτ, Dim, gauge_action, dSdU, nn, temps)
-
-        U_update!(U, p, 0.5, Δτ, Dim, gauge_action, temps)
-    end
-
-    Uout, Uout_multi, _ = calc_smearedU(U, nn)
-    Snew = calc_action(gauge_action, Uout, p)
-
-    if displayon
-        println("Sold = $Sold, Snew = $Snew")
-        println("Snew - Sold = $(Snew-Sold)")
-    end
-
-    accept = exp(Sold - Snew) >= rand()
-
-    if accept != true #rand() > ratio
-        substitute_U!(U, Uold)
-        return false
+                 displayon=false, mpi=false)
+    if mpi
+        MDstep_stout_mpi!(gauge_action, U, p, MDsteps, Dim, Uold, nn, dSdU, temps;
+                          displayon=displayon)
     else
-        return true
-    end
-
-end
-
-function P_update!(U, p, ϵ, Δτ, Dim, gauge_action, dSdU, nn, temps)
-    NC = U[1].NC
-    factor = -ϵ * Δτ / (NC)
-    temp1, it_temp1 = get_temp(temps)
-
-    Uout, Uout_multi, _ = calc_smearedU(U, nn)
-
-    for μ = 1:Dim
-        calc_dSdUμ!(dSdU[μ], gauge_action, μ, Uout)
-    end
-
-    dSdUbare = back_prop(dSdU, nn, Uout_multi, U)
-
-    for μ = 1:Dim
-        mul!(temp1, U[μ], dSdUbare[μ]) # U*dSdUμ
-        Traceless_antihermitian_add!(p[μ], factor, temp1)
-    end
-    unused!(temps, it_temp1)
-end
-
-
-function MDstep_dynB!(
-    gauge_action,
-    U,
-    B,
-    flux,
-    p,
-    MDsteps, # MDsteps should be an even integer
-    Dim,
-    Uold,
-    Bold,
-    flux_old,
-    temps
-) # Halfway-updating HMC
-    Δτ = 1.0/MDsteps
-    gauss_distribution!(p)
-
-    Sold = calc_action(gauge_action,U,B,p)
-
-    substitute_U!(Uold,U)
-    substitute_U!(Bold,B)
-    flux_old[:] = flux[:]
-
-    for itrj=1:MDsteps
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
-
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action,temps)
-
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
-
-        if itrj == Int(MDsteps/2)
-            Flux_update!(B,flux)
-        end
-    end
-
-    Snew = calc_action(gauge_action,U,B,p)
-    ratio = min(1,exp(-Snew+Sold))
-    if rand() > ratio
-        println("rejected! flux = ", flux_old)
-        substitute_U!(U,Uold)
-        substitute_U!(B,Bold)
-        flux[:] = flux_old[:]
-        return false
-    else
-        println("accepted! flux_old = ", flux_old, " -> flux_new = ", flux)
-        return true
+        MDstep_stout!(gauge_action, U, p, MDsteps, Dim, Uold, nn, dSdU, temps;
+                      displayon=displayon)
     end
 end
 
-function MDstep_dynB!(
-    gauge_action,
-    U,
-    B,
-    flux,
-    p,
-    MDsteps,
-    num_HMC,
-    Dim,
-    Uold1,
-    Uold2,
-    Bold,
-    flux_old,
-    temps
-) # Double-tesing HMC
-    p0 = initialize_TA_Gaugefields(U)
-    Sold = calc_action(gauge_action,U,B,p0)
 
-    substitute_U!(Uold1,U)
-    substitute_U!(Bold, B)
-    flux_old[:] = flux[:]
-
-    Flux_update!(B,flux)
-
-    for ihmc=1:num_HMC
-        MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold2,temps)
-    end
-
-    Snew = calc_action(gauge_action,U,B,p0)
-    #println("Sold = $Sold, Snew = $Snew")
-    #println("Snew - Sold = $(Snew-Sold)")
-    ratio = min(1,exp(-Snew+Sold))
-    if rand() > ratio
-        println("rejected! flux = ", flux_old)
-        substitute_U!(U,Uold1)
-        substitute_U!(B,Bold)
-        flux[:] = flux_old[:]
-        return false
-    else
-        println("accepted! flux_old = ", flux_old, " -> flux_new = ", flux)
-        return true
-    end
-end
-
-function Flux_update!(B,flux)
-
-    NC  = B[1,2].NC
-    NDW = B[1,2].NDW
-    NX  = B[1,2].NX
-    NY  = B[1,2].NY
-    NZ  = B[1,2].NZ
-    NT  = B[1,2].NT
-
-    i = rand(1:6)
-#    flux[i] += rand(-1:1)
-#    flux[i] %= NC
-#    flux[i] += (flux[i] < 0) ? NC : 0
-    flux[:] = rand(0:NC-1,6)
-    B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
-
-end
-
-function set_comb(U, Dim)
-    if Dim == 4
-        comb = 6 #4*3/2
-    elseif Dim == 3
-        comb = 3
-    elseif Dim == 2
-        comb = 1
-    else
-        error("dimension $Dim is not supported")
-    end
-    
-    factor = 1 / (comb * U[1].NV * U[1].NC)
-
-    return comb, factor
-end
 
 end
