@@ -4,24 +4,38 @@ using Random
 using LinearAlgebra
 
 import ..AbstractGaugefields_module:
+    AbstractGaugefields,
     Initialize_Bfields,
     gauss_distribution!,
     substitute_U!,
     exptU!,
     mul!,
     Traceless_antihermitian_add!
-import ..GaugeAction_module: evaluate_GaugeAction, calc_dSdUμ!
+import ..GaugeAction_module:
+    GaugeAction,
+    get_temporary_gaugefields,
+    evaluate_GaugeAction,
+    calc_dSdUμ!
 import ..Abstractsmearing_module: calc_smearedU, back_prop
 import ..Temporalfields_module: Temporalfields, get_temp, unused!
 
-function calc_action(gauge_action, U, p)
+function calc_action(
+    gauge_action::GaugeAction,
+    U::Array{T,1},
+    p
+) where {T<:AbstractGaugefields}
     NC = U[1].NC
     Sg = -evaluate_GaugeAction(gauge_action, U) / NC #evaluate_Gauge_action(gauge_action,U) = tr(evaluate_Gaugeaction_untraced(gauge_action,U))
     Sp = p * p / 2
     S = Sp + Sg
     return real(S)
 end
-function calc_action(gauge_action, U, B, p)
+function calc_action(
+    gauge_action::GaugeAction,
+    U::Array{T,1},
+    B::Array{T,2},
+    p
+) where {T<:AbstractGaugefields}
     NC = U[1].NC
     Sg = -evaluate_GaugeAction(gauge_action, U, B) / NC
     Sp = p * p / 2
@@ -29,8 +43,40 @@ function calc_action(gauge_action, U, B, p)
     return real(S)
 end
 
-function U_update!(U, p, ϵ, Δτ, Dim, gauge_action, temps)
+function U_update!(
+    U::Array{T,1},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction,
+    temps::Temporalfields
+) where {T<:AbstractGaugefields}
     #temps = get_temporary_gaugefields(gauge_action)
+    temp1, it_temp1 = get_temp(temps)#[1]
+    temp2, it_temp2 = get_temp(temps)#temps[2]
+    expU, it_expU = get_temp(temps)#[3]
+    W, it_W = get_temp(temps)#[4]
+
+    for μ = 1:Dim
+        exptU!(expU, ϵ * Δτ, p[μ], [temp1, temp2])
+        mul!(W, expU, U[μ])
+        substitute_U!(U[μ], W)
+    end
+    unused!(temps, it_temp1)
+    unused!(temps, it_temp2)
+    unused!(temps, it_expU)
+    unused!(temps, it_W)
+end
+function U_update!(
+    U::Array{T,1},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction,
+) where {T<:AbstractGaugefields}
+    temps = get_temporary_gaugefields(gauge_action)
     temp1, it_temp1 = get_temp(temps)#[1]
     temp2, it_temp2 = get_temp(temps)#temps[2]
     expU, it_expU = get_temp(temps)#[3]
@@ -48,7 +94,15 @@ function U_update!(U, p, ϵ, Δτ, Dim, gauge_action, temps)
 end
 
 
-function P_update!(U, p, ϵ, Δτ, Dim, gauge_action, temps) # p -> p +factor*U*dSdUμ
+function P_update!(
+    U::Array{T,1},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction,
+    temps::Temporalfields
+) where {T<:AbstractGaugefields}  # p -> p +factor*U*dSdUμ
     NC = U[1].NC
     #temps = get_temporary_gaugefields(gauge_action)
     temp1, it_temp1 = get_temp(temps)
@@ -63,7 +117,39 @@ function P_update!(U, p, ϵ, Δτ, Dim, gauge_action, temps) # p -> p +factor*U*
     unused!(temps, it_dSdUμ)
     unused!(temps, it_temp1)
 end
-function P_update!(U, B, p, ϵ, Δτ, Dim, gauge_action, temps)
+function P_update!(
+    U::Array{T,1},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction
+) where {T<:AbstractGaugefields} # p -> p +factor*U*dSdUμ
+    NC = U[1].NC
+    temps = get_temporary_gaugefields(gauge_action)
+    temp1, it_temp1 = get_temp(temps)
+    dSdUμ, it_dSdUμ = get_temp(temps)
+    factor = -ϵ * Δτ / (NC)
+
+    for μ = 1:Dim
+        calc_dSdUμ!(dSdUμ, gauge_action, μ, U)
+        mul!(temp1, U[μ], dSdUμ) # U*dSdUμ
+        Traceless_antihermitian_add!(p[μ], factor, temp1)
+    end
+    unused!(temps, it_dSdUμ)
+    unused!(temps, it_temp1)
+end
+
+function P_update!(
+    U::Array{T,1},
+    B::Array{T,2},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction,
+    temps::Temporalfields
+) where {T<:AbstractGaugefields}
     NC = U[1].NC
     temp1, it_temp1 = get_temp(temps)
     dSdUμ, it_dSdUμ = get_temp(temps)
@@ -77,9 +163,69 @@ function P_update!(U, B, p, ϵ, Δτ, Dim, gauge_action, temps)
     unused!(temps, it_dSdUμ)
     unused!(temps, it_temp1)
 end
+function P_update!(
+    U::Array{T,1},
+    B::Array{T,2},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction
+) where {T<:AbstractGaugefields}
+    NC = U[1].NC
+    temps = get_temporary_gaugefields(gauge_action)
+    temp1, it_temp1 = get_temp(temps)
+    dSdUμ, it_dSdUμ = get_temp(temps)
+    factor = -ϵ * Δτ / (NC)
 
+    for μ = 1:Dim
+        calc_dSdUμ!(dSdUμ, gauge_action, μ, U, B)
+        mul!(temp1, U[μ], dSdUμ) # U*dSdUμ
+        Traceless_antihermitian_add!(p[μ], factor, temp1)
+    end
+    unused!(temps, it_dSdUμ)
+    unused!(temps, it_temp1)
+end
 
-function P_update!(U, p, ϵ, Δτ, Dim, gauge_action, dSdU, nn, temps)
+function P_update!(
+    U::Array{T,1},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction,
+    dSdU,
+    nn,
+    temps::Temporalfields
+) where {T<:AbstractGaugefields}
+    NC = U[1].NC
+    factor = -ϵ * Δτ / (NC)
+    temp1, it_temp1 = get_temp(temps)
+
+    Uout, Uout_multi, _ = calc_smearedU(U, nn)
+
+    for μ = 1:Dim
+        calc_dSdUμ!(dSdU[μ], gauge_action, μ, Uout)
+    end
+
+    dSdUbare = back_prop(dSdU, nn, Uout_multi, U)
+
+    for μ = 1:Dim
+        mul!(temp1, U[μ], dSdUbare[μ]) # U*dSdUμ
+        Traceless_antihermitian_add!(p[μ], factor, temp1)
+    end
+    unused!(temps, it_temp1)
+end
+function P_update!(
+    U::Array{T,1},
+    p,
+    ϵ,
+    Δτ,
+    Dim,
+    gauge_action::GaugeAction,
+    dSdU,
+    nn
+) where {T<:AbstractGaugefields}
     NC = U[1].NC
     factor = -ϵ * Δτ / (NC)
     temp1, it_temp1 = get_temp(temps)
@@ -99,7 +245,10 @@ function P_update!(U, p, ϵ, Δτ, Dim, gauge_action, dSdU, nn, temps)
     unused!(temps, it_temp1)
 end
 
-function Flux_update!(B,flux)
+function Flux_update!(
+    B::Array{T,2},
+    flux
+) where {T<:AbstractGaugefields}
 
     NC  = B[1,2].NC
     NDW = B[1,2].NDW
@@ -117,7 +266,10 @@ function Flux_update!(B,flux)
 
 end
 
-function set_comb(U, Dim)
+function set_comb(
+    U::Array{T,1},
+    Dim
+) where {T<:AbstractGaugefields}
     if Dim == 4
         comb = 6 #4*3/2
     elseif Dim == 3
