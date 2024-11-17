@@ -85,16 +85,16 @@ function HMC_test_4D_dynamicalB(
     end
 
     if isInitial
-        flux = rand(0:NC-1,6)
+        #flux = rand(0:NC-1,6)
         flux[:] = MPI.bcast(flux[:], 0, MPI.COMM_WORLD)
         if get_myrank(U)==0
             println("Flux : ", flux)
         end
         if mpi
             PEs = pes
-            B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = false)
+            #B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = false)
         else
-            B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+            #B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
         end
     else
         idx = findfirst("_F",filename)[2]
@@ -183,11 +183,13 @@ function HMC_test_4D_dynamicalB(
         #println("$itrj plaq_t = $plaq_t")
         
         if itrj % 10 == 0
+            @time plaq_t = calculate_Plaquette(U,B,temps)*factor
             if get_myrank(U)==0
-                @time plaq_t = calculate_Plaquette(U,B,temps)*factor
                 println("$itrj plaq_t = $plaq_t")
-                #            poly = calculate_Polyakov_loop(U,temps) 
-                #            println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
+            end
+            #            poly = calculate_Polyakov_loop(U,temps) 
+            #            println("$itrj polyakov loop = $(real(poly)) $(imag(poly))")
+            if get_myrank(U)==0
                 println("acceptance ratio ",numaccepted/(itrj-strtrj))
             end
         end
@@ -198,7 +200,9 @@ function HMC_test_4D_dynamicalB(
             open("./conf_name/U_beta$(2β)_L$(NX)_mpi$(get_myrank(U)).txt", "w") do f
                 write(f, filename)
             end
-            println("Save conf: itrj=", itrj)
+            if get_myrank(U)==0
+                println("Save conf: itrj=", itrj)
+            end
         end
     end
     return plaq_t,numaccepted/numtrj
