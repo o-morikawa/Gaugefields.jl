@@ -190,6 +190,7 @@ import .AbstractGaugefields_module:
     RandomGauges,
     Oneinstanton,
     Initialize_4DGaugefields,
+    Initialize_3D_UN_Gaugefields,
     construct_Λmatrix_forSTOUT!,
     evaluate_gaugelinks_evenodd!,
     map_U!,
@@ -259,7 +260,7 @@ export exptU!,
     set_wing_U!,
     Traceless_antihermitian!
 export Initialize_Gaugefields, back_prop
-export Initialize_4DGaugefields
+export Initialize_4DGaugefields, Initialize_3D_UN_Gaugefields
 export Initialize_Bfields
 export set_parameters!, get_parameter_derivatives, apply_smearing_U,
     zero_grad!,
