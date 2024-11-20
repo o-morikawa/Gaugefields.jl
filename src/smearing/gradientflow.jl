@@ -579,7 +579,6 @@ function flow!(U, g::T) where {T<:Gradientflow_3D}
         add_U!(Ftmp, -(17 / 36 * eps), F0)
         exp_aF_U!(U, im, Ftmp, W2, temps) #exp(a*F)*U
         
-        normalize_U!(U)
     end
     unused!(Ftemps, it_F0)
     unused!(Ftemps, it_F1)

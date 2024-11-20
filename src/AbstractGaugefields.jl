@@ -3211,7 +3211,7 @@ function calc_Zfactor!(Z, U, temps_g::Temporalfields)
     temp4 = temps[4]
     z, it_z = get_temp(temps_g)
 
-    clear_U!(Z)
+    clear_U!(z)
     substitute_U!(temp1, U)
     for μ=1:3
         ##
@@ -3219,34 +3219,35 @@ function calc_Zfactor!(Z, U, temps_g::Temporalfields)
         multiply_12!(temp3, temp2, temp1, 0, false, true)
         
         temp2 = shift_U(temp1, μ)
-        multiply_12!(z, temp2, temp3, 0, false, false)
-        add_U!(Z, 1/2, z)
+        multiply_12!(Z, temp2, temp3, 0, false, false)
+        add_U!(z, 1/2, Z)
 
         ##
         temp2 = shift_U(temp1, -μ)
         temp3 = calculate_gdg(temp1, -μ, cc=true)
         multiply_12!(temp4, temp3, temp2, 0, false, true)
         
-        multiply_12!(z, temp1, temp4, 0, false, false)
-        add_U!(Z, -1/2, z)
+        multiply_12!(Z, temp1, temp4, 0, false, false)
+        add_U!(z, -1/2, Z)
 
         ##
         temp2 = calculate_gdg(temp1, -μ, cc=false)
         multiply_12!(temp3, temp2, temp1, 0, false, true)
         
         temp2 = shift_U(temp1, -μ)
-        multiply_12!(z, temp2, temp3, 0, false, false)
-        add_U!(Z, 1/2, z)
+        multiply_12!(Z, temp2, temp3, 0, false, false)
+        add_U!(z, 1/2, Z)
 
         ##
         temp2 = shift_U(temp1, μ)
         temp3 = calculate_gdg(temp1, μ, cc=true)
         multiply_12!(temp4, temp3, temp2, 0, false, true)
         
-        multiply_12!(z, temp1, temp4, 0, false, false)
-        add_U!(Z, -1/2, z)
+        multiply_12!(Z, temp1, temp4, 0, false, false)
+        add_U!(z, -1/2, Z)
         
     end
+    Antihermitian!(Z, z, factor=1/2)
     
     unused!(temps_g,it_temps)
     unused!(temps_g,it_z)
