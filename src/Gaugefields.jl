@@ -205,6 +205,7 @@ import .AbstractGaugefields_module:
     sweepaway_4D_Bplaquettes!,
     isLoopwithB,
     isStaplewithB,
+    calculate_gdg,
     construct_Adjoint_rep_Gaugefields,
     get_myrank,
     getvalue,
@@ -229,7 +230,8 @@ import .Obs_measure_module:
     calculate_gauge_coupling_plaq,
     calculate_gauge_coupling_clover,
     calculate_energy_density,
-    calc_Q_gradflow!
+    calc_Q_gradflow!,
+    winding_UN_3D
 import .HMC_core_module: MDstep!
 
 import .Temporalfields_module: Temporalfields, unused!, get_temp
@@ -246,7 +248,7 @@ export evaluate_gaugelinks_evenodd!, normalize!, normalize3!, normalizeN!
 export loops_staple
 export save_textdata, load_BridgeText!
 export shift_U, evaluate_gaugelinks!, Gradientflow, flow!
-export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB
+export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calculate_gdg
 export heatbath!, Heatbath
 export STOUT_Layer, CovNeuralnet, calc_smearedU, make_loops_fromname, STOUT_Layer_fast
 export GaugeAction,
@@ -281,7 +283,8 @@ export calculate_topological_charge_plaq,
     calculate_gauge_coupling_plaq,
     calculate_gauge_coupling_clover,
     calculate_energy_density,
-    calc_Q_gradflow!
+    calc_Q_gradflow!,
+    winding_UN_3D
 export MDstep!
 
 end

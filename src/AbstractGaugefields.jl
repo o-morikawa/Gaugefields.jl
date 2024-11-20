@@ -222,6 +222,11 @@ function substitute_U!(
     return
 end
 
+function calculate_gdg(a::T,ν::Integer;cc=false) where {T<:AbstractGaugefields}
+    error("calculate_gdg(a,ν;cc) is not implemented in type $(typeof(a))")
+    return
+end
+
 function Initialize_4DGaugefields(
     NC,
     NDW,
@@ -1133,7 +1138,6 @@ end
 
 function Initialize_3D_UN_Gaugefields(
     NC,
-    NDW,
     NN...;
     condition="cold",
     verbose_level=2,

@@ -459,7 +459,7 @@ function Flux_update_mpi!(
     flux,
     PEs,
 ) where {T<:AbstractGaugefields}
-
+    
     NC  = B[1,2].NC
     NDW = B[1,2].NDW
     NX  = B[1,2].NX

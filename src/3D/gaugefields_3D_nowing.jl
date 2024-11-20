@@ -15,7 +15,7 @@ struct Gaugefields_3D_nowing{NC} <: Gaugefields_3D{NC}
     NC::Int64
     mpi::Bool
     verbose_print::Verbose_print
-    Ushifted::Array{ComplexF64,6}
+    Ushifted::Array{ComplexF64,5}
 
     function Gaugefields_3D_nowing(
         NC::T,
@@ -899,13 +899,6 @@ function partial_tr(a::Gaugefields_3D_nowing{NC}, μ) where {NC}
     return s
 end
 
-function Base.:+(a::T1, b::T2) where {T1<:Abstractfields,T2<:Abstractfields}
-    c = deepcopy(a)
-    add_U!(c,b)
-    return c
-end
-
-
 function add_U!(c::Gaugefields_3D_nowing{NC}, a::T1) where {NC,T1<:Abstractfields}
 
     NT = c.NT
@@ -1032,12 +1025,6 @@ function LinearAlgebra.mul!(
         end
     end
     set_wing_U!(c)
-end
-
-function Base.:*(a::T1,b::T2) where {T1<:Abstractfields,T2<:Abstractfields}
-    c = similar(a)
-    LinearAlgebra.mul!(c,a,b)
-    return c
 end
 
 function LinearAlgebra.mul!(
@@ -1187,6 +1174,36 @@ function lambda_k_mul!(
 end
 
 
+
+function calculate_gdg(
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer;
+    cc=false,
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = similar(a)
+    substitute_U!(b, a)
+    b = shift_U(b, ν)
+
+    c = similar(a)
+
+    eye = Matrix(LinearAlgebra.I,NC,NC)
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                if !cc
+                    c[:,:,ix,iy,it] = a[:,:,ix,iy,it]' * b[:,:,ix,iy,it] - eye
+                else
+                    c[:,:,ix,iy,it] = b[:,:,ix,iy,it]' * a[:,:,ix,iy,it] - eye
+                end
+            end
+        end
+    end
+    return c
+end
 
 
 
