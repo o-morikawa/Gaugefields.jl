@@ -3247,8 +3247,6 @@ function calc_Zfactor!(Z, U, temps_g::Temporalfields)
         add_U!(Z, -1/2, z)
         
     end
-    substitute_U!(z, Z)
-    multiply_12!(Z, z, U, 0, false, false)
     
     unused!(temps_g,it_temps)
     unused!(temps_g,it_z)
@@ -3298,6 +3296,27 @@ function exp_aF_U!(
         exptU!(expU, a, F[μ], [temp1, temp2])
         mul!(W[μ], expU, U[μ])
     end
+    unused!(temps, it_expU)
+    unused!(temps, it_temp1)
+    unused!(temps, it_temp2)
+
+    set_wing_U!(W)
+end
+function exp_aF_U!(
+    W::T,
+    a::N,
+    F::T,
+    U::T,
+    temps::Temporalfields{T}
+) where {N<:Number,T<:AbstractGaugefields} #exp(a*F)*U
+    @assert a != 0 "Δτ should not be zero in expF_U! function!"
+    expU, it_expU = get_temp(temps)
+    temp1, it_temp1 = get_temp(temps)
+    temp2, it_temp2 = get_temp(temps)
+
+    exptU!(expU, a, F, [temp1, temp2])
+    mul!(W, expU, U)
+
     unused!(temps, it_expU)
     unused!(temps, it_temp1)
     unused!(temps, it_temp2)
