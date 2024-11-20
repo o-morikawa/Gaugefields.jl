@@ -15,7 +15,10 @@ import ..AbstractGaugefields_module:
     evaluate_gaugelinks!,
     construct_Λmatrix_forSTOUT!,
     Traceless_antihermitian!,
-    shift_U
+    shift_U,
+    normalize_U!,
+    calculate_gdg,
+    calc_Zfactor!
 import ..GaugeAction_module: GaugeAction, get_temporary_gaugefields, calc_dSdUμ!
 import ..Abstractsmearing_module: Abstractsmearing
 import Wilsonloop: make_loops_fromname, Wilsonline
@@ -201,6 +204,27 @@ mutable struct Gradientflow{TA,T} <: Abstractsmearing
     end
 
 end
+
+
+struct Gradientflow_3D{Z,T} <: Abstractsmearing
+    Nflow::Int64
+    eps::Float64
+    _temporal_U_field::Temporalfields{T}
+
+    function Gradientflow_3D(
+        U::T;
+        Nflow=1,
+        eps=0.01,
+    ) where {T<:AbstractGaugefields}
+        Z0 = similar(U)
+        Utemps = Temporalfields(U, num=6)
+
+        return new{typeof(Z0),T}(Nflow, eps, Utemps)
+    end
+
+end
+
+
 
 function get_tempG(x::T) where {T<:Gradientflow}
     return x._temporal_G_field
@@ -496,5 +520,18 @@ function F_update!(F, U, B, factor, Dim, gauge_action) # F -> F +factor*U*dSdUμ
     unused!(temps, it_temp1)
     unused!(temps, it_dSdUμ)
 end
+
+
+function flow!(U, g::T) where {T<:Gradientflow_3D}
+    temps = g._temporal_U_field
+    Z, it_Z = get_temp(temps)
+    for istep = 1:g.Nflow
+        calc_Zfactor!(Z, U, temps)
+        add_U!(U, g.eps, Z)
+        normalize_U!(U)
+    end
+    unused!(temps,it_Z)
+end
+
 
 end
