@@ -20,7 +20,8 @@ import ..AbstractGaugefields_module:
     shift_U,
     normalize_U!,
     calculate_gdg,
-    calc_Zfactor!
+    calc_Zfactor!,
+    calc_TA_Zfactor!
 import ..GaugeAction_module: GaugeAction, get_temporary_gaugefields, calc_dSdUμ!
 import ..Abstractsmearing_module: Abstractsmearing
 import Wilsonloop: make_loops_fromname, Wilsonline
@@ -216,6 +217,26 @@ struct Gradientflow_3D{T,T} <: Abstractsmearing
     _temporal_U_field::Temporalfields{T}
 
     function Gradientflow_3D(
+        U::T;
+        Nflow=1,
+        eps=0.01,
+    ) where {T<:AbstractGaugefields}
+        Ftemps = Temporalfields(U, num=4)
+        Utemps = Temporalfields(U, num=2)
+        tempG = Temporalfields(U, num=10)
+
+        return new{typeof(U),T}(Nflow, eps, Ftemps, tempG, Utemps)
+    end
+
+end
+struct Gradientflow_TA_3D{T,T} <: Abstractsmearing
+    Nflow::Int64
+    eps::Float64
+    _temporal_A_field::Temporalfields{T}
+    _temporal_G_field::Temporalfields{T}
+    _temporal_U_field::Temporalfields{T}
+
+    function Gradientflow_TA_3D(
         U::T;
         Nflow=1,
         eps=0.01,
@@ -573,6 +594,54 @@ function flow!(U, g::T) where {T<:Gradientflow_3D}
         clear_U!(F2)
         #add_force!(F2, W2, temps, plaqonly=true)
         calc_Zfactor!(F2, W2, temps)
+        clear_U!(Ftmp)
+        add_U!(Ftmp, -(3 / 4 * eps), F2)
+        add_U!(Ftmp, (8 / 9 * eps), F1)
+        add_U!(Ftmp, -(17 / 36 * eps), F0)
+        exp_aF_U!(U, im, Ftmp, W2, temps) #exp(a*F)*U
+        
+    end
+    unused!(Ftemps, it_F0)
+    unused!(Ftemps, it_F1)
+    unused!(Ftemps, it_F2)
+    unused!(Ftemps, it_Ftmp)
+    unused!(Utemps, it_W1)
+    unused!(Utemps, it_W2)
+end
+function flow!(U, g::T) where {T<:Gradientflow_TA_3D}
+    Ftemps = g._temporal_A_field
+    Utemps = g._temporal_U_field
+    temps = g._temporal_G_field
+
+    F0, it_F0 = get_temp(Ftemps)
+    F1, it_F1 = get_temp(Ftemps)
+    F2, it_F2 = get_temp(Ftemps)
+    Ftmp, it_Ftmp = get_temp(Ftemps)
+
+    W1, it_W1 = get_temp(Utemps)
+    W2, it_W2 = get_temp(Utemps)
+    eps = g.eps
+
+    for istep = 1:g.Nflow #RK4 integrator -> RK3?
+        clear_U!(F0)
+        #add_force!(F0, U, temps, plaqonly=true)
+        calc_TA_Zfactor!(F0, U, temps)
+
+        exp_aF_U!(W1, -eps * (im / 4), F0, U, temps) #exp(a*F)*U
+
+        #
+        clear_U!(F1)
+        #add_force!(F1, W1, temps, plaqonly=true)
+        calc_TA_Zfactor!(F1, W1, temps)
+        clear_U!(Ftmp)
+        add_U!(Ftmp, -(8 / 9 * eps), F1)
+        add_U!(Ftmp, (17 / 36 * eps), F0)
+        exp_aF_U!(W2, im, Ftmp, W1, temps) #exp(a*F)*U
+
+        #
+        clear_U!(F2)
+        #add_force!(F2, W2, temps, plaqonly=true)
+        calc_TA_Zfactor!(F2, W2, temps)
         clear_U!(Ftmp)
         add_U!(Ftmp, -(3 / 4 * eps), F2)
         add_U!(Ftmp, (8 / 9 * eps), F1)

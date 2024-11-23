@@ -1140,6 +1140,7 @@ function Initialize_3D_UN_Gaugefields(
     NC,
     NN...;
     condition="cold",
+    m=1,
     verbose_level=2,
     randomnumber="Random",
 )
@@ -1156,6 +1157,13 @@ function Initialize_3D_UN_Gaugefields(
             NN...,
             verbose_level=verbose_level,
             randomnumber=randomnumber,
+        )
+    elseif condition == "test_map"
+        u = TestmapGauges_3D(
+            NC,
+            m,
+            NN...,
+            verbose_level=verbose_level
         )
     else
         error("not supported")
@@ -3202,7 +3210,7 @@ function add_force!(F::Array{T,1},U::Array{T,1},temps::Array{<: AbstractGaugefie
 end
 =#
 
-
+#=
 function calc_Zfactor!(Z, U, temps_g::Temporalfields)
     temps, it_temps = get_temp(temps_g, 4)
     temp1 = temps[1]
@@ -3248,6 +3256,61 @@ function calc_Zfactor!(Z, U, temps_g::Temporalfields)
         
     end
     Antihermitian!(Z, z, factor=1/2)
+    
+    unused!(temps_g,it_temps)
+    unused!(temps_g,it_z)
+    return
+end
+=#
+function calc_gdgaction_3D(U,temps_g::Temporalfields)
+    NV = U.NV
+
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+
+    S = 0.0 + 0.0im
+    for μ=1:3
+        s = calculate_gdg_action(U, μ, [temp1,temp2,temp3])
+        S += (-1/4) * s
+    end
+    unused!(temps_g,it_temps)
+    return real(S) / NV
+end
+function calc_Zfactor!(Z, U, temps_g::Temporalfields)
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+    z, it_z = get_temp(temps_g)
+
+    clear_U!(z)
+    substitute_U!(temp1, U)
+    for μ=1:3
+        calculate_g_gdg_gdg_g!(Z, temp1, μ, [temp2, temp3], cc=false)
+        add_U!(z, 1/2, Z)
+    end
+    Antihermitian!(Z, z, factor=1)
+    
+    unused!(temps_g,it_temps)
+    unused!(temps_g,it_z)
+    return
+end
+function calc_TA_Zfactor!(Z, U, temps_g::Temporalfields)
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+    z, it_z = get_temp(temps_g)
+
+    clear_U!(z)
+    substitute_U!(temp1, U)
+    for μ=1:3
+        calculate_g_gdg_gdg_g!(Z, temp1, μ, [temp2, temp3], cc=false)
+        add_U!(z, 1/2, Z)
+    end
+    Traceless_antihermitian!(Z, z, factor=2)
     
     unused!(temps_g,it_temps)
     unused!(temps_g,it_z)

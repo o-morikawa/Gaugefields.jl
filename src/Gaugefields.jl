@@ -152,7 +152,7 @@ import .Abstractsmearing_module:
     zero_grad!,
     get_parameters
 import .SUN_generator: Generator
-import .Gradientflow_module: Gradientflow, Gradientflow_general, Gradientflow_3D, flow!, get_tempG, get_eps
+import .Gradientflow_module: Gradientflow, Gradientflow_general, Gradientflow_3D, Gradientflow_TA_3D, flow!, get_tempG, get_eps
 #import .Verbose_print:Verbose_level,Verbose_3,Verbose_2,Verbose_1,println_verbose3,println_verbose2,println_verbose1,
 #    print_verbose1,print_verbose2,print_verbose3
 
@@ -206,6 +206,8 @@ import .AbstractGaugefields_module:
     isLoopwithB,
     isStaplewithB,
     calculate_gdg,
+    calc_gdgaction_3D,
+    det_unitary,
     construct_Adjoint_rep_Gaugefields,
     get_myrank,
     getvalue,
@@ -248,7 +250,7 @@ export evaluate_gaugelinks_evenodd!, normalize!, normalize3!, normalizeN!
 export loops_staple
 export save_textdata, load_BridgeText!
 export shift_U, evaluate_gaugelinks!, Gradientflow, flow!
-export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calculate_gdg
+export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calculate_gdg, calc_gdgaction_3D, det_unitary
 export heatbath!, Heatbath
 export STOUT_Layer, CovNeuralnet, calc_smearedU, make_loops_fromname, STOUT_Layer_fast
 export GaugeAction,
@@ -268,7 +270,7 @@ export set_parameters!, get_parameter_derivatives, apply_smearing_U,
     zero_grad!,
     get_parameters
 export construct_Adjoint_rep_Gaugefields
-export get_myrank, getvalue, get_nprocs, Gradientflow_general, Gradientflow_3D
+export get_myrank, getvalue, get_nprocs, Gradientflow_general, Gradientflow_3D, Gradientflow_TA_3D
 export Heatbath_update
 export println_verbose_level1, println_verbose_level2, println_verbose_level3
 export overrelaxation!

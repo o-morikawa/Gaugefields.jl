@@ -1,4 +1,12 @@
 using Random
+using LinearAlgebra
+
+function random_unitary(rng, N)
+    A = rand(rng, ComplexF64, N, N) + im * rand(rng, ComplexF64, N, N)
+    Q, R = qr(A)
+    Q *= Diagonal(sign.(diag(R)))
+    return Q
+end
 
 """
 `Gaugefields_3D_nowing{NC} <: Gaugefields_3D{NC}``
@@ -255,6 +263,23 @@ function m3complv!(a::T) where {T<:Gaugefields_3D_nowing}
     end
 end
 
+function det_unitary(U::Gaugefields_3D_nowing)
+    NT = U.NT
+    NY = U.NY
+    NX = U.NX
+    NV = U.NV
+
+    d = zeros(ComplexF64,NX,NY,NT)
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                d[ix,iy,it] = det(U[:,:,ix,iy,it])
+            end
+        end
+    end
+    return d
+end
+
 function randomGaugefields_3D_nowing(
     NC,
     NX,
@@ -276,17 +301,11 @@ function randomGaugefields_3D_nowing(
 
     for it = 1:NT
         for iy = 1:NY
-            for ix = 1:NX
-                for j = 1:NC
-                    @simd for i = 1:NC
-                        U[i, j, ix, iy, it] =
-                            rand(rng) - 0.5 + im * (rand(rng) - 0.5)
-                    end
-                end
+            @simd for ix = 1:NX
+                U[:, :, ix, iy, it] = random_unitary(rng, NC)
             end
         end
     end
-    normalize_U!(U)
     set_wing_U!(U)
     return U
 end
@@ -766,6 +785,56 @@ end
      wher   x = vin - Conjg(vin)      
 -----------------------------------------------------c
     """
+function Traceless_antihermitian!(
+    vout::Gaugefields_3D_nowing{NC},
+    vin::Gaugefields_3D_nowing{NC};
+    factor=1
+) where {NC}
+    #NC = vout.NC
+    fac1N = 1 / NC
+    nv = vin.NV
+
+    NX = vin.NX
+    NY = vin.NY
+    NT = vin.NT
+
+    for it = 1:NT
+        for iy = 1:NY
+            @simd for ix = 1:NX
+                tri = 0.0
+                @simd for k = 1:NC
+                    tri += imag(vin[k, k, ix, iy, it])
+                end
+                tri *= fac1N
+                @simd for k = 1:NC
+                    vout[k, k, ix, iy, it] =
+                        (imag(vin[k, k, ix, iy, it]) - tri) * im * factor
+                end
+            end
+        end
+    end
+
+    for it = 1:NT
+        for iy = 1:NY
+            @simd for ix = 1:NX
+                for k1 = 1:NC
+                    @simd for k2 = k1+1:NC
+                        vv =
+                            0.5 * (
+                                vin[k1, k2, ix, iy, it] -
+                                    conj(vin[k2, k1, ix, iy, it])
+                            )
+                        vout[k1, k2, ix, iy, it] = vv*factor
+                        vout[k2, k1, ix, iy, it] = -conj(vv)*factor
+                    end
+                end
+            end
+        end
+    end
+
+
+end
+
 function Antihermitian!(
     vout::Gaugefields_3D_nowing{NC},
     vin::Gaugefields_3D_nowing{NC};factor = 1
@@ -1184,20 +1253,78 @@ function calculate_gdg(
     NY = a.NY
     NT = a.NT
 
-    b = similar(a)
-    substitute_U!(b, a)
-    b = shift_U(b, ν)
-
     c = similar(a)
+    clear_U!(c)
 
-    eye = Matrix(LinearAlgebra.I,NC,NC)
+    #eye = Matrix(LinearAlgebra.I,NC,NC)
     for it = 1:NT
+        t = it
+        t_f = it
+        t_b = it
+        if ν==3
+            t_f += 1
+            t_b += - 1
+        elseif ν==-3
+            t_f += - 1
+            t_b += 1
+        end
+        if t_f == (NT+1)
+            t_f = 1
+        elseif t_b == 0
+            t_b = NT
+        elseif t_b == (NT+1)
+            t_b = 1
+        elseif t_f == 0
+            t_f = NT
+        end
         for iy = 1:NY
-            for ix = 1:NX
+            y = iy
+            y_f = iy
+            y_b = iy
+            if ν==2
+                y_f += 1
+                y_b += - 1
+            elseif ν==-2
+                y_f += - 1
+                y_b += 1
+            end
+            if y_f == (NY+1)
+                y_f = 1
+            elseif y_b == 0
+                y_b = NY
+            elseif y_b == (NY+1)
+                y_b = 1
+            elseif y_f == 0
+                y_f = NY
+            end
+            @inbounds @simd for ix = 1:NX
+                x = ix
+                x_f = ix
+                x_b = ix
+                if ν==1
+                    x_f += 1
+                    x_b += - 1
+                elseif ν==-1
+                    x_f += - 1
+                    x_b += 1
+                end
+                if x_f == (NX+1)
+                    x_f = 1
+                elseif x_b == 0
+                    x_b = NX
+                elseif x_b == (NX+1)
+                    x_b = 1
+                elseif x_f == 0
+                    x_f = NX
+                end
                 if !cc
-                    c[:,:,ix,iy,it] = a[:,:,ix,iy,it]' * b[:,:,ix,iy,it] - eye
+                    c[:,:,x,y,t] =
+                        0.5 * a[:,:,x,y,t]' * a[:,:,x_f,y_f,t_f] -
+                        0.5 * a[:,:,x,y,t]' * a[:,:,x_b,y_b,t_b]
                 else
-                    c[:,:,ix,iy,it] = b[:,:,ix,iy,it]' * a[:,:,ix,iy,it] - eye
+                    c[:,:,x,y,t] =
+                        0.5 * a[:,:,x_f,y_f,t_f]' * a[:,:,x,y,t] -
+                        0.5 * a[:,:,x_b,y_b,t_b]' * a[:,:,x,y,t]
                 end
             end
         end
@@ -1205,7 +1332,170 @@ function calculate_gdg(
     return c
 end
 
+function calculate_gdg_conj(
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    temps
+) where NC
+    b1 = temps[1]
+    b2 = temps[2]
+    b1 = calculate_gdg(a,ν,cc=false)
+    b2 = calculate_gdg(a,ν,cc=true)
 
+    c = similar(a)
+    clear_U!(c)
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c[:,:,ix,iy,it] = b1[:,:,ix,iy,it] - b2[:,:,ix,iy,it]
+            end
+        end
+    end
+    return c
+end
+
+function calculate_gdg_action(
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temps[1]
+    b = calculate_gdg_conj(a,ν,[temps[2], temps[3]])
+
+    c = 0.0 + 0.0im
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c += tr(b[:,:,ix,iy,it]^2)
+            end
+        end
+    end
+    return c
+end
+
+function calculate_gdg3(
+    a::Gaugefields_3D_nowing{NC},
+    μ::Integer,
+    ν::Integer,
+    ρ::Integer,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b1 = temps[1]
+    b2 = temps[2]
+    b3 = temps[3]
+    c = similar(a)
+
+    b1 = calculate_gdg_conj(a,μ,[temps[4],temps[5]])
+    b2 = calculate_gdg_conj(a,ν,[temps[4],temps[5]])
+    b3 = calculate_gdg_conj(a,ρ,[temps[4],temps[5]])
+    clear_U!(c)
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c[:,:,ix,iy,it] =
+                    b1[:,:,ix,iy,it]*b2[:,:,ix,iy,it]*b3[:,:,ix,iy,it]
+            end
+        end
+    end
+    return c
+end
+
+function calculate_g_gdg_gdg_g!(
+    c::Gaugefields_3D_nowing{NC},
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    temps;
+    cc=false,
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temps[1]
+    d = temps[2]
+
+    b = calculate_gdg(a,ν,cc=cc)
+
+    clear_U!(c)
+    clear_U!(d)
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c[:,:,ix,iy,it] = b[:,:,ix,iy,it] * a[:,:,ix,iy,it]'
+            end
+        end
+    end
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                d[:,:,ix,iy,it] = b[:,:,ix,iy,it] * c[:,:,ix,iy,it]
+            end
+        end
+    end
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c[:,:,ix,iy,it] = a[:,:,ix,iy,it] * d[:,:,ix,iy,it]
+            end
+        end
+    end
+    return
+end
+
+function test_map_U2_theta(x,y,t,m)
+    theta = [0.0 0.0 0.0 0.0]
+
+    theta[1] = m + (cos(x)-1) + (cos(y)-1) + (cos(t)-1)
+    theta[2] = sin(x)
+    theta[3] = sin(y)
+    theta[4] = sin(t)
+    
+    return theta / norm(theta)
+end
+
+function test_map_U2_g(x,y,t,m)
+    eye = [1.0+0.0im 0.0+0.0im; 0.0+0.0im 1.0+0.0im]
+    sigma1 = [0.0+0.0im 1.0+0.0im; 1.0+0.0im 0.0+0.0im]
+    sigma2 = [0.0+0.0im 0.0-1.0im; 0.0+1.0im 0.0+0.0im]
+    sigma3 = [1.0+0.0im 0.0+0.0im; 0.0+0.0im (-1.0)+0.0im]
+
+    theta = test_map_U2_theta(x,y,t,m)
+
+    return theta[1]*eye + im*theta[2]*sigma1 + im*theta[3]*sigma2 + im*theta[4]*sigma3
+end
+
+function TestmapGauges_3D(NC, m, NX, NY, NT; verbose_level = 2)
+    return test_map_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level)
+end
+
+function test_map_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2)
+    @assert NC==2 "NC should be 2."
+    U = Gaugefields_3D_nowing(NC, NX, NY, NT, verbose_level = verbose_level)
+
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                x = - pi + (ix-1) * (2pi) / NX
+                y = - pi + (ix-1) * (2pi) / NY
+                t = - pi + (ix-1) * (2pi) / NT
+                U[:,:, ix, iy, it] = test_map_U2_g(x,y,t,m)
+            end
+        end
+    end
+    set_wing_U!
+    return U
+end
 
 function minusidentityGaugefields_3D_nowing(NC, NX, NY, NT; verbose_level = 2)
     U = Gaugefields_3D_nowing(NC, NX, NY, NT, verbose_level = verbose_level)

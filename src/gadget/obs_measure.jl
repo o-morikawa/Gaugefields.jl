@@ -10,7 +10,8 @@ import ..AbstractGaugefields_module:
     Traceless_antihermitian,
     Traceless_antihermitian!,
     substitute_U!,
-    calculate_gdg
+    calculate_gdg,
+    calculate_gdg3
 import ..GaugeAction_module: GaugeAction, evaluate_staple_eachindex!
 import ..Gradientflow_module: Gradientflow_general, flow!
 import ..Temporalfields_module: Temporalfields, unused!, get_temp
@@ -880,7 +881,7 @@ end
 
 function winding_UN_3D(
     U::T,
-    temps::Temporalfields
+    temps_g::Temporalfields
 ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
     if Dim == 3
         ε(μ, ν, ρ) = epsilon_tensor_3D(μ, ν, ρ)
@@ -888,13 +889,9 @@ function winding_UN_3D(
         error("Dimension $Dim is not supported")
     end
     w = 0.0
-    temp, it_temp = get_temp(temps)
-    a, it_a = get_temp(temps, 3)
+    temps, it_temps = get_temp(temps_g, 5)
+    a, it_a = get_temp(temps_g)
     
-    a[1] = calculate_gdg(U,1)
-    a[2] = calculate_gdg(U,2)
-    a[3] = calculate_gdg(U,3)
-
     for μ=1:Dim
         for ν=1:Dim
             if μ==ν
@@ -904,14 +901,14 @@ function winding_UN_3D(
                 if ρ==μ || ρ==ν
                     continue
                 end
-                mul!(temp, a[ν], a[ρ])
-                w += ε(μ, ν, ρ) * real(tr(a[μ], temp))
+                a = calculate_gdg3(U,μ,ν,ρ,temps)
+                w += ε(μ, ν, ρ) * real(tr(a))
             end
         end
     end
-    unused!(temps,it_temp)
-    unused!(temps,it_a)
-    return w/(24 * π^2)
+    unused!(temps_g,it_temps)
+    unused!(temps_g,it_a)
+    return w/(2^3 * 24 * π^2)
 end
 
 
