@@ -8,38 +8,21 @@ using Wilsonloop
 
 using Plots
 
-function calc_action_3D(U,temps_g)
-    NV = U.NV
-
-    temps, it_temps = get_temp(temps_g,2)
-    temp1 = temps[1]
-    temp2 = temps[2]
-
-    S = 0.0
-    substitute_U!(temp1, U)
-    for μ=1:3
-        temp2 = calculate_gdg(temp1, μ, cc=false)
-        S += (-1/2) * tr(temp2, temp2)
-
-        temp2 = calculate_gdg(temp1, μ, cc=true)
-        S += (-1/2) * tr(temp2, temp2)
-    end
-    unused!(temps_g,it_temps)
-    return real(S) / NV
-end
-
 function UN_test_3D(NX,NY,NT,NC,β)
 
     Dim = 3
 
-    n = 5
+    n = 20
+    println("Test random configuration: n=$n")
 
     eps = 0.001
-    flow_number = 10000
+    flow_number = 60000
     step = 100
-    
+    println("eps=$eps,flow=$(eps*flow_number)")
+
     w = zeros(Float64, n, Int(flow_number/step))
     s = zeros(Float64, n, Int(flow_number/step))
+    d = zeros(ComplexF64, n, Int(flow_number/step))
 
     for i = 1:n
 
@@ -48,7 +31,7 @@ function UN_test_3D(NX,NY,NT,NC,β)
         t  = Dates.now()
         Random.seed!(Dates.value(t-t0))
 
-        if i == 0
+        if i == 1
             U = Initialize_3D_UN_Gaugefields(
                 NC,NX,NY,NT,
                 condition = "cold",
@@ -75,37 +58,237 @@ function UN_test_3D(NX,NY,NT,NC,β)
             if iflow%step==0
                 j += 1
                 W = winding_UN_3D(U,temps)
-                S = calc_action_3D(U,temps)
+                S = calc_gdgaction_3D(U,temps)
+                D = det_unitary(U)
                 w[i,j] = W
                 s[i,j] = S
+                d[i,j] = D[1,1,1]
             end
         end
     end
 
     #println(w)
-    
+
     flow = (eps*step):(eps*step):(eps*flow_number)
+    lt = length(flow)
+
+    open("./wind.csv", "w") do f
+        write(f, "flowtime, ")
+        for i = 1:(n-1)
+            write(f, "w$i, ")
+        end
+        write(f, "w$n\n")
+        for it = 1:lt
+            write(f, "$(flow[it]), ")
+            for i = 1:(n-1)
+                write(f, "$(w[i,it]), ")
+            end
+            write(f, "$(w[n,it])\n")
+        end
+    end
     plt = plot(flow, w[1,:])
     for i = 2:n
         plot!(plt, flow, w[i,:])
     end
     savefig("wind.png")
     
+    open("./action.csv", "w") do f
+        write(f, "flowtime, ")
+        for i = 1:(n-1)
+            write(f, "s$i, ")
+        end
+        write(f, "s$n\n")
+        for it = 1:lt
+            write(f, "$(flow[it]), ")
+            for i = 1:(n-1)
+                write(f, "$(s[i,it]), ")
+            end
+            write(f, "$(s[n,it])\n")
+        end
+    end
     plt = plot(flow, s[1,:])
     for i = 2:n
         plot!(plt, flow, s[i,:])
     end
     savefig("action.png")
+    
+    open("./det.csv", "w") do f
+        write(f, "flowtime, ")
+        for i = 1:(n-1)
+            write(f, "d$i, ")
+        end
+        write(f, "d$n\n")
+        for it = 1:lt
+            write(f, "$(flow[it]), ")
+            for i = 1:(n-1)
+                write(f, "$(d[i,it]), ")
+            end
+            write(f, "$(d[n,it])\n")
+        end
+    end
+    plt = plot(flow, real(d[1,:]))
+    for i = 2:n
+        plot!(plt, flow, real(d[i,:]))
+    end
+    savefig("det_re.png")
+    plt = plot(flow, imag(d[1,:]))
+    for i = 2:n
+        plot!(plt, flow, imag(d[i,:]))
+    end
+    savefig("det_im.png")
+
+end
+
+function get_mass(i)
+    if i == 1
+        m = -1
+    elseif i == 2
+        m = 1
+    elseif i == 3
+        m = 3
+    elseif i == 4
+        m = 5
+    elseif i == 5
+        m = 7
+    else
+        error("Not supported for get_mass($i).")
+    end
+    return m
+end
+
+function UN_map_3D(NX,NY,NT,NC,β)
+
+    Dim = 3
+
+    println("Test mapping configuration")
+    n = 5
+
+    eps = 0.1
+    flow_number = 600
+    step = 10
+    println("eps=$eps,flow=$(eps*flow_number)")
+    
+    w = zeros(Float64, n, Int(flow_number/step))
+    s = zeros(Float64, n, Int(flow_number/step))
+    d = zeros(ComplexF64, n, Int(flow_number/step))
+
+    for i = 1:n
+
+        #Random.seed!(123)
+        t0 = Dates.DateTime(2024,1,1,16,10,7)
+        t  = Dates.now()
+        Random.seed!(Dates.value(t-t0))
+
+        U = Initialize_3D_UN_Gaugefields(
+            NC,NX,NY,NT,
+            condition = "test_map",
+            m = get_mass(i),
+            randomnumber="Random"
+        )
+        println(typeof(U))
+
+        temps = Temporalfields(U, num=9)
+        println(typeof(temps))
+
+        g = Gradientflow_3D(U, eps=eps)
+        flownumber = flow_number
+        j = 0
+        for iflow = 1:flownumber
+            flow!(U, g)
+            if iflow%step==0
+                j += 1
+                W = winding_UN_3D(U,temps)
+                S = calc_gdgaction_3D(U,temps)
+                D = det_unitary(U)
+                w[i,j] = W
+                s[i,j] = S
+                d[i,j] = D[1,1,1]
+            end
+        end
+    end
+
+    #println(w)
+
+    flow = (eps*step):(eps*step):(eps*flow_number)
+    lt = length(flow)
+
+    open("./wind_map.csv", "w") do f
+        write(f, "flowtime, ")
+        for i = 1:(n-1)
+            write(f, "w$i, ")
+        end
+        write(f, "w$n\n")
+        for it = 1:lt
+            write(f, "$(flow[it]), ")
+            for i = 1:(n-1)
+                write(f, "$(w[i,it]), ")
+            end
+            write(f, "$(w[n,it])\n")
+        end
+    end
+    plt = plot(flow, w[1,:], label="m=$(get_mass(1))")
+    for i = 2:n
+        plot!(plt, flow, w[i,:], label="m=$(get_mass(i))")
+    end
+    savefig("wind_map.png")
+    
+    open("./action_map.csv", "w") do f
+        write(f, "flowtime, ")
+        for i = 1:(n-1)
+            write(f, "s$i, ")
+        end
+        write(f, "s$n\n")
+        for it = 1:lt
+            write(f, "$(flow[it]), ")
+            for i = 1:(n-1)
+                write(f, "$(s[i,it]), ")
+            end
+            write(f, "$(s[n,it])\n")
+        end
+    end
+    plt = plot(flow, s[1,:], label="m=$(get_mass(1))")
+    for i = 2:n
+        plot!(plt, flow, s[i,:], label="m=$(get_mass(i))")
+    end
+    savefig("action_map.png")
+    
+    open("./det_map.csv", "w") do f
+        write(f, "flowtime, ")
+        for i = 1:(n-1)
+            write(f, "d$i, ")
+        end
+        write(f, "d$n\n")
+        for it = 1:lt
+            write(f, "$(flow[it]), ")
+            for i = 1:(n-1)
+                write(f, "$(d[i,it]), ")
+            end
+            write(f, "$(d[n,it])\n")
+        end
+    end
+    plt = plot(flow, real(d[1,:]), label="m=$(get_mass(1))")
+    for i = 2:n
+        plot!(plt, flow, real(d[i,:]), label="m=$(get_mass(i))")
+    end
+    savefig("det_map_re.png")
+    plt = plot(flow, imag(d[1,:]), label="m=$(get_mass(1))")
+    for i = 2:n
+        plot!(plt, flow, imag(d[i,:]), label="m=$(get_mass(i))")
+    end
+    savefig("det_map_im.png")
 
 end
 
 
 function main()
     β = 3.0
-    NX = 16
-    NY = 16
-    NT = 16
+    L = 16
+    
+    NX = L
+    NY = L
+    NT = L
     NC = 2
-    @time UN_test_3D(NX,NY,NT,NC,β)
+    #@time UN_test_3D(NX,NY,NT,NC,β)
+    @time UN_map_3D(NX,NY,NT,NC,β)
 end
 main()
