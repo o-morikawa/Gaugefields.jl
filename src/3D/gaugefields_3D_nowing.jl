@@ -1247,15 +1247,28 @@ end
 function calculate_gdg!(
     c::Gaugefields_3D_nowing{NC},
     a::Gaugefields_3D_nowing{NC},
-    ν::Integer;
+    ν::Integer,
+    temp;
     cc=false,
 ) where NC
     NX = a.NX
     NY = a.NY
     NT = a.NT
 
-    clear_U!(c)
+    b = temp
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                for k1 = 1:NC
+                    @inbounds @simd for k2 = 1:NC
+                        b[k1,k2,ix,iy,it] = a[k1,k2,ix,iy,it]
+                    end
+                end
+            end
+        end
+    end
 
+    clear_U!(c)
     #eye = Matrix(LinearAlgebra.I,NC,NC)
     for it = 1:NT
         t = it
@@ -1319,12 +1332,12 @@ function calculate_gdg!(
                 end
                 if !cc
                     c[:,:,x,y,t] =
-                        0.5 * a[:,:,x,y,t]' * a[:,:,x_f,y_f,t_f] -
-                        0.5 * a[:,:,x,y,t]' * a[:,:,x_b,y_b,t_b]
+                        0.5 * b[:,:,x,y,t]' * b[:,:,x_f,y_f,t_f] -
+                        0.5 * b[:,:,x,y,t]' * b[:,:,x_b,y_b,t_b]
                 else
                     c[:,:,x,y,t] =
-                        0.5 * a[:,:,x_f,y_f,t_f]' * a[:,:,x,y,t] -
-                        0.5 * a[:,:,x_b,y_b,t_b]' * a[:,:,x,y,t]
+                        0.5 * b[:,:,x_f,y_f,t_f]' * b[:,:,x,y,t] -
+                        0.5 * b[:,:,x_b,y_b,t_b]' * b[:,:,x,y,t]
                 end
             end
         end
@@ -1339,7 +1352,7 @@ function calculate_gdg_conj!(
     temps
 ) where NC
     b1 = temps[1]
-    calculate_gdg!(b1,a,ν,cc=false)
+    calculate_gdg!(b1,a,ν,temps[2],cc=false)
 
     clear_U!(c)
     NX = a.NX
@@ -1382,38 +1395,6 @@ function calculate_gdg_action(
     return c
 end
 
-function calculate_gdg3!(
-    c::Gaugefields_3D_nowing{NC},
-    a::Gaugefields_3D_nowing{NC},
-    μ::Integer,
-    ν::Integer,
-    ρ::Integer,
-    temps
-) where NC
-    NX = a.NX
-    NY = a.NY
-    NT = a.NT
-
-    b1 = temps[1]
-    b2 = temps[2]
-    b3 = temps[3]
-
-    calculate_gdg_conj!(b1,a,μ,[temps[4],temps[5]])
-    calculate_gdg_conj!(b2,a,ν,[temps[4],temps[5]])
-    calculate_gdg_conj!(b3,a,ρ,[temps[4],temps[5]])
-
-    clear_U!(c)
-    for it = 1:NT
-        for iy = 1:NY
-            @inbounds @simd for ix = 1:NX
-                c[:,:,ix,iy,it] =
-                    b1[:,:,ix,iy,it]*b2[:,:,ix,iy,it]*b3[:,:,ix,iy,it]
-            end
-        end
-    end
-    return
-end
-
 function calculate_gdg_wind(
     a::Gaugefields_3D_nowing{NC},
     temp,
@@ -1425,22 +1406,30 @@ function calculate_gdg_wind(
     w = 0.0
 
     b = temp
-    calculate_gdg3!(b,a,1,2,3,temps)
+    b1 = temps[1]
+    b2 = temps[2]
+    b3 = temps[3]
+
+    calculate_gdg_conj!(b1,a,1,[temps[4],temps[5]])
+    calculate_gdg_conj!(b2,a,2,[temps[4],temps[5]])
+    calculate_gdg_conj!(b3,a,3,[temps[4],temps[5]])
+
+    clear_U!(b)
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                b[:,:,ix,iy,it] =
+                    b1[:,:,ix,iy,it] *
+                    (b2[:,:,ix,iy,it]*b3[:,:,ix,iy,it] -
+                     b3[:,:,ix,iy,it]*b2[:,:,ix,iy,it])
+            end
+        end
+    end
     for it = 1:NT
         for iy = 1:NY
             for ix = 1:NX
                 for k = 1:NC
                     w += b[k,k,ix,iy,it]
-                end
-            end
-        end
-    end
-    calculate_gdg3!(b,a,1,3,2,temps)
-    for it = 1:NT
-        for iy = 1:NY
-            for ix = 1:NX
-                for k = 1:NC
-                    w += - b[k,k,ix,iy,it]
                 end
             end
         end
@@ -1461,7 +1450,7 @@ function calculate_g_gdg_gdg_g!(
 
     b = temps[1]
 
-    calculate_gdg!(b,a,ν,cc=cc)
+    calculate_gdg!(b,a,ν,temps[2],cc=cc)
 
     clear_U!(c)
     for it = 1:NT
@@ -1669,8 +1658,8 @@ function test_map_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2)
         for iy = 1:NY
             @inbounds @simd for ix = 1:NX
                 x = - pi + (ix-1) * (2pi) / NX
-                y = - pi + (ix-1) * (2pi) / NY
-                t = - pi + (ix-1) * (2pi) / NT
+                y = - pi + (iy-1) * (2pi) / NY
+                t = - pi + (it-1) * (2pi) / NT
                 U[:,:, ix, iy, it] = test_map_U2_g(x,y,t,m)
             end
         end
