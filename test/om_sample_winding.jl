@@ -8,7 +8,7 @@ using Wilsonloop
 
 using Plots
 
-function UN_test_3D(NX,NY,NT,NC,β)
+function UN_test_3D(NX,NY,NT,NC)
 
     Dim = 3
 
@@ -20,9 +20,9 @@ function UN_test_3D(NX,NY,NT,NC,β)
     step = 100
     println("eps=$eps,flow=$(eps*flow_number)")
 
-    w = zeros(Float64, n, Int(flow_number/step))
-    s = zeros(Float64, n, Int(flow_number/step))
-    d = zeros(ComplexF64, n, Int(flow_number/step))
+    w = zeros(Float64, n, Int(flow_number/step)+1)
+    s = zeros(Float64, n, Int(flow_number/step)+1)
+    d = zeros(ComplexF64, n, Int(flow_number/step)+1)
 
     for i = 1:n
 
@@ -50,9 +50,19 @@ function UN_test_3D(NX,NY,NT,NC,β)
         temps = Temporalfields(U, num=9)
         println(typeof(temps))
 
+        println(winding_UN_3D(U,temps))
+
         g = Gradientflow_3D(U, eps=eps)
         flownumber = flow_number
-        j = 0
+
+        j = 1
+        W = winding_UN_3D(U,temps)
+        S = calc_gdgaction_3D(U,temps)
+        D = det_unitary(U)
+        w[i,j] = W
+        s[i,j] = S
+        d[i,j] = D[1,1,1]
+
         for iflow = 1:flownumber
             flow!(U, g)
             if iflow%step==0
@@ -69,7 +79,7 @@ function UN_test_3D(NX,NY,NT,NC,β)
 
     #println(w)
 
-    flow = (eps*step):(eps*step):(eps*flow_number)
+    flow = 0:(eps*step):(eps*flow_number)
     lt = length(flow)
 
     open("./wind.csv", "w") do f
@@ -156,21 +166,32 @@ function get_mass(i)
     return m
 end
 
-function UN_map_3D(NX,NY,NT,NC,β)
+function UN_map_3D(NX,NY,NT,NC)
 
     Dim = 3
 
     println("Test mapping configuration")
     n = 5
 
-    eps = 0.1
-    flow_number = 600
+    eps = 0.01
+    flow_number = 4000
+    if NX==10
+        flow_number = 4000
+    elseif NX==20
+        flow_number = 8000
+    elseif NX==30
+        flow_number = 16000
+    elseif NX==40
+        flow_number = 27000
+    elseif NX==50
+        flow_number = 42000
+    end
     step = 10
     println("eps=$eps,flow=$(eps*flow_number)")
     
-    w = zeros(Float64, n, Int(flow_number/step))
-    s = zeros(Float64, n, Int(flow_number/step))
-    d = zeros(ComplexF64, n, Int(flow_number/step))
+    w = zeros(Float64, n, Int(flow_number/step)+1)
+    s = zeros(Float64, n, Int(flow_number/step)+1)
+    d = zeros(ComplexF64, n, Int(flow_number/step)+1)
 
     for i = 1:n
 
@@ -190,9 +211,19 @@ function UN_map_3D(NX,NY,NT,NC,β)
         temps = Temporalfields(U, num=9)
         println(typeof(temps))
 
-        g = Gradientflow_3D(U, eps=eps)
+        println(winding_UN_3D(U,temps))
+
+        g = Gradientflow_TA_3D(U, eps=eps)
         flownumber = flow_number
-        j = 0
+ 
+        j = 1
+        W = winding_UN_3D(U,temps)
+        S = calc_gdgaction_3D(U,temps)
+        D = det_unitary(U)
+        w[i,j] = W
+        s[i,j] = S
+        d[i,j] = D[1,1,1]
+
         for iflow = 1:flownumber
             flow!(U, g)
             if iflow%step==0
@@ -209,10 +240,10 @@ function UN_map_3D(NX,NY,NT,NC,β)
 
     #println(w)
 
-    flow = (eps*step):(eps*step):(eps*flow_number)
+    flow = 0:(eps*step):(eps*flow_number)
     lt = length(flow)
 
-    open("./wind_map.csv", "w") do f
+    open("./wind_map_L$L.csv", "w") do f
         write(f, "flowtime, ")
         for i = 1:(n-1)
             write(f, "w$i, ")
@@ -230,9 +261,9 @@ function UN_map_3D(NX,NY,NT,NC,β)
     for i = 2:n
         plot!(plt, flow, w[i,:], label="m=$(get_mass(i))")
     end
-    savefig("wind_map.png")
+    savefig("wind_map_L$L.png")
     
-    open("./action_map.csv", "w") do f
+    open("./action_map_L$L.csv", "w") do f
         write(f, "flowtime, ")
         for i = 1:(n-1)
             write(f, "s$i, ")
@@ -250,9 +281,9 @@ function UN_map_3D(NX,NY,NT,NC,β)
     for i = 2:n
         plot!(plt, flow, s[i,:], label="m=$(get_mass(i))")
     end
-    savefig("action_map.png")
+    savefig("action_map_L$L.png")
     
-    open("./det_map.csv", "w") do f
+    open("./det_map_L$L.csv", "w") do f
         write(f, "flowtime, ")
         for i = 1:(n-1)
             write(f, "d$i, ")
@@ -270,25 +301,24 @@ function UN_map_3D(NX,NY,NT,NC,β)
     for i = 2:n
         plot!(plt, flow, real(d[i,:]), label="m=$(get_mass(i))")
     end
-    savefig("det_map_re.png")
+    savefig("det_map_re_L$L.png")
     plt = plot(flow, imag(d[1,:]), label="m=$(get_mass(1))")
     for i = 2:n
         plot!(plt, flow, imag(d[i,:]), label="m=$(get_mass(i))")
     end
-    savefig("det_map_im.png")
+    savefig("det_map_im_L$L.png")
 
 end
 
 
 function main()
-    β = 3.0
-    L = 16
+    L = 50
     
     NX = L
     NY = L
     NT = L
     NC = 2
-    #@time UN_test_3D(NX,NY,NT,NC,β)
-    @time UN_map_3D(NX,NY,NT,NC,β)
+    #@time UN_test_3D(NX,NY,NT,NC)
+    @time UN_map_3D(NX,NY,NT,NC)
 end
 main()
