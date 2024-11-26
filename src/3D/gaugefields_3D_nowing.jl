@@ -1244,7 +1244,8 @@ end
 
 
 
-function calculate_gdg(
+function calculate_gdg!(
+    c::Gaugefields_3D_nowing{NC},
     a::Gaugefields_3D_nowing{NC},
     ν::Integer;
     cc=false,
@@ -1253,7 +1254,6 @@ function calculate_gdg(
     NY = a.NY
     NT = a.NT
 
-    c = similar(a)
     clear_U!(c)
 
     #eye = Matrix(LinearAlgebra.I,NC,NC)
@@ -1332,17 +1332,15 @@ function calculate_gdg(
     return c
 end
 
-function calculate_gdg_conj(
+function calculate_gdg_conj!(
+    c::Gaugefields_3D_nowing{NC},
     a::Gaugefields_3D_nowing{NC},
     ν::Integer,
     temps
 ) where NC
     b1 = temps[1]
-    b2 = temps[2]
-    b1 = calculate_gdg(a,ν,cc=false)
-    b2 = calculate_gdg(a,ν,cc=true)
+    calculate_gdg!(b1,a,ν,cc=false)
 
-    c = similar(a)
     clear_U!(c)
     NX = a.NX
     NY = a.NY
@@ -1350,7 +1348,7 @@ function calculate_gdg_conj(
     for it = 1:NT
         for iy = 1:NY
             @inbounds @simd for ix = 1:NX
-                c[:,:,ix,iy,it] = b1[:,:,ix,iy,it] - b2[:,:,ix,iy,it]
+                c[:,:,ix,iy,it] = b1[:,:,ix,iy,it] - b1[:,:,ix,iy,it]'
             end
         end
     end
@@ -1367,20 +1365,25 @@ function calculate_gdg_action(
     NT = a.NT
 
     b = temps[1]
-    b = calculate_gdg_conj(a,ν,[temps[2], temps[3]])
+    calculate_gdg_conj!(b,a,ν,[temps[2], temps[3]])
 
     c = 0.0 + 0.0im
     for it = 1:NT
         for iy = 1:NY
-            @inbounds @simd for ix = 1:NX
-                c += tr(b[:,:,ix,iy,it]^2)
+            for ix = 1:NX
+                for k = 1:NC
+                    @inbounds @simd for k3 = 1:NC
+                        c += b[k,k3,ix,iy,it]*b[k3,k,ix,iy,it]
+                    end
+                end
             end
         end
     end
     return c
 end
 
-function calculate_gdg3(
+function calculate_gdg3!(
+    c::Gaugefields_3D_nowing{NC},
     a::Gaugefields_3D_nowing{NC},
     μ::Integer,
     ν::Integer,
@@ -1394,11 +1397,11 @@ function calculate_gdg3(
     b1 = temps[1]
     b2 = temps[2]
     b3 = temps[3]
-    c = similar(a)
 
-    b1 = calculate_gdg_conj(a,μ,[temps[4],temps[5]])
-    b2 = calculate_gdg_conj(a,ν,[temps[4],temps[5]])
-    b3 = calculate_gdg_conj(a,ρ,[temps[4],temps[5]])
+    calculate_gdg_conj!(b1,a,μ,[temps[4],temps[5]])
+    calculate_gdg_conj!(b2,a,ν,[temps[4],temps[5]])
+    calculate_gdg_conj!(b3,a,ρ,[temps[4],temps[5]])
+
     clear_U!(c)
     for it = 1:NT
         for iy = 1:NY
@@ -1408,7 +1411,41 @@ function calculate_gdg3(
             end
         end
     end
-    return c
+    return
+end
+
+function calculate_gdg_wind(
+    a::Gaugefields_3D_nowing{NC},
+    temp,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+    w = 0.0
+
+    b = temp
+    calculate_gdg3!(b,a,1,2,3,temps)
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                for k = 1:NC
+                    w += b[k,k,ix,iy,it]
+                end
+            end
+        end
+    end
+    calculate_gdg3!(b,a,1,3,2,temps)
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                for k = 1:NC
+                    w += - b[k,k,ix,iy,it]
+                end
+            end
+        end
+    end
+    return 3 * real(w)
 end
 
 function calculate_g_gdg_gdg_g!(
@@ -1423,30 +1460,175 @@ function calculate_g_gdg_gdg_g!(
     NT = a.NT
 
     b = temps[1]
-    d = temps[2]
 
-    b = calculate_gdg(a,ν,cc=cc)
+    calculate_gdg!(b,a,ν,cc=cc)
 
     clear_U!(c)
-    clear_U!(d)
     for it = 1:NT
         for iy = 1:NY
             @inbounds @simd for ix = 1:NX
-                c[:,:,ix,iy,it] = b[:,:,ix,iy,it] * a[:,:,ix,iy,it]'
+                c[:,:,ix,iy,it] =
+                    a[:,:,ix,iy,it] * b[:,:,ix,iy,it] *
+                    b[:,:,ix,iy,it] * a[:,:,ix,iy,it]'
             end
         end
     end
     for it = 1:NT
+        t = it
+        t_f = it
+        t_b = it
+        if ν==3
+            t_f += 1
+            t_b += - 1
+        elseif ν==-3
+            t_f += - 1
+            t_b += 1
+        end
+        if t_f == (NT+1)
+            t_f = 1
+        elseif t_b == 0
+            t_b = NT
+        elseif t_b == (NT+1)
+            t_b = 1
+        elseif t_f == 0
+            t_f = NT
+        end
         for iy = 1:NY
+            y = iy
+            y_f = iy
+            y_b = iy
+            if ν==2
+                y_f += 1
+                y_b += - 1
+            elseif ν==-2
+                y_f += - 1
+                y_b += 1
+            end
+            if y_f == (NY+1)
+                y_f = 1
+            elseif y_b == 0
+                y_b = NY
+            elseif y_b == (NY+1)
+                y_b = 1
+            elseif y_f == 0
+                y_f = NY
+            end
             @inbounds @simd for ix = 1:NX
-                d[:,:,ix,iy,it] = b[:,:,ix,iy,it] * c[:,:,ix,iy,it]
+                x = ix
+                x_f = ix
+                x_b = ix
+                if ν==1
+                    x_f += 1
+                    x_b += - 1
+                elseif ν==-1
+                    x_f += - 1
+                    x_b += 1
+                end
+                if x_f == (NX+1)
+                    x_f = 1
+                elseif x_b == 0
+                    x_b = NX
+                elseif x_b == (NX+1)
+                    x_b = 1
+                elseif x_f == 0
+                    x_f = NX
+                end
+                c[:,:,x,y,t] +=
+                    0.5 * a[:,:,x,y,t] * b[:,:,x_f,y_f,t_f] * a[:,:,x_f,y_f,t_f]' -
+                    0.5 * a[:,:,x,y,t] * b[:,:,x_b,y_b,t_b] * a[:,:,x_b,y_b,t_b]'
             end
         end
     end
     for it = 1:NT
+        t = it
+        t_f = it
+        t_b = it
+        if ν==3
+            t_f += 2
+            t_b += - 2
+        elseif ν==-3
+            t_f += - 2
+            t_b += 2
+        end
+        if t_f == (NT+1)
+            t_f = 1
+        elseif t_b == 0
+            t_b = NT
+        elseif t_b == (NT+1)
+            t_b = 1
+        elseif t_f == 0
+            t_f = NT
+        end
+        if t_f == (NT+2)
+            t_f = 2
+        elseif t_b == -1
+            t_b = NT-1
+        elseif t_b == (NT+2)
+            t_b = 2
+        elseif t_f == -1
+            t_f = NT-1
+        end
         for iy = 1:NY
+            y = iy
+            y_f = iy
+            y_b = iy
+            if ν==2
+                y_f += 2
+                y_b += - 2
+            elseif ν==-2
+                y_f += - 2
+                y_b += 2
+            end
+            if y_f == (NY+1)
+                y_f = 1
+            elseif y_b == 0
+                y_b = NY
+            elseif y_b == (NY+1)
+                y_b = 1
+            elseif y_f == 0
+                y_f = NY
+            end
+            if y_f == (NY+2)
+                y_f = 2
+            elseif y_b == -1
+                y_b = NY-1
+            elseif y_b == (NY+2)
+                y_b = 2
+            elseif y_f == -1
+                y_f = NY-1
+            end
             @inbounds @simd for ix = 1:NX
-                c[:,:,ix,iy,it] = a[:,:,ix,iy,it] * d[:,:,ix,iy,it]
+                x = ix
+                x_f = ix
+                x_b = ix
+                if ν==1
+                    x_f += 2
+                    x_b += - 2
+                elseif ν==-1
+                    x_f += - 2
+                    x_b += 2
+                end
+                if x_f == (NX+1)
+                    x_f = 1
+                elseif x_b == 0
+                    x_b = NX
+                elseif x_b == (NX+1)
+                    x_b = 1
+                elseif x_f == 0
+                    x_f = NX
+                end
+                if x_f == (NX+2)
+                    x_f = 2
+                elseif x_b == -1
+                    x_b = NX-1
+                elseif x_b == (NX+2)
+                    x_b = 2
+                elseif x_f == -1
+                    x_f = NX-1
+                end
+                c[:,:,x,y,t] +=
+                    - 0.25 * a[:,:,x,y,t] * a[:,:,x_f,y_f,t_f]' -
+                    0.25 * a[:,:,x,y,t] * a[:,:,x_b,y_b,t_b]'
             end
         end
     end

@@ -19,7 +19,6 @@ import ..AbstractGaugefields_module:
     Traceless_antihermitian!,
     shift_U,
     normalize_U!,
-    calculate_gdg,
     calc_Zfactor!,
     calc_TA_Zfactor!
 import ..GaugeAction_module: GaugeAction, get_temporary_gaugefields, calc_dSdUμ!

@@ -222,8 +222,8 @@ function substitute_U!(
     return
 end
 
-function calculate_gdg(a::T,ν::Integer;cc=false) where {T<:AbstractGaugefields}
-    error("calculate_gdg(a,ν;cc) is not implemented in type $(typeof(a))")
+function calculate_gdg!(a::T,ν::Integer;cc=false) where {T<:AbstractGaugefields}
+    error("calculate_gdg!(a,ν;cc) is not implemented in type $(typeof(a))")
     return
 end
 
@@ -3289,7 +3289,7 @@ function calc_Zfactor!(Z, U, temps_g::Temporalfields)
     substitute_U!(temp1, U)
     for μ=1:3
         calculate_g_gdg_gdg_g!(Z, temp1, μ, [temp2, temp3], cc=false)
-        add_U!(z, 1/2, Z)
+        add_U!(z, 1/4, Z)
     end
     Antihermitian!(Z, z, factor=1)
     
@@ -3308,7 +3308,7 @@ function calc_TA_Zfactor!(Z, U, temps_g::Temporalfields)
     substitute_U!(temp1, U)
     for μ=1:3
         calculate_g_gdg_gdg_g!(Z, temp1, μ, [temp2, temp3], cc=false)
-        add_U!(z, 1/2, Z)
+        add_U!(z, 1/4, Z)
     end
     Traceless_antihermitian!(Z, z, factor=2)
     
