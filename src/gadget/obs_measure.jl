@@ -867,6 +867,20 @@ function winding_UN_3D(
     unused!(temps_g,it_a)
     return (1.0/(2^3 * 24 * π^2)) * w
 end
+function winding_UN_3D(
+    U::T,
+    η,
+    temps_g::Temporalfields
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    temps, it_temps = get_temp(temps_g, 5)
+    a, it_a = get_temp(temps_g)
+
+    w = calculate_gdg_wind(U,η,a,temps)
+
+    unused!(temps_g,it_temps)
+    unused!(temps_g,it_a)
+    return (1.0/(2^3 * 24 * π^2)) * w
+end
 
 
 end

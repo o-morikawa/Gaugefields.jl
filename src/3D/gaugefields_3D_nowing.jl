@@ -1671,6 +1671,48 @@ function calculate_gdg_wind(
     end
     return 3 * real(w)
 end
+function calculate_gdg_wind(
+    a::Gaugefields_3D_nowing{NC},
+    η,
+    temp,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+    w = 0.0
+
+    b = temp
+    b1 = temps[1]
+    b2 = temps[2]
+    b3 = temps[3]
+
+    calculate_gdg_conj!(b1,a,1,η,[temps[4],temps[5]])
+    calculate_gdg_conj!(b2,a,2,η,[temps[4],temps[5]])
+    calculate_gdg_conj!(b3,a,3,η,[temps[4],temps[5]])
+
+    clear_U!(b)
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                b[:,:,ix,iy,it] =
+                    b1[:,:,ix,iy,it] *
+                    (b2[:,:,ix,iy,it]*b3[:,:,ix,iy,it] -
+                     b3[:,:,ix,iy,it]*b2[:,:,ix,iy,it])
+            end
+        end
+    end
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                for k = 1:NC
+                    w += b[k,k,ix,iy,it]
+                end
+            end
+        end
+    end
+    return 3 * real(w)
+end
 
 function calculate_g_gdg_gdg_g!(
     c::Gaugefields_3D_nowing{NC},
