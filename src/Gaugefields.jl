@@ -152,7 +152,7 @@ import .Abstractsmearing_module:
     zero_grad!,
     get_parameters
 import .SUN_generator: Generator
-import .Gradientflow_module: Gradientflow, Gradientflow_general, Gradientflow_3D, Gradientflow_TA_3D, flow!, get_tempG, get_eps
+import .Gradientflow_module: Gradientflow, Gradientflow_general, Gradientflow_3D, Gradientflow_TA_3D, Gradientflow_eta_3D, Gradientflow_TA_eta_3D, flow!, get_tempG, get_eps
 #import .Verbose_print:Verbose_level,Verbose_3,Verbose_2,Verbose_1,println_verbose3,println_verbose2,println_verbose1,
 #    print_verbose1,print_verbose2,print_verbose3
 
@@ -269,7 +269,7 @@ export set_parameters!, get_parameter_derivatives, apply_smearing_U,
     zero_grad!,
     get_parameters
 export construct_Adjoint_rep_Gaugefields
-export get_myrank, getvalue, get_nprocs, Gradientflow_general, Gradientflow_3D, Gradientflow_TA_3D
+export get_myrank, getvalue, get_nprocs, Gradientflow_general, Gradientflow_3D, Gradientflow_TA_3D, Gradientflow_eta_3D, Gradientflow_TA_eta_3D
 export Heatbath_update
 export println_verbose_level1, println_verbose_level2, println_verbose_level3
 export overrelaxation!

@@ -1344,6 +1344,191 @@ function calculate_gdg!(
     end
     return c
 end
+function calculate_gdg!(
+    c::Gaugefields_3D_nowing{NC},
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    η,
+    temp;
+    cc=false,
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temp
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                for k1 = 1:NC
+                    @inbounds @simd for k2 = 1:NC
+                        b[k1,k2,ix,iy,it] = a[k1,k2,ix,iy,it]
+                    end
+                end
+            end
+        end
+    end
+
+    clear_U!(c)
+    #eye = Matrix(LinearAlgebra.I,NC,NC)
+    for it = 1:NT
+        t = it
+        t_f = it
+        t_f2 = it
+        t_b = it
+        t_b2 = it
+        if ν==3
+            t_f += 1
+            t_f2 += 2
+            t_b += - 1
+            t_b2 += - 2
+        elseif ν==-3
+            t_f += - 1
+            t_f2 += - 2
+            t_b += 1
+            t_b2 += 2
+        end
+        if t_f == (NT+1)
+            t_f = 1
+        elseif t_b == 0
+            t_b = NT
+        elseif t_b == (NT+1)
+            t_b = 1
+        elseif t_f == 0
+            t_f = NT
+        end
+        if t_f2 == (NT+1)
+            t_f2 = 1
+        elseif t_b2 == 0
+            t_b2 = NT
+        elseif t_b2 == (NT+1)
+            t_b2 = 1
+        elseif t_f2 == 0
+            t_f2 = NT
+        end
+        if t_f2 == (NT+2)
+            t_f2 = 2
+        elseif t_b2 == -1
+            t_b2 = NT-1
+        elseif t_b2 == (NT+2)
+            t_b2 = 2
+        elseif t_f2 == -1
+            t_f2 = NT-1
+        end
+        for iy = 1:NY
+            y = iy
+            y_f = iy
+            y_f2 = iy
+            y_b = iy
+            y_b2 = iy
+            if ν==2
+                y_f += 1
+                y_f2 += 2
+                y_b += - 1
+                y_b2 += - 2
+            elseif ν==-2
+                y_f += - 1
+                y_f2 += - 2
+                y_b += 1
+                y_b2 += 2
+            end
+            if y_f == (NY+1)
+                y_f = 1
+            elseif y_b == 0
+                y_b = NY
+            elseif y_b == (NY+1)
+                y_b = 1
+            elseif y_f == 0
+                y_f = NY
+            end
+            if y_f2 == (NY+1)
+                y_f2 = 1
+            elseif y_b2 == 0
+                y_b2 = NY
+            elseif y_b2 == (NY+1)
+                y_b2 = 1
+            elseif y_f2 == 0
+                y_f2 = NY
+            end
+            if y_f2 == (NY+2)
+                y_f2 = 2
+            elseif y_b2 == -1
+                y_b2 = NY-1
+            elseif y_b2 == (NY+2)
+                y_b2 = 2
+            elseif y_f2 == -1
+                y_f2 = NY-1
+            end
+            @inbounds @simd for ix = 1:NX
+                x = ix
+                x_f = ix
+                x_f2 = ix
+                x_b = ix
+                x_b2 = ix
+                if ν==1
+                    x_f += 1
+                    x_f2 += 2
+                    x_b += - 1
+                    x_b2 += - 2
+                elseif ν==-1
+                    x_f += - 1
+                    x_f2 += - 2
+                    x_b += 1
+                    x_b2 += 2
+                end
+                if x_f == (NX+1)
+                    x_f = 1
+                elseif x_b == 0
+                    x_b = NX
+                elseif x_b == (NX+1)
+                    x_b = 1
+                elseif x_f == 0
+                    x_f = NX
+                end
+                if x_f2 == (NX+1)
+                    x_f2 = 1
+                elseif x_b2 == 0
+                    x_b2 = NX
+                elseif x_b2 == (NX+1)
+                    x_b2 = 1
+                elseif x_f2 == 0
+                    x_f2 = NX
+                end
+                if x_f2 == (NX+2)
+                    x_f2 = 2
+                elseif x_b2 == -1
+                    x_b2 = NX-1
+                elseif x_b2 == (NX+2)
+                    x_b2 = 2
+                elseif x_f2 == -1
+                    x_f2 = NX-1
+                end
+                if !cc
+                    c[:,:,x,y,t] =
+                        0.5 * b[:,:,x,y,t]' *
+                        (b[:,:,x_f,y_f,t_f] - b[:,:,x_b,y_b,t_b]
+                         - (η/6) * (b[:,:,x_f2,y_f2,t_f2]
+                                      - 2b[:,:,x_f,y_f,t_f]
+                                      + 2b[:,:,x_b,y_b,t_b]
+                                      - b[:,:,x_b2,y_b2,t_b2]
+                                      )
+                         )
+                else
+                    c[:,:,x,y,t] =
+                        (b[:,:,x_f,y_f,t_f] - b[:,:,x_b,y_b,t_b]
+                         - (η/6) * (b[:,:,x_f2,y_f2,t_f2]
+                                      - 2b[:,:,x_f,y_f,t_f]
+                                      + 2b[:,:,x_b,y_b,t_b]
+                                      - b[:,:,x_b2,y_b2,t_b2]
+                                      )
+                         )' *
+                             0.5 * b[:,:,x,y,t]
+                end
+            end
+        end
+    end
+    return c
+end
 
 function calculate_gdg_conj!(
     c::Gaugefields_3D_nowing{NC},
@@ -1353,6 +1538,29 @@ function calculate_gdg_conj!(
 ) where NC
     b1 = temps[1]
     calculate_gdg!(b1,a,ν,temps[2],cc=false)
+
+    clear_U!(c)
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c[:,:,ix,iy,it] = b1[:,:,ix,iy,it] - b1[:,:,ix,iy,it]'
+            end
+        end
+    end
+    return c
+end
+function calculate_gdg_conj!(
+    c::Gaugefields_3D_nowing{NC},
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    η,
+    temps
+) where NC
+    b1 = temps[1]
+    calculate_gdg!(b1,a,ν,η,temps[2],cc=false)
 
     clear_U!(c)
     NX = a.NX
@@ -1379,6 +1587,33 @@ function calculate_gdg_action(
 
     b = temps[1]
     calculate_gdg_conj!(b,a,ν,[temps[2], temps[3]])
+
+    c = 0.0 + 0.0im
+    for it = 1:NT
+        for iy = 1:NY
+            for ix = 1:NX
+                for k = 1:NC
+                    @inbounds @simd for k3 = 1:NC
+                        c += b[k,k3,ix,iy,it]*b[k3,k,ix,iy,it]
+                    end
+                end
+            end
+        end
+    end
+    return c
+end
+function calculate_gdg_action(
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    η,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temps[1]
+    calculate_gdg_conj!(b,a,ν,η,[temps[2], temps[3]])
 
     c = 0.0 + 0.0im
     for it = 1:NT
@@ -1623,6 +1858,197 @@ function calculate_g_gdg_gdg_g!(
     end
     return
 end
+function calculate_g_gdg_gdg_g!(
+    c::Gaugefields_3D_nowing{NC},
+    a::Gaugefields_3D_nowing{NC},
+    ν::Integer,
+    η,
+    temps;
+    cc=false,
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temps[1]
+
+    calculate_gdg!(b,a,ν,η,temps[2],cc=cc)
+
+    clear_U!(c)
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                c[:,:,ix,iy,it] =
+                    a[:,:,ix,iy,it] * b[:,:,ix,iy,it] *
+                    (b[:,:,ix,iy,it]-b[:,:,ix,iy,it]') * a[:,:,ix,iy,it]'
+            end
+        end
+    end
+    for it = 1:NT
+        t = it
+        t_f = it
+        t_b = it
+        if ν==3
+            t_f += 1
+            t_b += - 1
+        elseif ν==-3
+            t_f += - 1
+            t_b += 1
+        end
+        if t_f == (NT+1)
+            t_f = 1
+        elseif t_b == 0
+            t_b = NT
+        elseif t_b == (NT+1)
+            t_b = 1
+        elseif t_f == 0
+            t_f = NT
+        end
+        for iy = 1:NY
+            y = iy
+            y_f = iy
+            y_b = iy
+            if ν==2
+                y_f += 1
+                y_b += - 1
+            elseif ν==-2
+                y_f += - 1
+                y_b += 1
+            end
+            if y_f == (NY+1)
+                y_f = 1
+            elseif y_b == 0
+                y_b = NY
+            elseif y_b == (NY+1)
+                y_b = 1
+            elseif y_f == 0
+                y_f = NY
+            end
+            @inbounds @simd for ix = 1:NX
+                x = ix
+                x_f = ix
+                x_b = ix
+                if ν==1
+                    x_f += 1
+                    x_b += - 1
+                elseif ν==-1
+                    x_f += - 1
+                    x_b += 1
+                end
+                if x_f == (NX+1)
+                    x_f = 1
+                elseif x_b == 0
+                    x_b = NX
+                elseif x_b == (NX+1)
+                    x_b = 1
+                elseif x_f == 0
+                    x_f = NX
+                end
+                c[:,:,x,y,t] +=
+                    0.5 * (1+η/3) * a[:,:,x,y,t] *
+                    (b[:,:,x_f,y_f,t_f]-b[:,:,x_f,y_f,t_f]') * a[:,:,x_f,y_f,t_f]' -
+                    0.5 * (1+η/3) * a[:,:,x,y,t] *
+                    (b[:,:,x_b,y_b,t_b]-b[:,:,x_b,y_b,t_b]') * a[:,:,x_b,y_b,t_b]'
+            end
+        end
+    end
+    for it = 1:NT
+        t = it
+        t_f = it
+        t_b = it
+        if ν==3
+            t_f += 2
+            t_b += - 2
+        elseif ν==-3
+            t_f += - 2
+            t_b += 2
+        end
+        if t_f == (NT+1)
+            t_f = 1
+        elseif t_b == 0
+            t_b = NT
+        elseif t_b == (NT+1)
+            t_b = 1
+        elseif t_f == 0
+            t_f = NT
+        end
+        if t_f == (NT+2)
+            t_f = 2
+        elseif t_b == -1
+            t_b = NT-1
+        elseif t_b == (NT+2)
+            t_b = 2
+        elseif t_f == -1
+            t_f = NT-1
+        end
+        for iy = 1:NY
+            y = iy
+            y_f = iy
+            y_b = iy
+            if ν==2
+                y_f += 2
+                y_b += - 2
+            elseif ν==-2
+                y_f += - 2
+                y_b += 2
+            end
+            if y_f == (NY+1)
+                y_f = 1
+            elseif y_b == 0
+                y_b = NY
+            elseif y_b == (NY+1)
+                y_b = 1
+            elseif y_f == 0
+                y_f = NY
+            end
+            if y_f == (NY+2)
+                y_f = 2
+            elseif y_b == -1
+                y_b = NY-1
+            elseif y_b == (NY+2)
+                y_b = 2
+            elseif y_f == -1
+                y_f = NY-1
+            end
+            @inbounds @simd for ix = 1:NX
+                x = ix
+                x_f = ix
+                x_b = ix
+                if ν==1
+                    x_f += 2
+                    x_b += - 2
+                elseif ν==-1
+                    x_f += - 2
+                    x_b += 2
+                end
+                if x_f == (NX+1)
+                    x_f = 1
+                elseif x_b == 0
+                    x_b = NX
+                elseif x_b == (NX+1)
+                    x_b = 1
+                elseif x_f == 0
+                    x_f = NX
+                end
+                if x_f == (NX+2)
+                    x_f = 2
+                elseif x_b == -1
+                    x_b = NX-1
+                elseif x_b == (NX+2)
+                    x_b = 2
+                elseif x_f == -1
+                    x_f = NX-1
+                end
+                c[:,:,x,y,t] +=
+                    - 0.5 * (η/6) * a[:,:,x,y,t] *
+                    (b[:,:,x_f,y_f,t_f]-b[:,:,x_f,y_f,t_f]') * a[:,:,x_f,y_f,t_f]' +
+                    0.5 * (η/6) * a[:,:,x,y,t] *
+                    (b[:,:,x_b,y_b,t_b]-b[:,:,x_b,y_b,t_b]') * a[:,:,x_b,y_b,t_b]'
+            end
+        end
+    end
+    return
+end
 
 function test_map_U2_theta(x,y,t,m)
     theta = [0.0 0.0 0.0 0.0]
@@ -1661,6 +2087,60 @@ function test_map_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2)
                 y = - pi + (iy-1) * (2pi) / NY
                 t = - pi + (it-1) * (2pi) / NT
                 U[:,:, ix, iy, it] = test_map_U2_g(x,y,t,m)
+            end
+        end
+    end
+    set_wing_U!
+    return U
+end
+
+function test_map_Random_U2_theta(x,y,t,m,rng,eps)
+    theta = [0.0 0.0 0.0 0.0]
+    zeta  = rand(rng, Float64, 4) - 0.5ones(4)
+
+    theta[1] = m + (cos(x)-1) + (cos(y)-1) + (cos(t)-1) + eps*zeta[1]
+    theta[2] = sin(x) + eps*zeta[2]
+    theta[3] = sin(y) + eps*zeta[3]
+    theta[4] = sin(t) + eps*zeta[4]
+    
+    return theta / norm(theta)
+end
+
+function test_map_Random_U2_g(x,y,t,m,rng,eps)
+    eye = [1.0+0.0im 0.0+0.0im; 0.0+0.0im 1.0+0.0im]
+    sigma1 = [0.0+0.0im 1.0+0.0im; 1.0+0.0im 0.0+0.0im]
+    sigma2 = [0.0+0.0im 0.0-1.0im; 0.0+1.0im 0.0+0.0im]
+    sigma3 = [1.0+0.0im 0.0+0.0im; 0.0+0.0im (-1.0)+0.0im]
+
+    theta = test_map_Random_U2_theta(x,y,t,m,rng,eps)
+
+    return theta[1]*eye + im*theta[2]*sigma1 + im*theta[3]*sigma2 + im*theta[4]*sigma3
+end
+
+function TestmapRandomGauges_3D(NC, m, NX, NY, NT; verbose_level = 2, randomnumber = "Random", reps = 0.1)
+    return test_map_Random_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level, randomnumber = randomnumber, reps = reps)
+end
+
+function test_map_Random_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2, randomnumber = "Random", reps = 0.1)
+    @assert NC==2 "NC should be 2."
+    U = Gaugefields_3D_nowing(NC, NX, NY, NT, verbose_level = verbose_level)
+    if randomnumber == "Random"
+        rng = MersenneTwister()
+    elseif randomnumber == "Reproducible"
+        rng = StableRNG(123)
+    else
+        error(
+            "randomnumber should be \"Random\" or \"Reproducible\". Now randomnumber = $randomnumber",
+        )
+    end
+
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                x = - pi + (ix-1) * (2pi) / NX
+                y = - pi + (iy-1) * (2pi) / NY
+                t = - pi + (it-1) * (2pi) / NT
+                U[:,:, ix, iy, it] = test_map_Random_U2_g(x,y,t,m,rng,reps)
             end
         end
     end

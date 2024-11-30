@@ -1143,6 +1143,7 @@ function Initialize_3D_UN_Gaugefields(
     m=1,
     verbose_level=2,
     randomnumber="Random",
+    reps=0.1,
 )
     @assert length(NN) == 3 "Dimension should be 3."
     if condition == "cold"
@@ -1164,6 +1165,15 @@ function Initialize_3D_UN_Gaugefields(
             m,
             NN...,
             verbose_level=verbose_level
+        )
+    elseif condition == "test_map_rand"
+        u = TestmapRandomGauges_3D(
+            NC,
+            m,
+            NN...,
+            verbose_level=verbose_level,
+            randomnumber=randomnumber,
+            reps=reps,
         )
     else
         error("not supported")
@@ -3278,6 +3288,23 @@ function calc_gdgaction_3D(U,temps_g::Temporalfields)
     unused!(temps_g,it_temps)
     return real(S) / NV
 end
+function calc_gdgaction_3D(U,η,temps_g::Temporalfields)
+    NV = U.NV
+
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+
+    S = 0.0 + 0.0im
+    for μ=1:3
+        s = calculate_gdg_action(U, μ, η, [temp1,temp2,temp3])
+        S += (-1/4) * s
+    end
+    unused!(temps_g,it_temps)
+    return real(S) / NV
+end
+
 function calc_Zfactor!(Z, U, temps_g::Temporalfields)
     temps, it_temps = get_temp(temps_g, 3)
     temp1 = temps[1]
@@ -3297,6 +3324,26 @@ function calc_Zfactor!(Z, U, temps_g::Temporalfields)
     unused!(temps_g,it_z)
     return
 end
+function calc_Zfactor!(Z, U, η, temps_g::Temporalfields)
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+    z, it_z = get_temp(temps_g)
+
+    clear_U!(z)
+    substitute_U!(temp1, U)
+    for μ=1:3
+        calculate_g_gdg_gdg_g!(Z, temp1, μ, η, [temp2, temp3], cc=false)
+        add_U!(z, 1/4, Z)
+    end
+    Antihermitian!(Z, z, factor=1)
+    
+    unused!(temps_g,it_temps)
+    unused!(temps_g,it_z)
+    return
+end
+
 function calc_TA_Zfactor!(Z, U, temps_g::Temporalfields)
     temps, it_temps = get_temp(temps_g, 3)
     temp1 = temps[1]
@@ -3308,6 +3355,25 @@ function calc_TA_Zfactor!(Z, U, temps_g::Temporalfields)
     substitute_U!(temp1, U)
     for μ=1:3
         calculate_g_gdg_gdg_g!(Z, temp1, μ, [temp2, temp3], cc=false)
+        add_U!(z, 1/4, Z)
+    end
+    Traceless_antihermitian!(Z, z, factor=2)
+    
+    unused!(temps_g,it_temps)
+    unused!(temps_g,it_z)
+    return
+end
+function calc_TA_Zfactor!(Z, U, η, temps_g::Temporalfields)
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+    z, it_z = get_temp(temps_g)
+
+    clear_U!(z)
+    substitute_U!(temp1, U)
+    for μ=1:3
+        calculate_g_gdg_gdg_g!(Z, temp1, μ, η, [temp2, temp3], cc=false)
         add_U!(z, 1/4, Z)
     end
     Traceless_antihermitian!(Z, z, factor=2)
