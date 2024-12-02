@@ -206,6 +206,7 @@ import .AbstractGaugefields_module:
     isLoopwithB,
     isStaplewithB,
     calc_gdgaction_3D,
+    calc_gdgactiondensity_3D,
     det_unitary,
     construct_Adjoint_rep_Gaugefields,
     get_myrank,
@@ -249,7 +250,7 @@ export evaluate_gaugelinks_evenodd!, normalize!, normalize3!, normalizeN!
 export loops_staple
 export save_textdata, load_BridgeText!
 export shift_U, evaluate_gaugelinks!, Gradientflow, flow!
-export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calc_gdgaction_3D, det_unitary
+export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calc_gdgaction_3D, calc_gdgactiondensity_3D, det_unitary
 export heatbath!, Heatbath
 export STOUT_Layer, CovNeuralnet, calc_smearedU, make_loops_fromname, STOUT_Layer_fast
 export GaugeAction,

@@ -1,8 +1,9 @@
 using Random
 using LinearAlgebra
 
-function random_unitary(rng, N)
-    A = rand(rng, ComplexF64, N, N) + im * rand(rng, ComplexF64, N, N)
+function random_unitary(rng, N; scale=1)
+    A = scale * rand(rng, ComplexF64, N, N) +
+        scale * im * rand(rng, ComplexF64, N, N)
     Q, R = qr(A)
     Q *= Diagonal(sign.(diag(R)))
     return Q
@@ -287,6 +288,7 @@ function randomGaugefields_3D_nowing(
     NT;
     verbose_level = 2,
     randomnumber = "Random",
+    scale = 1,
 )
     U = Gaugefields_3D_nowing(NC, NX, NY, NT, verbose_level = verbose_level)
     if randomnumber == "Random"
@@ -302,7 +304,7 @@ function randomGaugefields_3D_nowing(
     for it = 1:NT
         for iy = 1:NY
             @simd for ix = 1:NX
-                U[:, :, ix, iy, it] = random_unitary(rng, NC)
+                U[:, :, ix, iy, it] = random_unitary(rng, NC, scale=scale)
             end
         end
     end
@@ -310,7 +312,8 @@ function randomGaugefields_3D_nowing(
     return U
 end
 
-function RandomGauges_3D(NC, NX, NY, NT; verbose_level = 2, randomnumber = "Random")
+function RandomGauges_3D(NC, NX, NY, NT;
+                         verbose_level = 2, randomnumber = "Random", randscale=1)
     return randomGaugefields_3D_nowing(
         NC,
         NX,
@@ -318,6 +321,7 @@ function RandomGauges_3D(NC, NX, NY, NT; verbose_level = 2, randomnumber = "Rand
         NT,
         verbose_level = verbose_level,
         randomnumber = randomnumber,
+        scale = randscale,
     )
 end
 
@@ -1625,6 +1629,54 @@ function calculate_gdg_action(
                     end
                 end
             end
+        end
+    end
+    return c
+end
+
+function calculate_gdg_actiondensity(
+    a::Gaugefields_3D_nowing{NC},
+    ix::Integer,
+    iy::Integer,
+    it::Integer,
+    ν::Integer,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temps[1]
+    calculate_gdg_conj!(b,a,ν,[temps[2], temps[3]])
+
+    c = 0.0 + 0.0im
+    for k = 1:NC
+        @inbounds @simd for k3 = 1:NC
+            c += b[k,k3,ix,iy,it]*b[k3,k,ix,iy,it]
+        end
+    end
+    return c
+end
+function calculate_gdg_actiondensity(
+    a::Gaugefields_3D_nowing{NC},
+    ix::Integer,
+    iy::Integer,
+    it::Integer,
+    ν::Integer,
+    η,
+    temps
+) where NC
+    NX = a.NX
+    NY = a.NY
+    NT = a.NT
+
+    b = temps[1]
+    calculate_gdg_conj!(b,a,ν,η,[temps[2], temps[3]])
+
+    c = 0.0 + 0.0im
+    for k = 1:NC
+        @inbounds @simd for k3 = 1:NC
+            c += b[k,k3,ix,iy,it]*b[k3,k,ix,iy,it]
         end
     end
     return c

@@ -1144,6 +1144,7 @@ function Initialize_3D_UN_Gaugefields(
     verbose_level=2,
     randomnumber="Random",
     reps=0.1,
+    randscale=1,
 )
     @assert length(NN) == 3 "Dimension should be 3."
     if condition == "cold"
@@ -1158,6 +1159,7 @@ function Initialize_3D_UN_Gaugefields(
             NN...,
             verbose_level=verbose_level,
             randomnumber=randomnumber,
+            randscale=randscale,
         )
     elseif condition == "test_map"
         u = TestmapGauges_3D(
@@ -3303,6 +3305,35 @@ function calc_gdgaction_3D(U,η,temps_g::Temporalfields)
     end
     unused!(temps_g,it_temps)
     return real(S) / NV
+end
+
+function calc_gdgactiondensity_3D(U,ix,iy,it,temps_g::Temporalfields)
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+
+    S = 0.0 + 0.0im
+    for μ=1:3
+        s = calculate_gdg_actiondensity(U, ix,iy,it, μ, [temp1,temp2,temp3])
+        S += (-1/4) * s
+    end
+    unused!(temps_g,it_temps)
+    return real(S)
+end
+function calc_gdgactiondensity_3D(U,ix,iy,it,η,temps_g::Temporalfields)
+    temps, it_temps = get_temp(temps_g, 3)
+    temp1 = temps[1]
+    temp2 = temps[2]
+    temp3 = temps[3]
+
+    S = 0.0 + 0.0im
+    for μ=1:3
+        s = calculate_gdg_actiondensity(U, ix,iy,it, μ, η, [temp1,temp2,temp3])
+        S += (-1/4) * s
+    end
+    unused!(temps_g,it_temps)
+    return real(S)
 end
 
 function calc_Zfactor!(Z, U, temps_g::Temporalfields)
