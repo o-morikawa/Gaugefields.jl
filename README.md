@@ -2,14 +2,15 @@
 
 # Abstract
 
-[NOTE: This is an extended version by Okuto Morikawa,
-in order to implement higher-form gauge fields
- (i.e., 't Hooft twisted boundary condition/flux).]
-
-[NOTE: O.M. also provides a memory-safer code set than the original one.]
-
 This is a package for lattice QCD codes.
 Treating gauge fields (links), gauge actions with MPI and autograd.
+
+This is an extended version by Okuto Morikawa,
+in order to implement higher-form gauge fields
+ (i.e., 't Hooft twisted boundary condition/flux).
+
+[~~NOTE: O.M. also provides a memory-safer code set than the original one.~~
+This has been fixed on v0.4.0.]
 
 <img src="LQCDjl_block.png" width=300> 
 
@@ -48,6 +49,9 @@ In addition, this supports followings
 - **Autograd for functions with SU(Nc) variables**
 - Stout smearing (exp projecting smearing)
 - Stout force via [backpropagation](https://arxiv.org/abs/2103.11965)
+- **A 3D implementation of U(N) gauge fields** [by Shiozaki](https://arxiv.org/abs/2403.05291)
+    - Discrete approximation of winding number, and gradient-flow improvement
+    - See [Wind3D](https://github.com/o-morikawa/Wind3D)
 
 Autograd can be worked for general Wilson lines except for ones have overlaps.
 
@@ -310,7 +314,7 @@ function HMC_test_4D_dynamicalB(NX,NY,NZ,NT,NC,β)
     numtrj = 100
     for itrj = 1:numtrj
         t = @timed begin
-            accepted = MDstep_dynB!(
+            accepted = MDstep!(
                 gauge_action,
                 U,
                 B,
