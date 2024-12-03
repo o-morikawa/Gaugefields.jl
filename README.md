@@ -1002,7 +1002,7 @@ Conditions are "Qplaq", "Qclover", "Qimproved", "Eplaq", "Eclover", "Energydensi
 We can easily calculate the matrix derivative of the actions. The matrix derivative is defined as 
 
 ```math
-\frac{\partial S}{\partial U_{\mu}(n)}]_{ij} = \frac{\partial S}{\partial U_{\mu,ji}(n)}
+[\frac{\partial S}{\partial U_{\mu}(n)}]_{ij} = \frac{\partial S}{\partial U_{\mu,ji}(n)}
 ```
 
 <!--<img src="https://latex.codecogs.com/svg.image?[\frac{\partial&space;S}{\partial&space;U_{\mu}(n)}]_{ij}&space;=&space;\frac{\partial&space;S}{\partial&space;U_{\mu,ji}(n)}" title="[\frac{\partial S}{\partial U_{\mu}(n)}]_{ij} = \frac{\partial S}{\partial U_{\mu,ji}(n)}" />-->
@@ -1086,34 +1086,6 @@ function MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold)
         return false
     else
         return true
-    end
-end
-
-function U_update!(U,p,ϵ,Δτ,Dim,gauge_action)
-    temps = get_temporary_gaugefields(gauge_action)
-    temp1 = temps[1]
-    temp2 = temps[2]
-    expU = temps[3]
-    W = temps[4]
-
-    for μ=1:Dim
-        exptU!(expU,ϵ*Δτ,p[μ],[temp1,temp2])
-        mul!(W,expU,U[μ])
-        substitute_U!(U[μ],W)
-        
-    end
-end
-
-function P_update!(U,B,p,ϵ,Δτ,Dim,gauge_action) # p -> p +factor*U*dSdUμ
-    NC = U[1].NC
-    temp  = gauge_action._temp_U[end]
-    dSdUμ = similar(U[1])
-    factor =  -ϵ*Δτ/(NC)
-
-    for μ=1:Dim
-        calc_dSdUμ!(dSdUμ,gauge_action,μ,U,B)
-        mul!(temp,U[μ],dSdUμ) # U*dSdUμ
-        Traceless_antihermitian_add!(p[μ],factor,temp)
     end
 end
 ```
