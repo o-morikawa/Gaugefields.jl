@@ -54,6 +54,7 @@ function HMC_test_4D_dynamicalB(
         B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
     end
 
+
     #filename = "U_beta6.0_L8_F111120_4000.txt"
     filename = ""
     if !isdir("confs")
@@ -67,13 +68,13 @@ function HMC_test_4D_dynamicalB(
             Base.run(`mkdir conf_name`)
         end
         isInitial = true
-    elseif !isfile("./conf_name/U_beta$(β)_L$(NX).txt")
+    elseif !isfile("./conf_name/U_beta$(β)_L$(NX)_PE$(pes[1])$(pes[2])$(pes[3])$(pes[4]).txt")
         if get_myrank(U)==0
-            Base.run(`touch conf_name/U_beta$(β)_L$(NX).txt`)
+            Base.run(`touch conf_name/U_beta$(β)_L$(NX)_PE$(pes[1])$(pes[2])$(pes[3])$(pes[4]).txt`)
         end
         isInitial = true
     else
-        open("./conf_name/U_beta$(β)_L$(NX).txt", "r") do f
+        open("./conf_name/U_beta$(β)_L$(NX)_PE$(pes[1])$(pes[2])$(pes[3])$(pes[4]).txt", "r") do f
             filename *= readline(f)
         end
         isInitial = false
@@ -85,6 +86,10 @@ function HMC_test_4D_dynamicalB(
     #        isInitial = false
     #    end
     end
+    if get_myrank(U)==0
+        println("Configuration type: U_beta$(β)_L$(NX)_PE$(pes[1])$(pes[2])$(pes[3])$(pes[4])")
+    end
+
 
     if isInitial
         #flux = rand(0:NC-1,6)
@@ -200,13 +205,13 @@ function HMC_test_4D_dynamicalB(
         end
 
         if itrj % save_step == 0
-            filename = "confs/U_beta$(2β)_L$(NX)_mpi$(get_myrank(U))_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.ildg"
+            filename = "confs/U_beta$(2β)_L$(NX)_PE$(pes[1])$(pes[2])$(pes[3])$(pes[4])_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.ildg"
             if get_myrank(U)==0
                 println("Save file: ", filename)
             end
             save_binarydata(U,filename)
             if get_myrank(U)==0
-                open("./conf_name/U_beta$(2β)_L$(NX).txt", "w") do f
+                open("./conf_name/U_beta$(2β)_L$(NX)_PE$(pes[1])$(pes[2])$(pes[3])$(pes[4]).txt", "w") do f
                     write(f, filename)
                 end
                 println("Save conf: itrj=", itrj)
@@ -219,8 +224,8 @@ end
 
 
 function main()
-    β = 3.0
-    L = 12
+    β = 2.4
+    L = 8
 
     NX = L
     NY = L
@@ -228,7 +233,7 @@ function main()
     NT = L
     NC = 2
 
-    HMC_test_4D_dynamicalB(
+    @time HMC_test_4D_dynamicalB(
         NX,
         NY,
         NZ,
