@@ -35,7 +35,7 @@ function __init__()
             counts = zeros(Int64, U[1].nprocs)
             totalnum = NX * NY * NZ * NT * NC * NC * 2 * 4
             PN = U[1].PN
-            Gaugefields.barrier(U[1])
+            barrier(U[1])
 
             N = NC * NC * 4
             send_mesg1 = Array{ComplexF64}(undef, 1)
@@ -52,7 +52,7 @@ function __init__()
                     for iy = 1:NY
                         for ix = 1:NX
                             rank, ix_local, iy_local, iz_local, it_local =
-                                Gaugefields.calc_rank_and_indices(U[1], ix, iy, iz, it)
+                                calc_rank_and_indices(U[1], ix, iy, iz, it)
                             #counts[rank+1] += 1
                             counttotal += 1
 
@@ -65,7 +65,7 @@ function __init__()
                                 println("$it $(it_local)")
                             end
                             =#
-                            Gaugefields.barrier(U[1])
+                            barrier(U[1])
                             if U[1].myrank == 0
                                 count = 0
                                 for μ = 1:4
@@ -77,11 +77,11 @@ function __init__()
                                     end
                                 end
                                 sreq =
-                                    MPI.Isend(send_mesg, rank, counttotal, Gaugefields.comm)
+                                    MPI.Isend(send_mesg, rank, counttotal, comm)
                             end
                             if U[1].myrank == rank
                                 rreq =
-                                    MPI.Irecv!(recv_mesg, 0, counttotal, Gaugefields.comm)
+                                    MPI.Irecv!(recv_mesg, 0, counttotal, comm)
                                 MPI.Wait!(rreq)
                                 count = 0
                                 for μ = 1:4
@@ -89,7 +89,7 @@ function __init__()
                                         for ic1 = 1:NC
                                             count += 1
                                             v = recv_mesg[count]
-                                            Gaugefields.setvalue!(
+                                            setvalue!(
                                                 U[μ],
                                                 v,
                                                 ic2,
@@ -103,30 +103,30 @@ function __init__()
                                     end
                                 end
                             end
-                            Gaugefields.barrier(U[1])
+                            barrier(U[1])
                         end
                     end
                 end
             end
             #end
 
-            Gaugefields.barrier(U[1])
+            barrier(U[1])
             #=
 
             N = length(data[:,:,:,:,1])
             send_mesg1 =  Array{ComplexF64}(undef, N)#data[:,:,:,:,1] #Array{ComplexF64}(undef, N)
             recv_mesg1 = Array{ComplexF64}(undef, N)
             #comm = MPI.MPI_COMM_WORLD
-            #println(typeof(Gaugefields.comm))
+            #println(typeof(comm))
 
 
             for ip=0:U[1].nprocs-1
                 if U[1].myrank == 0
                     send_mesg1[:] = reshape(data[:,:,:,:,ip+1],:) #Array{ComplexF64}(undef, N)
-                    sreq1 = MPI.Isend(send_mesg1, ip, ip+32, Gaugefields.comm) 
+                    sreq1 = MPI.Isend(send_mesg1, ip, ip+32, comm) 
                 end
                 if U[1].myrank == ip
-                    rreq1 = MPI.Irecv!(recv_mesg1, 0, ip+32, Gaugefields.comm)
+                    rreq1 = MPI.Irecv!(recv_mesg1, 0, ip+32, comm)
                     MPI.Wait!(rreq1)
 
                     count = 0
@@ -139,7 +139,7 @@ function __init__()
                                             for ic2 = 1:NC
                                                 count += 1
                                                 v = recv_mesg1[count] 
-                                                Gaugefields.setvalue!(U[μ],v,ic2,ic1,ix,iy,iz,it) 
+                                                setvalue!(U[μ],v,ic2,ic1,ix,iy,iz,it) 
                                             end
                                         end
                                     end
@@ -151,7 +151,7 @@ function __init__()
 
             end
 
-            Gaugefields.barrier(U[1])
+            barrier(U[1])
             =#
 
             update!(U)
@@ -195,7 +195,7 @@ function __init__()
                     for iy = 1:NY
                         for ix = 1:NX
                             rank, ix_local, iy_local, iz_local, it_local =
-                                Gaugefields.calc_rank_and_indices(U[1], ix, iy, iz, it)
+                                calc_rank_and_indices(U[1], ix, iy, iz, it)
                             #counts[rank+1] += 1
                             counttotal += 1
 
@@ -208,7 +208,7 @@ function __init__()
                                 println("$it $(it_local)")
                             end
                             =#
-                            Gaugefields.barrier(U[1])
+                            barrier(U[1])
                             if U[1].myrank == 0
                                 count = 0
                                 for μ = 1:4
@@ -220,11 +220,11 @@ function __init__()
                                     end
                                 end
                                 sreq =
-                                    MPI.Isend(send_mesg, rank, counttotal, Gaugefields.comm)
+                                    MPI.Isend(send_mesg, rank, counttotal, comm)
                             end
                             if U[1].myrank == rank
                                 rreq =
-                                    MPI.Irecv!(recv_mesg, 0, counttotal, Gaugefields.comm)
+                                    MPI.Irecv!(recv_mesg, 0, counttotal, comm)
                                 MPI.Wait!(rreq)
                                 count = 0
                                 for μ = 1:4
@@ -232,7 +232,7 @@ function __init__()
                                         for ic1 = 1:NC
                                             count += 1
                                             v = recv_mesg[count]
-                                            Gaugefields.setvalue!(
+                                            setvalue!(
                                                 U[μ],
                                                 v,
                                                 ic2,
@@ -246,14 +246,14 @@ function __init__()
                                     end
                                 end
                             end
-                            Gaugefields.barrier(U[1])
+                            barrier(U[1])
                         end
                     end
                 end
             end
             #end
 
-            Gaugefields.barrier(U[1])
+            barrier(U[1])
             update!(U)
 
 
@@ -344,7 +344,7 @@ function __init__()
                                             v = recv_mesg[count]
                                             write(fp, hton(real(v)))
                                             write(fp, hton(imag(v)))
-                                            #Gaugefields.setvalue!(U[μ],v,ic2,ic1,ix_local,iy_local,iz_local,it_local) 
+                                            #setvalue!(U[μ],v,ic2,ic1,ix_local,iy_local,iz_local,it_local) 
                                         end
                                     end
                                 end
