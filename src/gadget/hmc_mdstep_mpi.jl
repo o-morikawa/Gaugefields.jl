@@ -476,7 +476,7 @@ function Flux_update_mpi!(
     flux[i] += (flux[i] < 0) ? NC : 0
 #    flux[:] = rand(0:NC-1,6)
 #    flux[:] = MPI.bcast(flux[:], 0, MPI.COMM_WORLD)
-    B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = false)
+    B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = true)
 
 end
 
