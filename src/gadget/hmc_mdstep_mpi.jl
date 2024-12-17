@@ -198,7 +198,7 @@ function MDstep_dynB_mpi!(
     ratio = min(1,exp(-Snew+Sold))
     r = rand()
     r = MPI.bcast(r, 0, MPI.COMM_WORLD)
-    if rand() > r
+    if r > ratio
         if get_myrank(U)==0
             println("rejected! flux = ", flux_old)
         end
@@ -251,7 +251,7 @@ function MDstep_dynB_mpi!(
     ratio = min(1,exp(-Snew+Sold))
     r = rand()
     r = MPI.bcast(r, 0, MPI.COMM_WORLD)
-    if rand() > r
+    if r > ratio
         if get_myrank(U)==0
             println("rejected! flux = ", flux_old)
         end
@@ -300,7 +300,7 @@ function MDstep_dynB_mpi!(
     ratio = min(1,exp(-Snew+Sold))
     r = rand()
     r = MPI.bcast(r, 0, MPI.COMM_WORLD)
-    if rand() > r
+    if r > ratio
         if get_myrank(U)==0
             println("rejected! flux = ", flux_old)
         end
@@ -347,7 +347,7 @@ function MDstep_dynB_mpi!(
     ratio = min(1,exp(-Snew+Sold))
     r = rand()
     r = MPI.bcast(r, 0, MPI.COMM_WORLD)
-    if rand() > r
+    if r > ratio
         if get_myrank(U)==0
             println("rejected! flux = ", flux_old)
         end
