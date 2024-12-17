@@ -67,11 +67,13 @@ function HMC_test_4D_dynamicalB(
             Base.run(`mkdir conf_name`)
         end
         isInitial = true
-    elseif !isfile("./conf_name/U_beta$(β)_L$(NX)_mpi$(get_myrank(U)).txt")
-        Base.run(`touch conf_name/U_beta$(β)_L$(NX)_mpi$(get_myrank(U)).txt`)
+    elseif !isfile("./conf_name/U_beta$(β)_L$(NX).txt")
+        if get_myrank(U)==0
+            Base.run(`touch conf_name/U_beta$(β)_L$(NX).txt`)
+        end
         isInitial = true
     else
-        open("./conf_name/U_beta$(β)_L$(NX)_mpi$(get_myrank(U)).txt", "r") do f
+        open("./conf_name/U_beta$(β)_L$(NX).txt", "r") do f
             filename *= readline(f)
         end
         isInitial = false
@@ -101,18 +103,21 @@ function HMC_test_4D_dynamicalB(
         for i = 1:6
             flux[i] = parse(Int,filename[idx+i])
         end
-        idy = findfirst(".txt",filename)[1]
+        idy = findfirst(".ildg",filename)[1]
         strtrj = parse(Int, filename[idx+8:idy-1])
 
         if get_myrank(U)==0
             println("Flux : ", flux)
         end
 
+        ildg = ILDG(filename)
+        i = 1
         L = [NX,NY,NZ,NT]
         if get_myrank(U)==0
             println("Load file: ", filename)
         end
-        load_BridgeText!(filename,U,L,NC)
+        load_gaugefield!(U,i,ildg,L,NC)
+
         if mpi
             PEs = pes
             B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = false)
@@ -195,12 +200,15 @@ function HMC_test_4D_dynamicalB(
         end
 
         if itrj % save_step == 0
-            filename = "confs/U_beta$(2β)_L$(NX)_mpi$(get_myrank(U))_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
-            save_textdata(U,filename)
-            open("./conf_name/U_beta$(2β)_L$(NX)_mpi$(get_myrank(U)).txt", "w") do f
-                write(f, filename)
-            end
+            filename = "confs/U_beta$(2β)_L$(NX)_mpi$(get_myrank(U))_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.ildg"
             if get_myrank(U)==0
+                println("Save file: ", filename)
+            end
+            save_binarydata(U,filename)
+            if get_myrank(U)==0
+                open("./conf_name/U_beta$(2β)_L$(NX).txt", "w") do f
+                    write(f, filename)
+                end
                 println("Save conf: itrj=", itrj)
             end
         end
