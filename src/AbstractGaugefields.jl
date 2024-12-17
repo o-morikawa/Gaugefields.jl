@@ -1338,7 +1338,7 @@ function evaluate_gaugelinks_evenodd!(
     w::Wilsonline{Dim},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 4
+    temps::Array{T,1}, # length >= 4+3
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
     Unew = temps[1]
@@ -1492,7 +1492,7 @@ function evaluate_gaugelinks!(
     w::Wilsonline{Dim},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 4
+    temps::Array{T,1}, # length >= 4+3
 ) where {T<:AbstractGaugefields,Dim}
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
@@ -1584,7 +1584,7 @@ function sweepaway_4D_Bplaquettes!(
     uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
-    temps::Array{T,1}, # length(temps) >= 4
+    temps::Array{T,1}, # length(temps) >= 4+3
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
     Unew = temps[1]
@@ -1625,6 +1625,10 @@ function sweepaway_4D_Bplaquettes!(
     Ushift = shift_U(Unew, (0, 0, 0, 0))
 
     if direction == 1
+        Bshift12 = temps[end]
+        Bshift13 = temps[end-1]
+        Bshift14 = temps[end-2]
+
         if isU1dag
             Bshift12 = shift_U(B[1, 2], (0, 0, 0, 0))
             Bshift13 = shift_U(B[1, 3], (0, 0, 0, 0))
@@ -1723,6 +1727,9 @@ function sweepaway_4D_Bplaquettes!(
 
         end
     elseif direction == 2
+        Bshift23 = temps[end]
+        Bshift24 = temps[end-1]
+
         if isU1dag
             Bshift23 = shift_U(B[2, 3], (0, 0, 0, 0))
             Bshift24 = shift_U(B[2, 4], (0, 0, 0, 0))
@@ -1801,6 +1808,8 @@ function sweepaway_4D_Bplaquettes!(
             Ushift = shift_U(Unew, origin)
         end
     elseif direction == 3
+        Bshift34 = temps[end]
+
         if isU1dag
             Bshift34 = shift_U(B[3, 4], (0, 0, 0, 0))
         else
@@ -1897,7 +1906,7 @@ function sweepaway_4D_Bplaquettes_evenodd!(
     uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
-    temps::Array{T,1}, # length(temps) >= 4
+    temps::Array{T,1}, # length(temps) >= 4+3
     iseven::Bool,
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
@@ -1933,6 +1942,9 @@ function sweepaway_4D_Bplaquettes_evenodd!(
     substitute_U!(Unew,uout)
     Ushift = shift_U(Unew, (0,0,0,0))
     if direction == 1
+        Bshift12 = temps[end]
+        Bshift13 = temps[end-1]
+        Bshift14 = temps[end-2]
         if isU1dag
             Bshift12 = shift_U(B[1,2], (0,0,0,0))
             Bshift13 = shift_U(B[1,3], (0,0,0,0))
@@ -2022,6 +2034,8 @@ function sweepaway_4D_Bplaquettes_evenodd!(
             
         end
     elseif direction == 2
+        Bshift23 = temps[end]
+        Bshift24 = temps[end-1]
         if isU1dag
             Bshift23 = shift_U(B[2,3], (0,0,0,0))
             Bshift24 = shift_U(B[2,4], (0,0,0,0))
@@ -2092,6 +2106,7 @@ function sweepaway_4D_Bplaquettes_evenodd!(
             Ushift = shift_U(Unew, origin)
         end
     elseif direction == 3
+        Bshift34 = temps[end]
         if isU1dag
             Bshift34 = shift_U(B[3,4], (0,0,0,0))
         else
@@ -2279,7 +2294,7 @@ function evaluate_gaugelinks_evenodd!(
     w::Array{<:Wilsonline{Dim},1},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 5
+    temps::Array{T,1}, # length >= 5+3
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
     num = length(w)
@@ -2288,7 +2303,7 @@ function evaluate_gaugelinks_evenodd!(
     clear_U!(xout, iseven)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks_evenodd!(temp, glinks, U, temps[1:4], iseven) # length >= 4
+        evaluate_gaugelinks_evenodd!(temp, glinks, U, temps[1:7], iseven) # length >= 4+3
         add_U!(xout, temp, iseven)
     end
     return
@@ -2326,7 +2341,7 @@ function evaluate_gaugelinks!(
     w::Array{WL,1},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 5
+    temps::Array{T,1}, # length >= 5+3
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
     num = length(w)
     temp1 = temps[5]
@@ -2334,7 +2349,7 @@ function evaluate_gaugelinks!(
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:4]) # length >= 4
+        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:7]) # length >= 4+3
         add_U!(xout, temp1)
     end
 

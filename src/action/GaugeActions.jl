@@ -110,7 +110,7 @@ function calc_dSdUμ!(
     B::Array{T,2},
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim}}
     temp,  it_temp   = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 5)
+    temps, its_temps = get_temp(S._temp_U, 8)
     numterm = length(S.dataset)
 
     clear_U!(dSdUμ)
@@ -221,13 +221,13 @@ function evaluate_GaugeAction_untraced!(
 end
 function evaluate_GaugeAction_untraced!(
     uout,
-    S::GaugeAction, # length(temps) > 6
+    S::GaugeAction, # length(temps) > 9
     U::Vector{T},
     B::Array{T,2}
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim}}
     numterm = length(S.dataset)
     temp, it_temp = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 5)
+    temps, its_temps = get_temp(S._temp_U, 8)
     clear_U!(uout)
 
     for i = 1:numterm
