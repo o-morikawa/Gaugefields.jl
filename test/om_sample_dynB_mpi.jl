@@ -48,7 +48,7 @@ function HMC_test_4D_dynamicalB(
     if mpi
         PEs = pes#(1,1,1,2)
         U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",mpi=true,PEs = PEs,mpiinit = false) 
-        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = false)
+        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = true)
     else
         U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold")
         B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
