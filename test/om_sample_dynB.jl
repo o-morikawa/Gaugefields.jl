@@ -49,7 +49,11 @@ function HMC_test_4D_dynamicalB(
         open("./conf_name/U_beta$(β)_L$(NX).txt", "r") do f
             filename *= readline(f)
         end
-        isInitial = false
+        if length(filename)==0
+            isInitial = true
+        else
+            isInitial = false
+        end
     #else
     #    filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
     #    if filename == ""
