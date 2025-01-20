@@ -79,7 +79,7 @@ function HMC_test_4D_dynamicalB(
         B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
     end
 
-    temps = Temporalfields(U[1], num=9)
+    temps = Temporalfields(U[1], num=3)
     comb, factor = set_comb(U, Dim)
 
     @time plaq_t = calculate_Plaquette(U,B,temps)*factor
@@ -120,7 +120,7 @@ function HMC_test_4D_dynamicalB(
                 Uold,
                 Bold,
                 flux_old,
-                temps
+                #temps
             )
         end
         if get_myrank(U) == 0
