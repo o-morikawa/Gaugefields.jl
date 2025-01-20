@@ -151,7 +151,7 @@ function HMC_test_4D_dynamicalB(
         if itrj % save_step == 0
             filename = "confs/U_beta$(2β)_L$(NX)_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
             save_textdata(U,filename)
-            open("./conf_name/flux_beta(2β)_L$(NX).txt", "a") do f
+            open("./conf_name/flux_beta$(2β)_L$(NX).txt", "a") do f
                 write(f, filename)
             end
             open("./conf_name/U_beta$(2β)_L$(NX).txt", "w") do f
