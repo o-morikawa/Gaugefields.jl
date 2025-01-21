@@ -138,7 +138,7 @@ import .HMC_module:
     P_update!,
     Flux_update!,
     set_comb
-import .Bridge_format: save_textdata, load_BridgeText!
+import .Bridge_format: save_textdata, load_BridgeText!, save_textdata_B, load_BridgeText_B!
 import Wilsonloop: loops_staple
 import .Abstractsmearing_module:
     STOUT_Layer,
@@ -248,7 +248,7 @@ export calc_action, U_update!, P_update!, Flux_update!, set_comb
 export map_U!
 export evaluate_gaugelinks_evenodd!, normalize!, normalize3!, normalizeN!
 export loops_staple
-export save_textdata, load_BridgeText!
+export save_textdata, load_BridgeText!, save_textdata_B, load_BridgeText_B!
 export shift_U, evaluate_gaugelinks!, Gradientflow, flow!
 export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calc_gdgaction_3D, calc_gdgactiondensity_3D, det_unitary
 export heatbath!, Heatbath

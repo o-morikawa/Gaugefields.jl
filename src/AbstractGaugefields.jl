@@ -2250,7 +2250,7 @@ function gaugetransf_core_4D_Bfields!(
                 continue
             end
             loop = [(μ,+1),(ν,+1),(μ,-1),(ν,-1)]
-            w = Wilsonloop(loop)
+            w = Wilsonline(loop)
             evaluate_gaugelinks!(uout[μ,ν], w, λ, B, temps)
         end
     end
@@ -2278,7 +2278,7 @@ function gaugetransf_4D_Bfields!(
         error("gaugetransf_4D_Bfields!: numtransf is not matched")
     end
     for i = 1:num
-        gaugetransf_core_4D_Bfields!(uout, B, temps_g, verbose_level, randomnumber)
+        gaugetransf_core_4D_Bfields!(uout, B, temps_g, verbose_level=verbose_level, randomnumber=randomnumber)
     end
 end
 
