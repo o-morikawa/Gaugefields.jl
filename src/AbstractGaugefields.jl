@@ -2222,6 +2222,67 @@ function isStaplewithB(
 
 end
 
+
+function gaugetransf_core_4D_Bfields!(
+    uout::Array{T,2},
+    B::Array{T,2},
+    temps_g::Temporalfields;
+    verbose_level = 2,
+    randomnumber = "Random",
+) where {T<:AbstractGaugefields}
+    Dim = 4
+    
+    NC  = B[1,2].NC
+    NX  = B[1,2].NX
+    NY  = B[1,2].NY
+    NZ  = B[1,2].NZ
+    NT  = B[1,2].NT
+
+    λ, iλ = get_temp(temps_g, Dim)
+    temps, its = get_temp(temps_g, 7)
+    for μ = 1:Dim
+        λ[μ] = RandomIntGauges_4D(NC,NX,NY,NZ,NT,verbose_level=verbose_level,randomnumber=randomnumber)
+    end
+
+    for μ = 1:Dim
+        for ν = 1:Dim
+            if μ==ν
+                continue
+            end
+            loop = [(μ,+1),(ν,+1),(μ,-1),(ν,-1)]
+            w = Wilsonloop(loop)
+            evaluate_gaugelinks!(uout[μ,ν], w, λ, B, temps)
+        end
+    end
+    unused!(temps_g, iλ)
+    unused!(temps_g, its)
+end
+
+function gaugetransf_4D_Bfields!(
+    uout::Array{T,2},
+    B::Array{T,2},
+    temps_g::Temporalfields;
+    verbose_level = 2,
+    randomnumber = "Random",
+    numtransf = 0,
+) where {T<:AbstractGaugefields}
+    if numtransf == 0
+        NX  = B[1,2].NX
+        NY  = B[1,2].NY
+        NZ  = B[1,2].NZ
+        NT  = B[1,2].NT
+        num = NX + NY + NZ + NT
+    elseif numtransf > 0
+        num = numtransf
+    else
+        error("gaugetransf_4D_Bfields!: numtransf is not matched")
+    end
+    for i = 1:num
+        gaugetransf_core_4D_Bfields!(uout, B, temps_g, verbose_level, randomnumber)
+    end
+end
+
+
 function zerocheck(U, U2bare, Uname)
     for myrank = 0:(get_nprocs(U)-1)
         #println(get_nprocs(U))

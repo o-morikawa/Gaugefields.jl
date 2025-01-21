@@ -2731,11 +2731,7 @@ function thooftFlux_4D_B_at_bndry_wing_mpi(
             )
         end
         
-        if overallminus
-            v = exp(-im * (2pi/NC) * FLUX)
-        else
-            v = - exp(-im * (2pi/NC) * FLUX)
-        end
+        v = exp(-im * (2pi/NC) * FLUX)
         myrank_xyzt = U.myrank_xyzt
       if FLUXNUM==1
         for it = 1:U.PN[4]

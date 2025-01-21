@@ -341,4 +341,96 @@ function save_textdata(U, filename)
 
 end
 
+
+function load_BridgeText_B!(initial, U, L, NC)
+    NX = L[1]
+    NY = L[2]
+    NZ = L[3]
+    NT = L[4]
+    @assert U[1,2].NX == NX "NX mismatch"
+    @assert U[1,2].NY == NY "NY mismatch"
+    @assert U[1,2].NZ == NZ "NZ mismatch"
+    @assert U[1,2].NT == NT "NT mismatch"
+    @assert U[1,2].NC == NC "NC mismatch"
+    fp = open(initial, "r")
+    numdata = countlines(initial)
+    @assert numdata == 6 * NX * NY * NT * NZ * NC * NC * 2 "data shape is wrong"
+
+
+    #for μ=1:4
+    for it = 1:NT
+        for iz = 1:NZ
+            for iy = 1:NY
+                for ix = 1:NX
+                    for μ = 1:4
+                        for ν = (μ+1):4
+                            for a = 1:NC
+                                for b = 1:NC
+                                    u = split(readline(fp))
+                                    rvalue = parse(Float64, u[1])
+                                    u = split(readline(fp))
+                                    ivalue = parse(Float64, u[1])
+                                    U[μ,ν][a, b, ix, iy, iz, it] = rvalue + im * ivalue
+                                    U[ν,μ][a, b, ix, iy, iz, it] = - (rvalue + im * ivalue)
+                                end
+                            end
+                        end
+                        #u = U[μ][:,:,ix,iy,iz,it] 
+                        #println(u'*u)
+                    end
+                end
+            end
+        end
+    end
+
+
+    set_wing_U!(U)
+
+
+    close(fp)
+
+
+end
+
+function save_textdata_B(U, filename)
+
+    NX = U[1,2].NX
+    NY = U[1,2].NY
+    NZ = U[1,2].NZ
+    NT = U[1,2].NT
+    NC = U[1,2].NC
+
+
+    fp = open(filename, "w")
+    i = 0
+    for it = 1:NT
+        for iz = 1:NZ
+            for iy = 1:NY
+                for ix = 1:NX
+                    for μ = 1:4
+                        for ν = (μ+1):4
+                            for a = 1:NC
+                                for b = 1:NC
+                                    i += 1
+                                    rvalue = real(U[μ,ν][a, b, ix, iy, iz, it])
+                                    println(fp, rvalue)
+                                    ivalue = imag(U[μ,ν][a, b, ix, iy, iz, it])
+                                    println(fp, ivalue)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    close(fp)
+
+
+
+
+    return
+
+end
+
 end

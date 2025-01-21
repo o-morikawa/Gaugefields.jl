@@ -265,6 +265,7 @@ function identityGaugefields_4D_nowing_mpi(
         verbose_level = verbose_level,
         comm = comm,
     )
+    clear_U!(U)
     v = 1
 
     for it = 1:U.PN[4]
@@ -4096,6 +4097,7 @@ function minusidentityGaugefields_4D_nowing_mpi(
         verbose_level = verbose_level,
         comm = comm,
     )
+    clear_U!(U)
     v = -1
 
     for it = 1:U.PN[4]
@@ -4161,11 +4163,7 @@ function thooftFlux_4D_B_at_bndry_nowing_mpi(
             )
         end
         
-        if overallminus
-            v = exp(-im * (2pi/NC) * FLUX)
-        else
-            v = - exp(-im * (2pi/NC) * FLUX)
-        end
+        v = exp(-im * (2pi/NC) * FLUX)
         myrank_xyzt = U.myrank_xyzt
       if FLUXNUM==1
         for it = 1:U.PN[4]

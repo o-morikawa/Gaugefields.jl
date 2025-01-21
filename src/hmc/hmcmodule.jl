@@ -6,6 +6,7 @@ using LinearAlgebra
 import ..AbstractGaugefields_module:
     AbstractGaugefields,
     Initialize_Bfields,
+    gaugetransf_4D_Bfields!,
     gauss_distribution!,
     substitute_U!,
     exptU!,
@@ -177,7 +178,6 @@ function P_update!(
     temp1, it_temp1 = get_temp(temps)
     dSdUμ, it_dSdUμ = get_temp(temps)
     factor = -ϵ * Δτ / (NC)
-
     for μ = 1:Dim
         calc_dSdUμ!(dSdUμ, gauge_action, μ, U, B)
         mul!(temp1, U[μ], dSdUμ) # U*dSdUμ
@@ -264,6 +264,59 @@ function Flux_update!(
     flux[:] = rand(0:NC-1,6)
     B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
 
+end
+function Flux_update!(
+    B::Array{T,2},
+    Btemp::Array{T,2},
+    flux,
+    temps::Temporalfields;
+    verbose_level = 2,
+    randomnumber = "Random",
+    numtransf = 0,
+) where {T<:AbstractGaugefields}
+
+    NC  = B[1,2].NC
+    NDW = B[1,2].NDW
+    NX  = B[1,2].NX
+    NY  = B[1,2].NY
+    NZ  = B[1,2].NZ
+    NT  = B[1,2].NT
+
+#    i = rand(1:6)
+#    flux[i] += rand(-1:1)
+#    flux[i] %= NC
+#    flux[i] += (flux[i] < 0) ? NC : 0
+    flux[:] = rand(0:NC-1,6)
+    Btemp = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
+
+    gaugetransf_4D_Bfields!(B,Btemp,temps,verbose_level=verbose_level,randomnumber=randomnumber,numtransf=numtransf)
+end
+function Flux_update!(
+    B::Array{T,2},
+    Btemp::Array{T,2},
+    flux,
+    gauge_action::GaugeAction;
+    verbose_level = 2,
+    randomnumber = "Random",
+    numtransf = 0,
+) where {T<:AbstractGaugefields}
+
+    NC  = B[1,2].NC
+    NDW = B[1,2].NDW
+    NX  = B[1,2].NX
+    NY  = B[1,2].NY
+    NZ  = B[1,2].NZ
+    NT  = B[1,2].NT
+
+#    i = rand(1:6)
+#    flux[i] += rand(-1:1)
+#    flux[i] %= NC
+#    flux[i] += (flux[i] < 0) ? NC : 0
+    flux[:] = rand(0:NC-1,6)
+    Btemp = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
+
+    temps = get_temporary_gaugefields(gauge_action)
+    gaugetransf_4D_Bfields!(B,Btemp,temps,verbose_level=verbose_level,randomnumber=randomnumber,numtransf=numtransf)
 end
 
 function set_comb(
