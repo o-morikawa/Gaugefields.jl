@@ -118,6 +118,33 @@ function MDstep!(
         MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old)
     end
 end
+function MDstep!(
+    gauge_action::GaugeAction,
+    U::Array{T,1},
+    B::Array{T,2},
+    flux, p, MDsteps, Dim,
+    Uold::Array{T,1},
+    Bold::Array{T,2},
+    Btemp::Array{T,2},
+    flux_old,
+    temps::Temporalfields;
+    numtransf = 0
+) where {T<:AbstractGaugefields}
+    MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,Btemp,flux_old,temps,numtransf)
+end
+function MDstep!(
+    gauge_action::GaugeAction,
+    U::Array{T,1},
+    B::Array{T,2},
+    flux, p, MDsteps, Dim,
+    Uold::Array{T,1},
+    Bold::Array{T,2},
+    Btemp::Array{T,2},
+    flux_old;
+    numtransf = 0
+) where {T<:AbstractGaugefields}
+    MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,Btemp,flux_old,numtransf)
+end
 # Double-tesing HMC
 function MDstep!(
     gauge_action::GaugeAction,

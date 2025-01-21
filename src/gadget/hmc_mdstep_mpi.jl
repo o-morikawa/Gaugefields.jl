@@ -5,6 +5,8 @@ using LinearAlgebra
 
 import ..AbstractGaugefields_module:
     Initialize_Bfields,
+    B_TfluxGauges,
+    thooftFlux_4D_B_at_bndry_nowing_mpi,
     gauss_distribution!,
     substitute_U!,
     exptU!,
@@ -190,7 +192,7 @@ function MDstep_dynB_mpi!(
         U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
 
         if itrj == Int(MDsteps/2)
-            Flux_update_mpi!(B,flux,PEs)
+            Flux_update_mpi!(B,flux,gauge_action,PEs)
         end
     end
 
@@ -237,13 +239,17 @@ function MDstep_dynB_mpi!(
 
     for itrj=1:MDsteps
         U_update!(U,  p,0.5,Δτ,Dim,gauge_action)
-
+        if get_myrank(U)==0
+            println("Trj: $itrj, Flux: $flux")
+            println(typeof(B))
+        end
+        println(get_myrank(U), B[3,4].U[1,1, PEs[1],PEs[2],PEs[3],:])
         P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
 
         U_update!(U,  p,0.5,Δτ,Dim,gauge_action)
 
         if itrj == Int(MDsteps/2)
-            Flux_update_mpi!(B,flux,PEs)
+            Flux_update_mpi!(B,flux,gauge_action,PEs)
         end
     end
 
@@ -290,7 +296,7 @@ function MDstep_dynB_mpi!(
     substitute_U!(Bold, B)
     flux_old[:] = flux[:]
 
-    Flux_update_mpi!(B,flux,PEs)
+    Flux_update_mpi!(B,flux,gauge_action,PEs)
 
     for ihmc=1:num_HMC
         MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold2,temps)
@@ -337,7 +343,7 @@ function MDstep_dynB_mpi!(
     substitute_U!(Bold, B)
     flux_old[:] = flux[:]
 
-    Flux_update_mpi!(B,flux,PEs)
+    Flux_update_mpi!(B,flux,gauge_action,PEs)
 
     for ihmc=1:num_HMC
         MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold2)
@@ -457,8 +463,10 @@ end
 function Flux_update_mpi!(
     B::Array{T,2},
     flux,
+    gauge_action,
     PEs,
 ) where {T<:AbstractGaugefields}
+    Dim = 4
     
     NC  = B[1,2].NC
     NDW = B[1,2].NDW
@@ -467,17 +475,66 @@ function Flux_update_mpi!(
     NZ  = B[1,2].NZ
     NT  = B[1,2].NT
 
+    if !(NDW==0)
+        error("not implemented for wing...")
+    end
+
+    temps, it_temps = get_temp(gauge_action._temp_U,2)
+
     i = rand(1:6)
     i = MPI.bcast(i, 0, MPI.COMM_WORLD)
     r = rand(-1:1)
     r = MPI.bcast(r, 0, MPI.COMM_WORLD)
+    if get_myrank(B[1,2])==0
+        println("i=$i,  r=$r")
+    end
     flux[i] += r
     flux[i] %= NC
     flux[i] += (flux[i] < 0) ? NC : 0
 #    flux[:] = rand(0:NC-1,6)
 #    flux[:] = MPI.bcast(flux[:], 0, MPI.COMM_WORLD)
-    B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = true)
 
+
+    #B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux",mpi=true,PEs = PEs,mpiinit = true)
+
+    fluxnum = i
+    temps[1] = thooftFlux_4D_B_at_bndry_nowing_mpi(
+        NC,
+        flux[fluxnum],
+        fluxnum,
+        NX,NY,NZ,NT,
+        PEs,
+        overallminus=false,
+    )
+    temps[2] = thooftFlux_4D_B_at_bndry_nowing_mpi(
+        NC,
+        flux[fluxnum],
+        fluxnum,
+        NX,NY,NZ,NT,
+        PEs,
+        overallminus=true,
+    )
+    if fluxnum == 1
+        substitute_U!(B[1,2], temps[1])
+        substitute_U!(B[2,1], temps[2])
+    elseif fluxnum == 2
+        substitute_U!(B[1,3], temps[1])
+        substitute_U!(B[3,1], temps[2])
+    elseif fluxnum == 3
+        substitute_U!(B[1,4], temps[1])
+        substitute_U!(B[4,1], temps[2])
+    elseif fluxnum == 4
+        substitute_U!(B[2,3], temps[1])
+        substitute_U!(B[3,2], temps[2])
+    elseif fluxnum == 5
+        substitute_U!(B[2,4], temps[1])
+        substitute_U!(B[4,2], temps[2])
+    elseif fluxnum == 6
+        substitute_U!(B[3,4], temps[1])
+        substitute_U!(B[4,3], temps[2])
+    end
+
+    unused!(gauge_action._temp_U,it_temps)
 end
 
 
