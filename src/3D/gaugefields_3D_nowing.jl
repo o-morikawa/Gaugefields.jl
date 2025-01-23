@@ -2268,7 +2268,7 @@ function test_map_U8_g(x,y,t,m,rng)
     sigma2 = [0.0+0.0im 0.0-1.0im; 0.0+1.0im 0.0+0.0im]
     sigma3 = [1.0+0.0im 0.0+0.0im; 0.0+0.0im (-1.0)+0.0im]
 
-    theta = test_map_U2_theta(x,y,t,m,rng)
+    theta = test_map_U8_theta(x,y,t,m,rng)
 
     q = zeros(ComplexF64, 8, 8)
     for i = 1:8
