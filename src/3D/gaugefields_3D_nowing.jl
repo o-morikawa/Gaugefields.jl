@@ -2288,7 +2288,7 @@ function test_map_U8_g(x,y,t,m,rng)
 end
 
 function TestmapGauges_3D_U8(NC, m, NX, NY, NT; verbose_level = 2, randomnumber = "Random")
-    return test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level)
+    return test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level, randomnumber = randomnumber)
 end
 
 function test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2, randomnumber = "Random")
