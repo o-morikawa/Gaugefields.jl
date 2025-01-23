@@ -2273,8 +2273,8 @@ function test_map_U8_g(x,y,t,m,rng)
     q = zeros(ComplexF64, 8, 8)
     for i = 1:8
         for j = 1:8
-            i_R = i % 4
-            j_R = j % 4
+            i_R = (i-1) % 4 + 1
+            j_R = (j-1) % 4 + 1
             i_P = div(i-1, 4) + 1
             j_P = div(j-1, 4) + 1
             q[i,j] = theta[1,i_R,j_R]*eye[i_P,j_P] +
