@@ -1178,7 +1178,7 @@ function Initialize_3D_UN_Gaugefields(
             reps=reps,
         )
     elseif condition == "test_U8_rand"
-        u = TestmapGauges_3D(
+        u = TestmapGauges_3D_U8(
             NC,
             m,
             NN...,
