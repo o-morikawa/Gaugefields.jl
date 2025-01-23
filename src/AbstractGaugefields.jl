@@ -1177,6 +1177,14 @@ function Initialize_3D_UN_Gaugefields(
             randomnumber=randomnumber,
             reps=reps,
         )
+    elseif condition == "test_U8_rand"
+        u = TestmapGauges_3D(
+            NC,
+            m,
+            NN...,
+            verbose_level=verbose_level,
+            randomnumber=randomnumber,
+        )
     else
         error("not supported")
     end

@@ -2242,6 +2242,85 @@ function test_map_Random_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_leve
     return U
 end
 
+function test_map_U8_theta(x,y,t,m,rng)
+    theta = zeros(Float64, 4, 4, 4)
+
+    r = rand(rng, Float64, 4, 4)
+    s = rand(rng, Float64, 4, 4)
+    theta[1,:,:] = ( m - 3 + cos(x) + cos(y) + cos(t) ) * r + ( m - 3 + cos(2x) + cos(2y) + cos(2t) ) * s
+    
+    r = rand(rng, Float64, 4, 4)
+    s = rand(rng, Float64, 4, 4)
+    theta[2,:,:] = sin(x) * r + sin(2x) * s
+    r = rand(rng, Float64, 4, 4)
+    s = rand(rng, Float64, 4, 4)
+    theta[3,:,:] = sin(y) * r + sin(2y) * s
+    r = rand(rng, Float64, 4, 4)
+    s = rand(rng, Float64, 4, 4)
+    theta[4,:,:] = sin(t) * r + sin(2t) * s
+    
+    return theta
+end
+
+function test_map_U8_g(x,y,t,m,rng)
+    eye = [1.0+0.0im 0.0+0.0im; 0.0+0.0im 1.0+0.0im]
+    sigma1 = [0.0+0.0im 1.0+0.0im; 1.0+0.0im 0.0+0.0im]
+    sigma2 = [0.0+0.0im 0.0-1.0im; 0.0+1.0im 0.0+0.0im]
+    sigma3 = [1.0+0.0im 0.0+0.0im; 0.0+0.0im (-1.0)+0.0im]
+
+    theta = test_map_U2_theta(x,y,t,m,rng)
+
+    q = zeros(ComplexF64, 8, 8)
+    for i = 1:8
+        for j = 1:8
+            i_R = i % 4
+            j_R = j % 4
+            i_P = div(i-1, 4) + 1
+            j_P = div(j-1, 4) + 1
+            q[i,j] = theta[1,i_R,j_R]*eye[i_P,j_P] +
+                im*theta[2,i_R,j_R]*sigma1[i_P,j_P] +
+                im*theta[3,i_R,j_R]*sigma2[i_P,j_P] +
+                im*theta[4,i_R,j_R]*sigma3[i_P,j_P]
+        end
+    end
+    F = svd(q)
+    return F.U * F.Vt
+end
+
+function TestmapGauges_3D_U8(NC, m, NX, NY, NT; verbose_level = 2, randomnumber = "Random")
+    return test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level)
+end
+
+function test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2, randomnumber = "Random")
+    @assert NC==2 "NC should be 2."
+    U = Gaugefields_3D_nowing(NC*4, NX, NY, NT, verbose_level = verbose_level)
+    if randomnumber == "Random"
+        rng = MersenneTwister()
+    elseif randomnumber == "Reproducible"
+        rng = StableRNG(123)
+    else
+        error(
+            "randomnumber should be \"Random\" or \"Reproducible\". Now randomnumber = $randomnumber",
+        )
+    end
+
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                x = - pi + (ix-1) * (2pi) / NX
+                y = - pi + (iy-1) * (2pi) / NY
+                t = - pi + (it-1) * (2pi) / NT
+                U[:,:, ix, iy, it] = test_map_U8_g(x,y,t,m,rng)
+            end
+        end
+    end
+    set_wing_U!
+    return U
+end
+
+
+
+
 function minusidentityGaugefields_3D_nowing(NC, NX, NY, NT; verbose_level = 2)
     U = Gaugefields_3D_nowing(NC, NX, NY, NT, verbose_level = verbose_level)
 
