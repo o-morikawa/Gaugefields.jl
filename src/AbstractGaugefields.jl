@@ -1142,6 +1142,7 @@ function Initialize_3D_UN_Gaugefields(
     condition="cold",
     m=1,
     verbose_level=2,
+    n_U2 = 4,
     randomnumber="Random",
     reps=0.1,
     randscale=1,
@@ -1177,13 +1178,21 @@ function Initialize_3D_UN_Gaugefields(
             randomnumber=randomnumber,
             reps=reps,
         )
-    elseif condition == "test_U8_rand"
-        u = TestmapGauges_3D_U8(
+    elseif condition == "test_U2n_rand"
+        u = TestmapGauges_3D_U2n(
+            NC,
+            m,
+            n_U2,
+            NN...,
+            verbose_level=verbose_level,
+            randomnumber=randomnumber,
+        )
+    elseif condition == "test_U8hs"
+        u = TestmapGauges_3D_U8hs(
             NC,
             m,
             NN...,
             verbose_level=verbose_level,
-            randomnumber=randomnumber,
         )
     else
         error("not supported")

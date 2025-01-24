@@ -2242,33 +2242,109 @@ function test_map_Random_U2Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_leve
     return U
 end
 
-function test_map_U8_theta(x,y,t,m,rng)
-    theta = zeros(Float64, 4, 4, 4)
+function test_map_U2n_theta(x,y,t,m,n,rng)
+    theta = zeros(Float64, 4, n, n)
 
-    r = rand(rng, Float64, 4, 4)
-    s = rand(rng, Float64, 4, 4)
+    r = rand(rng, Float64, n, n)
+    s = rand(rng, Float64, n, n)
     theta[1,:,:] = ( m - 3 + cos(x) + cos(y) + cos(t) ) * r + ( m - 3 + cos(2x) + cos(2y) + cos(2t) ) * s
     
-    r = rand(rng, Float64, 4, 4)
-    s = rand(rng, Float64, 4, 4)
+    r = rand(rng, Float64, n, n)
+    s = rand(rng, Float64, n, n)
     theta[2,:,:] = sin(x) * r + sin(2x) * s
-    r = rand(rng, Float64, 4, 4)
-    s = rand(rng, Float64, 4, 4)
+    r = rand(rng, Float64, n, n)
+    s = rand(rng, Float64, n, n)
     theta[3,:,:] = sin(y) * r + sin(2y) * s
-    r = rand(rng, Float64, 4, 4)
-    s = rand(rng, Float64, 4, 4)
+    r = rand(rng, Float64, n, n)
+    s = rand(rng, Float64, n, n)
     theta[4,:,:] = sin(t) * r + sin(2t) * s
     
     return theta
 end
 
-function test_map_U8_g(x,y,t,m,rng)
+function test_map_U2n_g(x,y,t,m,n,rng)
     eye = [1.0+0.0im 0.0+0.0im; 0.0+0.0im 1.0+0.0im]
     sigma1 = [0.0+0.0im 1.0+0.0im; 1.0+0.0im 0.0+0.0im]
     sigma2 = [0.0+0.0im 0.0-1.0im; 0.0+1.0im 0.0+0.0im]
     sigma3 = [1.0+0.0im 0.0+0.0im; 0.0+0.0im (-1.0)+0.0im]
 
-    theta = test_map_U8_theta(x,y,t,m,rng)
+    theta = test_map_U2n_theta(x,y,t,m,n,rng)
+
+    q = zeros(ComplexF64, 2*n, 2*n)
+    for i = 1:2*n
+        for j = 1:2*n
+            i_R = (i-1) % n + 1
+            j_R = (j-1) % n + 1
+            i_P = div(i-1, n) + 1
+            j_P = div(j-1, n) + 1
+            q[i,j] = theta[1,i_R,j_R]*eye[i_P,j_P] +
+                im*theta[2,i_R,j_R]*sigma1[i_P,j_P] +
+                im*theta[3,i_R,j_R]*sigma2[i_P,j_P] +
+                im*theta[4,i_R,j_R]*sigma3[i_P,j_P]
+        end
+    end
+    F = svd(q)
+    return F.U * F.Vt
+end
+
+function TestmapGauges_3D_U2n(NC, m, n, NX, NY, NT; verbose_level = 2, randomnumber = "Random")
+    return test_map_U2nGaugefields_3D_nowing(NC, NX, NY, NT, m, n, verbose_level = verbose_level, randomnumber = randomnumber)
+end
+
+function test_map_U2nGaugefields_3D_nowing(NC, NX, NY, NT, m, n; verbose_level = 2, randomnumber = "Random")
+    @assert NC==2 "NC should be 2."
+    U = Gaugefields_3D_nowing(NC*n, NX, NY, NT, verbose_level = verbose_level)
+    if randomnumber == "Random"
+        rng = MersenneTwister()
+    elseif randomnumber == "Reproducible"
+        rng = StableRNG(123)
+    else
+        error(
+            "randomnumber should be \"Random\" or \"Reproducible\". Now randomnumber = $randomnumber",
+        )
+    end
+
+    for it = 1:NT
+        for iy = 1:NY
+            @inbounds @simd for ix = 1:NX
+                x = - pi + (ix-1) * (2pi) / NX
+                y = - pi + (iy-1) * (2pi) / NY
+                t = - pi + (it-1) * (2pi) / NT
+                U[:,:, ix, iy, it] = test_map_U2n_g(x,y,t,m,n,rng)
+            end
+        end
+    end
+    set_wing_U!
+    return U
+end
+
+function test_map_U8hs_theta(x,y,t,m)
+    theta = zeros(Float64, 4, 4, 4)
+
+    r = [0.876608 0.521964 0.0862234 0.377913; 0.0116446 0.927266 0.543757 0.479332; 0.245349 0.759896 0.984993 0.217045; 0.459017 0.884729 0.583854 0.263973]
+    s = [0.561954 0.0305083 0.416484 0.957411; 0.914282 0.974078 0.248139 0.318042; 0.946 0.414563 0.374183 0.643015; 0.506951 0.304123 0.634802 0.272851]
+    theta[1,:,:] = ( m - 3 + cos(x) + cos(y) + cos(t) ) * r + ( m - 3 + cos(2x) + cos(2y) + cos(2t) ) * s
+    
+    r = [0.840093 0.00529254 0.203814 0.953795; 0.415082 0.0639042 0.22124 0.292323; 0.707049 0.744601 0.752071 0.965077; 0.595576 0.357156 0.0974585 0.509618]
+    s = [0.147099 0.351169 0.0338565 0.332413; 0.972018 0.968023 0.380472 0.966577; 0.864904 0.0338764 0.152853 0.879249; 0.947237 0.292545 0.425238 0.698324]
+    theta[2,:,:] = sin(x) * r + sin(2x) * s
+    r = [0.00391285 0.648185 0.32748 0.429586; 0.443565 0.152388 0.670732 0.666447; 0.973967 0.288747 0.850372 0.749003; 0.742053 0.355433 0.748923 0.916096]
+    s = [0.278329 0.504067 0.311738 0.661763; 0.441954 0.0638038 0.30767 0.915738; 0.738833 0.824195 0.00252546 0.819486; 0.106435 0.61738 0.886671 0.0485881]
+    theta[3,:,:] = sin(y) * r + sin(2y) * s
+    r = [0.521992 0.0997372 0.980063 0.485604; 0.239529 0.817905 0.792302 0.278309; 0.612152 0.987525 0.833196 0.0444734; 0.0879581 0.250586 0.384922 0.61815]
+    s = [0.0512385 0.297878 0.421724 0.08238; 0.320924 0.670261 0.0735134 0.284197; 0.724307 0.338734 0.738199 0.533047; 0.956959 0.687224 0.334217 0.90432]
+    theta[4,:,:] = sin(t) * r + sin(2t) * s
+    
+    return theta
+end
+
+function test_map_U8hs_g(x,y,t,m)
+    eye = [1.0+0.0im 0.0+0.0im; 0.0+0.0im 1.0+0.0im]
+    sigma1 = [0.0+0.0im 1.0+0.0im; 1.0+0.0im 0.0+0.0im]
+    sigma2 = [0.0+0.0im 0.0-1.0im; 0.0+1.0im 0.0+0.0im]
+    sigma3 = [1.0+0.0im 0.0+0.0im; 0.0+0.0im (-1.0)+0.0im]
+
+    theta = test_map_U8hs_theta(x,y,t,m)
 
     q = zeros(ComplexF64, 8, 8)
     for i = 1:8
@@ -2287,22 +2363,13 @@ function test_map_U8_g(x,y,t,m,rng)
     return F.U * F.Vt
 end
 
-function TestmapGauges_3D_U8(NC, m, NX, NY, NT; verbose_level = 2, randomnumber = "Random")
-    return test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level, randomnumber = randomnumber)
+function TestmapGauges_3D_U8hs(NC, m, NX, NY, NT; verbose_level = 2)
+    return test_map_U8hsGaugefields_3D_nowing(NC, NX, NY, NT, m, verbose_level = verbose_level)
 end
 
-function test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2, randomnumber = "Random")
+function test_map_U8hsGaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2)
     @assert NC==2 "NC should be 2."
     U = Gaugefields_3D_nowing(NC*4, NX, NY, NT, verbose_level = verbose_level)
-    if randomnumber == "Random"
-        rng = MersenneTwister()
-    elseif randomnumber == "Reproducible"
-        rng = StableRNG(123)
-    else
-        error(
-            "randomnumber should be \"Random\" or \"Reproducible\". Now randomnumber = $randomnumber",
-        )
-    end
 
     for it = 1:NT
         for iy = 1:NY
@@ -2310,7 +2377,7 @@ function test_map_U8Gaugefields_3D_nowing(NC, NX, NY, NT, m; verbose_level = 2, 
                 x = - pi + (ix-1) * (2pi) / NX
                 y = - pi + (iy-1) * (2pi) / NY
                 t = - pi + (it-1) * (2pi) / NT
-                U[:,:, ix, iy, it] = test_map_U8_g(x,y,t,m,rng)
+                U[:,:, ix, iy, it] = test_map_U8hs_g(x,y,t,m)
             end
         end
     end
