@@ -21,19 +21,21 @@ function MDstep_core!(
     p, MDsteps, Dim,
     Uold::Array{T,1},
     temps::Temporalfields;
-    displayon=true
+    displayon=true,
+    τ = 1.0,
 ) where {T<:AbstractGaugefields}
-    Δτ = 1.0 / MDsteps
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action, U, p)
     substitute_U!(Uold, U)
 
     for itrj = 1:MDsteps
-        U_update!(U, p, 0.5, Δτ, Dim, gauge_action, temps)
+        U_update!(U, p, 0.5*tau, Δτ, Dim, gauge_action, temps)
 
-        P_update!(U, p, 1.0, Δτ, Dim, gauge_action, temps)
+        P_update!(U, p, 1.0*tau, Δτ, Dim, gauge_action, temps)
 
-        U_update!(U, p, 0.5, Δτ, Dim, gauge_action, temps)
+        U_update!(U, p, 0.5*tau, Δτ, Dim, gauge_action, temps)
     end
     Snew = calc_action(gauge_action, U, p)
     if displayon
@@ -53,19 +55,21 @@ function MDstep_core!(
     U::Array{T,1},
     p, MDsteps, Dim,
     Uold::Array{T,1};
-    displayon=true
+    displayon=true,
+    τ = 1.0,
 ) where {T<:AbstractGaugefields}
-    Δτ = 1.0 / MDsteps
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action, U, p)
     substitute_U!(Uold, U)
 
     for itrj = 1:MDsteps
-        U_update!(U, p, 0.5, Δτ, Dim, gauge_action)
+        U_update!(U, p, 0.5*tau, Δτ, Dim, gauge_action)
 
-        P_update!(U, p, 1.0, Δτ, Dim, gauge_action)
+        P_update!(U, p, 1.0*tau, Δτ, Dim, gauge_action)
 
-        U_update!(U, p, 0.5, Δτ, Dim, gauge_action)
+        U_update!(U, p, 0.5*tau, Δτ, Dim, gauge_action)
     end
     Snew = calc_action(gauge_action, U, p)
     if displayon
@@ -88,19 +92,21 @@ function MDstep_core!(
     p, MDsteps, Dim,
     Uold::Array{T,1},
     temps::Temporalfields;
-    displayon=true
+    displayon=true,
+    τ = 1.0,
 ) where {T<:AbstractGaugefields}
-    Δτ = 1.0 / MDsteps
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action, U, B, p)
     substitute_U!(Uold, U)
 
     for itrj = 1:MDsteps
-        U_update!(U,    p, 0.5, Δτ, Dim, gauge_action, temps)
+        U_update!(U,    p, 0.5*tau, Δτ, Dim, gauge_action, temps)
 
-        P_update!(U, B, p, 1.0, Δτ, Dim, gauge_action, temps)
+        P_update!(U, B, p, 1.0*tau, Δτ, Dim, gauge_action, temps)
 
-        U_update!(U,    p, 0.5, Δτ, Dim, gauge_action, temps)
+        U_update!(U,    p, 0.5*tau, Δτ, Dim, gauge_action, temps)
     end
     Snew = calc_action(gauge_action, U, B, p)
     if displayon
@@ -121,19 +127,21 @@ function MDstep_core!(
     B::Array{T,2},
     p, MDsteps, Dim,
     Uold::Array{T,1};
-    displayon=true
+    displayon=true,
+    τ = 1.0,
 ) where {T<:AbstractGaugefields}
-    Δτ = 1.0 / MDsteps
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
     Sold = calc_action(gauge_action, U, B, p)
     substitute_U!(Uold, U)
 
     for itrj = 1:MDsteps
-        U_update!(U,    p, 0.5, Δτ, Dim, gauge_action)
+        U_update!(U,    p, 0.5*tau, Δτ, Dim, gauge_action)
 
-        P_update!(U, B, p, 1.0, Δτ, Dim, gauge_action)
+        P_update!(U, B, p, 1.0*tau, Δτ, Dim, gauge_action)
 
-        U_update!(U,    p, 0.5, Δτ, Dim, gauge_action)
+        U_update!(U,    p, 0.5*tau, Δτ, Dim, gauge_action)
     end
     Snew = calc_action(gauge_action, U, B, p)
     if displayon
@@ -150,6 +158,7 @@ function MDstep_core!(
 end
 
 
+# Halfway-updating HMC
 function MDstep_dynB!(
     gauge_action::GaugeAction,
     U::Array{T,1},
@@ -161,9 +170,12 @@ function MDstep_dynB!(
     Uold::Array{T,1},
     Bold::Array{T,2},
     flux_old,
-    temps::Temporalfields
-) where {T<:AbstractGaugefields} # Halfway-updating HMC
-    Δτ = 1.0/MDsteps
+    temps::Temporalfields;
+    displayon=true,
+    τ = 1.0,
+) where {T<:AbstractGaugefields}
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
 
     Sold = calc_action(gauge_action,U,B,p)
@@ -173,11 +185,11 @@ function MDstep_dynB!(
     flux_old[:] = flux[:]
 
     for itrj=1:MDsteps
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action,temps)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action,temps)
+        P_update!(U,B,p,1.0*tau,Δτ,Dim,gauge_action,temps)
 
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action,temps)
 
         if itrj == Int(MDsteps/2)
             Flux_update!(B,flux)
@@ -185,6 +197,10 @@ function MDstep_dynB!(
     end
 
     Snew = calc_action(gauge_action,U,B,p)
+    if displayon
+        println("Sold = $Sold, Snew = $Snew")
+        println("Snew - Sold = $(Snew-Sold)")
+    end
     ratio = min(1,exp(-Snew+Sold))
     if rand() > ratio
         println("rejected! flux = ", flux_old)
@@ -207,9 +223,12 @@ function MDstep_dynB!(
     Dim,
     Uold::Array{T,1},
     Bold::Array{T,2},
-    flux_old,
-) where {T<:AbstractGaugefields} # Halfway-updating HMC
-    Δτ = 1.0/MDsteps
+    flux_old;
+    displayon=true,
+    τ = 1.0,
+) where {T<:AbstractGaugefields}
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
 
     Sold = calc_action(gauge_action,U,B,p)
@@ -219,11 +238,11 @@ function MDstep_dynB!(
     flux_old[:] = flux[:]
 
     for itrj=1:MDsteps
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
+        P_update!(U,B,p,1.0*tau,Δτ,Dim,gauge_action)
 
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action)
 
         if itrj == Int(MDsteps/2)
             Flux_update!(B,flux)
@@ -231,6 +250,10 @@ function MDstep_dynB!(
     end
 
     Snew = calc_action(gauge_action,U,B,p)
+    if displayon
+        println("Sold = $Sold, Snew = $Snew")
+        println("Snew - Sold = $(Snew-Sold)")
+    end
     ratio = min(1,exp(-Snew+Sold))
     if rand() > ratio
         println("rejected! flux = ", flux_old)
@@ -243,7 +266,7 @@ function MDstep_dynB!(
         return true
     end
 end
-
+## Halfway-updating HMC with random B fields
 function MDstep_dynB!(
     gauge_action::GaugeAction,
     U::Array{T,1},
@@ -257,9 +280,12 @@ function MDstep_dynB!(
     Btemp::Array{T,2},
     flux_old,
     temps::Temporalfields,
-    numtransf,
-) where {T<:AbstractGaugefields} # Halfway-updating HMC
-    Δτ = 1.0/MDsteps
+    numtransf;
+    displayon=true,
+    τ = 1.0,
+) where {T<:AbstractGaugefields}
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
 
     Sold = calc_action(gauge_action,U,B,p)
@@ -269,11 +295,11 @@ function MDstep_dynB!(
     flux_old[:] = flux[:]
 
     for itrj=1:MDsteps
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action,temps)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action,temps)
+        P_update!(U,B,p,1.0*tau,Δτ,Dim,gauge_action,temps)
 
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action,temps)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action,temps)
 
         if itrj == Int(MDsteps/2)
             Flux_update!(B,Btemp,flux,temps,numtransf=numtransf)
@@ -281,6 +307,10 @@ function MDstep_dynB!(
     end
 
     Snew = calc_action(gauge_action,U,B,p)
+    if displayon
+        println("Sold = $Sold, Snew = $Snew")
+        println("Snew - Sold = $(Snew-Sold)")
+    end
     ratio = min(1,exp(-Snew+Sold))
     if rand() > ratio
         println("rejected! flux = ", flux_old)
@@ -305,9 +335,12 @@ function MDstep_dynB!(
     Bold::Array{T,2},
     Btemp::Array{T,2},
     flux_old,
-    numtransf,
-) where {T<:AbstractGaugefields} # Halfway-updating HMC
-    Δτ = 1.0/MDsteps
+    numtransf;
+    displayon=true,
+    τ = 1.0,
+) where {T<:AbstractGaugefields}
+    tau = τ
+    Δτ = tau / MDsteps
     gauss_distribution!(p)
 
     Sold = calc_action(gauge_action,U,B,p)
@@ -317,11 +350,11 @@ function MDstep_dynB!(
     flux_old[:] = flux[:]
 
     for itrj=1:MDsteps
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action)
 
-        P_update!(U,B,p,1.0,Δτ,Dim,gauge_action)
+        P_update!(U,B,p,1.0*tau,Δτ,Dim,gauge_action)
 
-        U_update!(U,  p,0.5,Δτ,Dim,gauge_action)
+        U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action)
 
         if itrj == Int(MDsteps/2)
             Flux_update!(B,Btemp,flux,gauge_action,numtransf=numtransf)
@@ -329,6 +362,10 @@ function MDstep_dynB!(
     end
 
     Snew = calc_action(gauge_action,U,B,p)
+    if displayon
+        println("Sold = $Sold, Snew = $Snew")
+        println("Snew - Sold = $(Snew-Sold)")
+    end
     ratio = min(1,exp(-Snew+Sold))
     if rand() > ratio
         println("rejected! flux = ", flux_old)
@@ -342,6 +379,7 @@ function MDstep_dynB!(
     end
 end
 
+# Double-tesing HMC
 function MDstep_dynB!(
     gauge_action::GaugeAction,
     U::Array{T,1},
@@ -355,8 +393,9 @@ function MDstep_dynB!(
     Uold2::Array{T,1},
     Bold::Array{T,2},
     flux_old,
-    temps::Temporalfields
-) where {T<:AbstractGaugefields} # Double-tesing HMC
+    temps::Temporalfields;
+    displayon=true
+) where {T<:AbstractGaugefields}
     p0 = initialize_TA_Gaugefields(U)
     Sold = calc_action(gauge_action,U,B,p0)
 
@@ -367,10 +406,14 @@ function MDstep_dynB!(
     Flux_update!(B,flux)
 
     for ihmc=1:num_HMC
-        MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold2,temps)
+        MDstep_core!(gauge_action,U,B,p,MDsteps,Dim,Uold2,temps,displayon=false)
     end
 
     Snew = calc_action(gauge_action,U,B,p0)
+    if displayon
+        println("Sold = $Sold, Snew = $Snew")
+        println("Snew - Sold = $(Snew-Sold)")
+    end    
     ratio = min(1,exp(-Snew+Sold))
     if rand() > ratio
         println("rejected! flux = ", flux_old)
@@ -395,8 +438,9 @@ function MDstep_dynB!(
     Uold1::Array{T,1},
     Uold2::Array{T,1},
     Bold::Array{T,2},
-    flux_old,
-) where {T<:AbstractGaugefields} # Double-tesing HMC
+    flux_old;
+    displayon=true
+) where {T<:AbstractGaugefields}
     p0 = initialize_TA_Gaugefields(U)
     Sold = calc_action(gauge_action,U,B,p0)
 
@@ -407,10 +451,14 @@ function MDstep_dynB!(
     Flux_update!(B,flux)
 
     for ihmc=1:num_HMC
-        MDstep!(gauge_action,U,B,p,MDsteps,Dim,Uold2)
+        MDstep_core!(gauge_action,U,B,p,MDsteps,Dim,Uold2,displayon=false)
     end
 
     Snew = calc_action(gauge_action,U,B,p0)
+    if displayon
+        println("Sold = $Sold, Snew = $Snew")
+        println("Snew - Sold = $(Snew-Sold)")
+    end
     ratio = min(1,exp(-Snew+Sold))
     if rand() > ratio
         println("rejected! flux = ", flux_old)

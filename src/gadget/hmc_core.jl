@@ -22,14 +22,14 @@ function MDstep!(
     p, MDsteps, Dim,
     Uold::Array{T,1},
     temps::Temporalfields;
-    displayon=false, mpi=false
+    displayon=false, mpi=false, τ=1.0,
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_core_mpi!(gauge_action, U, p, MDsteps, Dim, Uold, temps;
                          displayon=displayon)
     else
         MDstep_core!(gauge_action, U, p, MDsteps, Dim, Uold, temps;
-                     displayon=displayon)
+                     displayon=displayon, τ=τ)
     end
 end
 function MDstep!(
@@ -37,14 +37,14 @@ function MDstep!(
     U::Array{T,1},
     p, MDsteps, Dim,
     Uold::Array{T,1};
-    displayon=false, mpi=false
+    displayon=false, mpi=false, τ=1.0,
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_core_mpi!(gauge_action, U, p, MDsteps, Dim, Uold;
                          displayon=displayon)
     else
         MDstep_core!(gauge_action, U, p, MDsteps, Dim, Uold;
-                     displayon=displayon)
+                     displayon=displayon, τ=τ)
     end
 end
 
@@ -55,14 +55,14 @@ function MDstep!(
     p, MDsteps, Dim,
     Uold::Array{T,1},
     temps::Temporalfields;
-    displayon=false, mpi=false
+    displayon=false, mpi=false, τ=1.0,
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_core_mpi!(gauge_action, U, B, p, MDsteps, Dim, Uold, temps;
                          displayon=displayon)
     else
         MDstep_core!(gauge_action, U, B, p, MDsteps, Dim, Uold, temps;
-                     displayon=displayon)
+                     displayon=displayon, τ=τ)
     end
 end
 function MDstep!(
@@ -71,14 +71,14 @@ function MDstep!(
     B::Array{T,2},
     p, MDsteps, Dim,
     Uold::Array{T,1};
-    displayon=false, mpi=false
+    displayon=false, mpi=false, τ=1.0,
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_core_mpi!(gauge_action, U, B, p, MDsteps, Dim, Uold;
                          displayon=displayon)
     else
         MDstep_core!(gauge_action, U, B, p, MDsteps, Dim, Uold;
-                     displayon=displayon)
+                     displayon=displayon, τ=τ)
     end
 end
 
@@ -92,13 +92,16 @@ function MDstep!(
     Bold::Array{T,2},
     flux_old,
     temps::Temporalfields;
+    displayon=false,
     mpi=false,
-    PEs=nothing
+    PEs=nothing,
+    τ=1.0,
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps,PEs)
     else
-        MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps)
+        MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps;
+                     displayon=displayon, τ=τ)
     end
 end
 function MDstep!(
@@ -109,13 +112,16 @@ function MDstep!(
     Uold::Array{T,1},
     Bold::Array{T,2},
     flux_old;
+    displayon=false,
     mpi=false,
-    PEs=nothing
+    PEs=nothing,
+    τ=1.0,
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,PEs)
     else
-        MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old)
+        MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old;
+                     displayon=displayon, τ=τ)
     end
 end
 function MDstep!(
@@ -128,9 +134,10 @@ function MDstep!(
     Btemp::Array{T,2},
     flux_old,
     temps::Temporalfields;
-    numtransf = 0
+    displayon=false, numtransf = 0, τ=1.0,
 ) where {T<:AbstractGaugefields}
-    MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,Btemp,flux_old,temps,numtransf)
+    MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,Btemp,flux_old,temps,numtransf;
+                 displayon=displayon, τ=τ)
 end
 function MDstep!(
     gauge_action::GaugeAction,
@@ -141,9 +148,10 @@ function MDstep!(
     Bold::Array{T,2},
     Btemp::Array{T,2},
     flux_old;
-    numtransf = 0
+    displayon=false, numtransf = 0, τ=1.0,
 ) where {T<:AbstractGaugefields}
-    MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,Btemp,flux_old,numtransf)
+    MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,Btemp,flux_old,numtransf;
+                 displayon=displayon, τ=τ)
 end
 # Double-tesing HMC
 function MDstep!(
@@ -156,14 +164,15 @@ function MDstep!(
     Bold::Array{T,2},
     flux_old,
     temps::Temporalfields;
-    PEs=nothing
+    displayon=false, PEs=nothing
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
                          Uold1,Uold2,Bold,flux_old,temps,PEs)
     else
         MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
-                     Uold1,Uold2,Bold,flux_old,temps)
+                     Uold1,Uold2,Bold,flux_old,temps;
+                     displayon=displayon)
     end
 end
 function MDstep!(
@@ -175,14 +184,15 @@ function MDstep!(
     Uold2::Array{T,1},
     Bold::Array{T,2},
     flux_old;
-    PEs=nothing
+    displayon=false, PEs=nothing
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
                          Uold1,Uold2,Bold,flux_old,PEs)
     else
         MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,num_HMC,Dim,
-                     Uold1,Uold2,Bold,flux_old)
+                     Uold1,Uold2,Bold,flux_old;
+                     displayon=displayon)
     end
 end
 
