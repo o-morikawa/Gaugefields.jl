@@ -34,7 +34,8 @@ function HMC_test_4D_dynamicalB(
     U = Initialize_Gaugefields(NC,Nwing,NX,NY,NZ,NT,condition = "cold",randomnumber="Reproducible")
 
     #filename = "U_beta6.0_L8_F111120_4000.txt"
-    filename = ""
+    filename  = ""
+    filename2 = ""
     if !isdir("confs")
         Base.run(`mkdir confs`)
         Base.run(`mkdir conf_name`)
@@ -42,17 +43,18 @@ function HMC_test_4D_dynamicalB(
     elseif !isdir("conf_name")
         Base.run(`mkdir conf_name`)
         isInitial = true
-    elseif !isfile("./conf_name/U_beta$(β)_L$(NX).txt")
-        Base.run(`touch conf_name/U_beta$(β)_L$(NX).txt`)
+    elseif !isfile("./conf_name/U_beta$(β)_L$(NX)x$(NT).txt")
+        Base.run(`touch conf_name/U_beta$(β)_L$(NX)x$(NT).txt`)
         isInitial = true
     else
-        open("./conf_name/U_beta$(β)_L$(NX).txt", "r") do f
+        open("./conf_name/U_beta$(β)_L$(NX)x$(NT).txt", "r") do f
             filename *= readline(f)
         end
         if length(filename)==0
             isInitial = true
         else
             isInitial = false
+            filename2 = "B" * filename[2:end]
         end
     #else
     #    filename = replace(Base.read(pipeline(`find ./confs -iname "U_beta$(β)_L$(NX)_F*_*.txt"`, `xargs ls -t`, `head -n 1`), String), "\n"=>"")
@@ -63,8 +65,8 @@ function HMC_test_4D_dynamicalB(
     #    end
     end
 
-    if !isfile("./conf_name/flux_beta$(β)_L$(NX).txt")
-        Base.run(`touch conf_name/flux_beta$(β)_L$(NX).txt`)
+    if !isfile("./conf_name/flux_beta$(β)_L$(NX)x$(NT).txt")
+        Base.run(`touch conf_name/flux_beta$(β)_L$(NX)x$(NT).txt`)
     end
 
     if isInitial
@@ -84,7 +86,7 @@ function HMC_test_4D_dynamicalB(
         L = [NX,NY,NZ,NT]
         println("Load file: ", filename)
         load_BridgeText!(filename,U,L,NC)
-        B = Initialize_Bfields(NC,flux,Nwing,NX,NY,NZ,NT,condition = "tflux")
+        load_BridgeText_B!(filename2,B,L,NC)
     end
 
     temps = Temporalfields(U[1], num=3)
@@ -105,9 +107,11 @@ function HMC_test_4D_dynamicalB(
 
     p = initialize_TA_Gaugefields(U)
 
-    Uold  = similar(U)
+    Uold = similar(U)
     Bold = similar(B)
     flux_old = zeros(Int, 6)
+
+    Btemp = similar(B)
 
     MDsteps = 50 # even integer!!!
     numaccepted = 0
@@ -117,7 +121,7 @@ function HMC_test_4D_dynamicalB(
     for itrj = (strtrj+1):numtrj
 
         t = @timed begin
-            accepted = MDstep_dynB!(
+            accepted = MDstep!(
                 gauge_action,
                 U,
                 B,
@@ -128,7 +132,8 @@ function HMC_test_4D_dynamicalB(
                 Uold,
                 Bold,
                 flux_old,
-                #temps
+                #temps,
+                τ=1.0
             )
         end
         if get_myrank(U) == 0
@@ -149,12 +154,14 @@ function HMC_test_4D_dynamicalB(
         end
 
         if itrj % save_step == 0
-            filename = "confs/U_beta$(2β)_L$(NX)_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
+            filename  = "confs/U_beta$(2β)_L$(NX)x$(NT)_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
+            filename2 = "confs/B_beta$(2β)_L$(NX)x$(NT)_F$(flux[1])$(flux[2])$(flux[3])$(flux[4])$(flux[5])$(flux[6])_$itrj.txt"
             save_textdata(U,filename)
-            open("./conf_name/flux_beta$(2β)_L$(NX).txt", "a") do f
+            save_textdata_B(B,filename2)
+            open("./conf_name/flux_beta$(2β)_L$(NX)x$(NT).txt", "a") do f
                 write(f, filename * "\n")
             end
-            open("./conf_name/U_beta$(2β)_L$(NX).txt", "w") do f
+            open("./conf_name/U_beta$(2β)_L$(NX)x$(NT).txt", "w") do f
                 write(f, filename)
             end
             println("Save conf: itrj=", itrj)
@@ -167,13 +174,14 @@ end
 
 
 function main()
-    β = 3.0
+    β = 2.4
     L = 4
+    T = 4
 
     NX = L
     NY = L
     NZ = L
-    NT = L
+    NT = T
     NC = 2
 
     HMC_test_4D_dynamicalB(
