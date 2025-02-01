@@ -96,12 +96,13 @@ function MDstep!(
     mpi=false,
     PEs=nothing,
     τ=1.0,
+    flux_cond="randall" # "randone", "temporal", "12"..."34"
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps,PEs)
     else
         MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,temps;
-                     displayon=displayon, τ=τ)
+                     displayon=displayon, τ=τ, flux_cond=flux_cond)
     end
 end
 function MDstep!(
@@ -116,12 +117,13 @@ function MDstep!(
     mpi=false,
     PEs=nothing,
     τ=1.0,
+    flux_cond="randall"
 ) where {T<:AbstractGaugefields}
     if mpi
         MDstep_dynB_mpi!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old,PEs)
     else
         MDstep_dynB!(gauge_action,U,B,flux,p,MDsteps,Dim,Uold,Bold,flux_old;
-                     displayon=displayon, τ=τ)
+                     displayon=displayon, τ=τ, flux_cond=flux_cond)
     end
 end
 function MDstep!(

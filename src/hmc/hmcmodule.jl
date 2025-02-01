@@ -247,7 +247,8 @@ end
 
 function Flux_update!(
     B::Array{T,2},
-    flux
+    flux;
+    condition="randall",
 ) where {T<:AbstractGaugefields}
 
     NC  = B[1,2].NC
@@ -257,11 +258,31 @@ function Flux_update!(
     NZ  = B[1,2].NZ
     NT  = B[1,2].NT
 
-#    i = rand(1:6)
-#    flux[i] += rand(-1:1)
-#    flux[i] %= NC
-#    flux[i] += (flux[i] < 0) ? NC : 0
-    flux[:] = rand(0:NC-1,6)
+    if condition=="randall"
+        flux[:] = rand(0:NC-1,6)
+    elseif condition=="randone"
+        i = rand(1:6)
+        flux[i] += rand(-1:1)
+        flux[i] %= NC
+        flux[i] += (flux[i] < 0) ? NC : 0
+    elseif condition=="temporal"
+        flux[3] = rand(0:NC-1,6)
+        flux[5] = rand(0:NC-1,6)
+        flux[6] = rand(0:NC-1,6)
+    elseif condition=="12"
+        flux[1] = rand(0:NC-1,6)
+    elseif condition=="13"
+        flux[2] = rand(0:NC-1,6)
+    elseif condition=="14"
+        flux[3] = rand(0:NC-1,6)
+    elseif condition=="23"
+        flux[4] = rand(0:NC-1,6)
+    elseif condition=="24"
+        flux[5] = rand(0:NC-1,6)
+    elseif condition=="34"
+        flux[6] = rand(0:NC-1,6)
+    end
+
     B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
 
 end
