@@ -202,7 +202,7 @@ function HMC_test_4D_dynamicalB(
             println("Save conf: itrj=", itrj)
         end
     end
-    return plaq_t,numaccepted/numtrj
+    return numaccepted/numtrj
 
 end
 
