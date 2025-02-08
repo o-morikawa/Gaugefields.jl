@@ -1,6 +1,7 @@
 module HMC_module
 
 using Random
+using StatsBase
 using LinearAlgebra
 
 import ..AbstractGaugefields_module:
@@ -249,6 +250,7 @@ function Flux_update!(
     B::Array{T,2},
     flux;
     condition="randall",
+    γ=1.0,
 ) where {T<:AbstractGaugefields}
 
     NC  = B[1,2].NC
@@ -260,15 +262,26 @@ function Flux_update!(
 
     if condition=="randall"
         flux[:] = rand(0:NC-1,6)
+    elseif condition=="normall"
+        for i = 1:6
+            flux[i] = Flux_normal_update(flux[i], NC, γ)
+        end
     elseif condition=="randone"
         i = rand(1:6)
         flux[i] += rand(-1:1)
         flux[i] %= NC
         flux[i] += (flux[i] < 0) ? NC : 0
+    elseif condition=="normone"
+        i = rand(1:6)
+        flux[i] = Flux_normal_update(flux[i], NC, γ)
     elseif condition=="temporal"
         flux[3] = rand(0:NC-1)
         flux[5] = rand(0:NC-1)
         flux[6] = rand(0:NC-1)
+    elseif condition=="norm_temporal"
+        flux[3] = Flux_normal_update(flux[3], NC, γ)
+        flux[5] = Flux_normal_update(flux[5], NC, γ)
+        flux[6] = Flux_normal_update(flux[6], NC, γ)
     elseif condition=="12"
         flux[1] = rand(0:NC-1)
     elseif condition=="13"
@@ -281,11 +294,34 @@ function Flux_update!(
         flux[5] = rand(0:NC-1)
     elseif condition=="34"
         flux[6] = rand(0:NC-1)
+    elseif condition=="norm_12"
+        flux[1] = Flux_normal_update(flux[1], NC, γ)
+    elseif condition=="norm_13"
+        flux[2] = Flux_normal_update(flux[2], NC, γ)
+    elseif condition=="norm_14"
+        flux[3] = Flux_normal_update(flux[3], NC, γ)
+    elseif condition=="norm_23"
+        flux[4] = Flux_normal_update(flux[4], NC, γ)
+    elseif condition=="norm_24"
+        flux[5] = Flux_normal_update(flux[5], NC, γ)
+    elseif condition=="norm_34"
+        flux[6] = Flux_normal_update(flux[6], NC, γ)
     end
 
     B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
 
 end
+
+function Flux_normal_update(z_i, NC, γ)
+    z_val = 0:(NC-1)
+    
+    prob = exp.(-γ .* (z_val .- z_i) .^ 2)
+    prob /= sum(prob)
+    
+    z_j = sample(z_val, Weights(prob))
+    return z_j
+end
+
 function Flux_update!(
     B::Array{T,2},
     Btemp::Array{T,2},
