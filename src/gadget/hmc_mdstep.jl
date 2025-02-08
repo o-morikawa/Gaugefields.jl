@@ -173,7 +173,8 @@ function MDstep_dynB!(
     temps::Temporalfields;
     displayon=true,
     τ = 1.0,
-    flux_cond="randall"
+    flux_cond="randall",
+    γ = 1.0,
 ) where {T<:AbstractGaugefields}
     tau = τ
     Δτ = tau / MDsteps
@@ -193,7 +194,7 @@ function MDstep_dynB!(
         U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action,temps)
 
         if itrj == Int(MDsteps/2)
-            Flux_update!(B,flux,condition=flux_cond)
+            Flux_update!(B,flux,condition=flux_cond,γ=γ)
         end
     end
 
@@ -227,7 +228,8 @@ function MDstep_dynB!(
     flux_old;
     displayon=true,
     τ = 1.0,
-    flux_cond="randall"
+    flux_cond="randall",
+    γ = 1.0,
 ) where {T<:AbstractGaugefields}
     tau = τ
     Δτ = tau / MDsteps
@@ -247,7 +249,7 @@ function MDstep_dynB!(
         U_update!(U,  p,0.5*tau,Δτ,Dim,gauge_action)
 
         if itrj == Int(MDsteps/2)
-            Flux_update!(B,flux,condition=flux_cond)
+            Flux_update!(B,flux,condition=flux_cond,γ=γ)
         end
     end
 
