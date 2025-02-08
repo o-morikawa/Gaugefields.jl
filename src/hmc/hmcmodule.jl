@@ -1,7 +1,6 @@
 module HMC_module
 
 using Random
-using StatsBase
 using LinearAlgebra
 
 import ..AbstractGaugefields_module:
@@ -312,13 +311,23 @@ function Flux_update!(
 
 end
 
+function sample_categorical(prob)
+    cdf = cumsum(prob)
+    r = rand()
+    for (j, p) in enumerate(cdf)
+        if r < p
+            return j - 1
+        end
+    end
+    return length(probabilities) - 1
+end
 function Flux_normal_update(z_i, NC, γ)
     z_val = 0:(NC-1)
     
     prob = exp.(-γ .* (z_val .- z_i) .^ 2)
     prob /= sum(prob)
     
-    z_j = sample(z_val, Weights(prob))
+    z_j = sample_categorical(prob)
     return z_j
 end
 
