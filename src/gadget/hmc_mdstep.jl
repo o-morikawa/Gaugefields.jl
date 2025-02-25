@@ -44,9 +44,15 @@ function MDstep_core!(
     end
     ratio = min(1, exp(-Snew + Sold))
     if rand() > ratio
+        if displayon
+            println("rejected!")
+        end
         substitute_U!(U, Uold)
         return false
     else
+        if displayon
+            println("accepted!")
+        end
         return true
     end
 end
@@ -78,9 +84,15 @@ function MDstep_core!(
     end
     ratio = min(1, exp(-Snew + Sold))
     if rand() > ratio
+        if displayon
+            println("rejected!")
+        end
         substitute_U!(U, Uold)
         return false
     else
+        if displayon
+            println("accepted!")
+        end
         return true
     end
 end
@@ -115,9 +127,15 @@ function MDstep_core!(
     end
     ratio = min(1, exp(-Snew + Sold))
     if rand() > ratio
+        if displayon
+            println("rejected!")
+        end
         substitute_U!(U, Uold)
         return false
     else
+        if displayon
+            println("accepted!")
+        end
         return true
     end
 end
@@ -150,9 +168,15 @@ function MDstep_core!(
     end
     ratio = min(1, exp(-Snew + Sold))
     if rand() > ratio
+        if displayon
+            println("rejected!")
+        end
         substitute_U!(U, Uold)
         return false
     else
+        if displayon
+            println("accepted!")
+        end
         return true
     end
 end
