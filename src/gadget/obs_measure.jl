@@ -14,6 +14,8 @@ import ..AbstractGaugefields_module:
 import ..GaugeAction_module: GaugeAction, evaluate_staple_eachindex!
 import ..Gradientflow_module: Gradientflow_general, flow!
 import ..Temporalfields_module: Temporalfields, unused!, get_temp
+import ..Storedlinkfields_module: Storedlinkfields, is_storedlink, store_link!, get_storedlink
+
 
 function calculate_topological_charge_plaq(
     U::Array{T,1},
@@ -36,6 +38,18 @@ function calculate_topological_charge_plaq(
     Q = calc_Q(UμνTA, numofloops, U)
     return Q
 end
+function calculate_topological_charge_plaq(
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temp_UμνTA,
+    temps::Temporalfields
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "plaq", U, B, Bps, temps)
+    Q = calc_Q(UμνTA, numofloops, U)
+    return Q
+end
 
 function calculate_topological_charge_clover(
     U::Array{T,1},
@@ -55,6 +69,18 @@ function calculate_topological_charge_clover(
 ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
     UμνTA = temp_UμνTA
     numofloops = calc_UμνTA!(UμνTA, "clover", U, B, temps)
+    Q = calc_Q(UμνTA, numofloops, U)
+    return Q
+end
+function calculate_topological_charge_clover(
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temp_UμνTA,
+    temps::Temporalfields
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "clover", U, B, Bps, temps)
     Q = calc_Q(UμνTA, numofloops, U)
     return Q
 end
@@ -90,6 +116,23 @@ function calculate_topological_charge_improved(
     Q = c0 * Qclover + c1 * Qrect
     return Q
 end
+function calculate_topological_charge_improved(
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temp_UμνTA,
+    Qclover,
+    temps::Temporalfields,
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    UμνTA = temp_UμνTA
+
+    numofloops = calc_UμνTA!(UμνTA, "rect", U, B, Bps, temps)
+    Qrect = 2 * calc_Q(UμνTA, numofloops, U)
+    c1 = -1 / 12
+    c0 = 5 / 3
+    Q = c0 * Qclover + c1 * Qrect
+    return Q
+end
 
 function calc_UμνTA!(
     temp_UμνTA,
@@ -110,6 +153,18 @@ function calc_UμνTA!(
 ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
     loops_μν, numofloops = calc_loopset_μν_name(name, Dim)
     calc_UμνTA!(temp_UμνTA, loops_μν, U, B, temps)
+    return numofloops
+end
+function calc_UμνTA!(
+    temp_UμνTA,
+    name::String,
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temps::Temporalfields,
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    loops_μν, numofloops = calc_loopset_μν_name(name, Dim)
+    calc_UμνTA!(temp_UμνTA, loops_μν, U, B, Bps, temps)
     return numofloops
 end
 
@@ -154,6 +209,31 @@ function calc_UμνTA!(
                 continue
             end
             evaluate_gaugelinks!(temp, loops_μν[μ, ν], U, B, temps)
+            Traceless_antihermitian!(UμνTA[μ, ν], temp)
+        end
+    end
+    unused!(temps_g,it_temp)
+    unused!(temps_g,it_temps)
+    return
+end
+function calc_UμνTA!(
+    temp_UμνTA,
+    loops_μν,
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temps_g::Temporalfields,
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    UμνTA = temp_UμνTA
+
+    temp, it_temp   = get_temp(temps_g)
+    temps, it_temps = get_temp(temps_g,8)
+    for μ = 1:Dim
+        for ν = 1:Dim
+            if ν == μ
+                continue
+            end
+            evaluate_gaugelinks!(temp, loops_μν[μ, ν], U, B, Bps, temps)
             Traceless_antihermitian!(UμνTA[μ, ν], temp)
         end
     end
@@ -339,6 +419,18 @@ function calculate_gauge_coupling_plaq(
     E = calc_E(UμνTA, numofloops, U)
     return E
 end
+function calculate_gauge_coupling_plaq(
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temp_UμνTA,
+    temps::Temporalfields
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "plaq", U, B, Bps, temps)
+    E = calc_E(UμνTA, numofloops, U)
+    return E
+end
 
 function calculate_gauge_coupling_clover(
     U::Array{T,1},
@@ -353,6 +445,18 @@ end
 function calculate_gauge_coupling_clover(
     U::Array{T,1},
     B::Array{T,2},
+    temp_UμνTA,
+    temps::Temporalfields
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    UμνTA = temp_UμνTA
+    numofloops = calc_UμνTA!(UμνTA, "clover", U, B, temps)
+    E = calc_E(UμνTA, numofloops, U)
+    return E
+end
+function calculate_gauge_coupling_clover(
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
     temp_UμνTA,
     temps::Temporalfields
 ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
@@ -435,6 +539,19 @@ function make_energy_density!(
     unused!(temps_g, it_temps)
     return 
 end
+function make_energy_density!(
+    Wmat,
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    temps_g::Temporalfields
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    W_operator = cloverloops(Dim)
+    temps, it_temps = get_temp(temps_g, 9)
+    calc_wilson_loop!(Wmat,W_operator,U,B,Bps,temps)
+    unused!(temps_g, it_temps)
+    return 
+end
 
 function calc_wilson_loop!(W,W_operator,U::Vector{<: AbstractGaugefields{NC,Dim}},temps) where {NC,Dim}
     for μ=1:Dim
@@ -456,6 +573,19 @@ function calc_wilson_loop!(W,W_operator,U::Array{T,1},B::Array{T,2},temps
                 continue
             end
             evaluate_gaugelinks!(W[μ,ν],W_operator[μ,ν],U,B,temps)
+            W[μ,ν] = Traceless_antihermitian(W[μ,ν])
+        end
+    end
+    return 
+end
+function calc_wilson_loop!(W,W_operator,U::Array{T,1},B::Array{T,2},Bps,temps
+                           ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
+    for μ=1:Dim
+        for ν=1:Dim
+            if μ == ν
+                continue
+            end
+            evaluate_gaugelinks!(W[μ,ν],W_operator[μ,ν],U,B,Bps,temps)
             W[μ,ν] = Traceless_antihermitian(W[μ,ν])
         end
     end
@@ -500,6 +630,21 @@ function calculate_energy_density(
     NV = U[1].NV
     NC = U[1].NC
     make_energy_density!(Wmat,U,B,temps)
+    WL =  make_energy_density_core(Wmat)
+    NDir = 4.0*3.0/2
+    return real(WL)/(NV*4^2)
+end
+function calculate_energy_density(
+    U::Array{T,1},
+    B::Array{T,2},
+    Bps::Storedlinkfields,
+    Wmat,
+    temps::Temporalfields
+) where T <: AbstractGaugefields
+    WL = 0.0+0.0im
+    NV = U[1].NV
+    NC = U[1].NC
+    make_energy_density!(Wmat,U,B,Bps,temps)
     WL =  make_energy_density_core(Wmat)
     NDir = 4.0*3.0/2
     return real(WL)/(NV*4^2)
@@ -822,6 +967,181 @@ function calc_Q_gradflow!(
                     end
                 elseif conditions[i]=="Energydensity"
                     E = calculate_energy_density(U_copy,B_copy,W_temp,temps)
+                    push!(energy_density_values, E)
+                    if displayon
+                        println("Energydensity: $E")
+                    end
+                end
+            end
+
+        end
+    end
+
+    values = []
+    for i=1:numofobs
+        if conditions[i]=="Qplaq"
+            push!(values, topo_values_plaq)
+        elseif conditions[i]=="Qclover"
+            push!(values, topo_values_clover)
+        elseif conditions[i]=="Qimproved"
+            push!(values, topo_values_improved)
+        elseif conditions[i]=="Eplaq"
+            push!(values, gauge_values_plaq)
+        elseif conditions[i]=="Eclover"
+            push!(values, gauge_values_clover)
+        elseif conditions[i]=="Energydensity"
+            push!(values, energy_density_values)
+        end
+    end
+
+    return Tuple(values[i] for i=1:numofobs)
+end
+function calc_Q_gradflow!(
+    U_copy,
+    B_copy,
+    U,
+    B,
+    Bps,
+    temp_UμνTA,
+    W_temp,
+    temps;
+    Δt = 0.1,
+    tstep = 10,
+    meas_step = 10,
+    displayon = true,
+    conditions = ["Qimproved"],
+)
+    Dim = 4
+    NC = U[1].NC
+
+    flow_number = tstep
+
+    dt = Δt
+
+    #    flow_times = dt:dt:flow_number*dt
+
+    substitute_U!(U_copy,U)
+    substitute_U!(B_copy,B)
+
+    numofobs=0
+    if "Qplaq" in conditions
+        topo_values_plaq = []
+        Qplaq = 0.0
+        numofobs+=1
+    end
+    if "Qclover" in conditions
+        topo_values_clover = []
+        Qclover = 0.0
+        numofobs+=1
+    end
+    if "Qimproved" in conditions
+        topo_values_improved = []
+        Qclover = 0.0
+        Qimproved = 0.0
+        numofobs+=1
+    end
+    if "Eplaq" in conditions
+        gauge_values_plaq = []
+        Eplaq = 0.0
+        numofobs+=1
+    end
+    if "Eclover" in conditions
+        gauge_values_clover = []
+        Eclover = 0.0
+        numofobs+=1
+    end
+    if "Energydensity" in conditions
+        energy_density_values = []
+        E = 0.0
+        numofobs+=1
+    end
+
+    if !(numofobs == length(conditions))
+        println("Not matched condition name!")
+        return
+    elseif numofobs==0
+        return
+    end
+
+    for μ=1:Dim
+        for ν=1:Dim
+            temp_UμνTA[μ,ν] = similar(U_copy[1])
+        end
+    end
+
+    #Plaquette term
+    loops_p = Wilsonline{Dim}[]
+    for μ=1:Dim
+        for ν=μ:Dim
+            if ν == μ
+                continue
+            end
+            loop1 = Wilsonline([(μ,1),(ν,1),(μ,-1),(ν,-1)],Dim = Dim)
+            push!(loops_p,loop1)
+        end
+    end
+
+    #Rectangular term
+    loops = Wilsonline{Dim}[]
+    for μ=1:Dim
+        for ν=μ:Dim
+            if ν == μ
+                continue
+            end
+            loop1 = Wilsonline([(μ,1),(ν,2),(μ,-1),(ν,-2)],Dim = Dim)
+            push!(loops,loop1)
+            loop1 = Wilsonline([(μ,2),(ν,1),(μ,-2),(ν,-1)],Dim = Dim)
+            
+            push!(loops,loop1)
+        end
+    end
+
+    listloops = [loops_p,loops]
+    listvalues = [1+im,0.1]
+
+    g = Gradientflow_general(U_copy,B_copy,Bps,listloops,listvalues,eps = dt)
+
+    measurement_step = meas_step
+
+    for iflow=1:flow_number
+        flow!(U_copy, B_copy, Bps, g)
+        if iflow % measurement_step == 0
+            println("Flowtime $(iflow*dt)")
+
+            for i=1:numofobs
+                if conditions[i]=="Qplaq"
+                    Qplaq = calculate_topological_charge_plaq(U_copy,B_copy,Bps,temp_UμνTA,temps)
+                    push!(topo_values_plaq, Qplaq)
+                    if displayon
+                        println("Qplaq:         $Qplaq")
+                    end
+                elseif conditions[i]=="Qclover"
+                    Qclover = calculate_topological_charge_clover(U_copy,B_copy,Bps,temp_UμνTA,temps)
+                    push!(topo_values_clover, Qclover)
+                    if displayon
+                        println("Qclover:       $Qclover")
+                    end
+                elseif conditions[i]=="Qimproved"
+                    Qclover = calculate_topological_charge_clover(U_copy,B_copy,Bps,temp_UμνTA,temps)
+                    Qimproved= calculate_topological_charge_improved(U_copy,B_copy,temp_UμνTA,Qclover,temps)
+                    push!(topo_values_improved, Qimproved)
+                    if displayon
+                        println("Qimproved:     $Qimproved")
+                    end
+                elseif conditions[i]=="Eplaq"
+                    Eplaq = calculate_gauge_coupling_plaq(U_copy,B_copy,Bps,temp_UμνTA,temps)
+                    push!(gauge_values_plaq, Eplaq)
+                    if displayon
+                        println("Eplaq:         $Eplaq")
+                    end
+                elseif conditions[i]=="Eclover"
+                    Eclover = calculate_gauge_coupling_clover(U_copy,B_copy,Bps,temp_UμνTA,temps)
+                    push!(gauge_values_clover, Eclover)
+                    if displayon
+                        println("Eclover:       $Eclover")
+                    end
+                elseif conditions[i]=="Energydensity"
+                    E = calculate_energy_density(U_copy,B_copy,Bps,W_temp,temps)
                     push!(energy_density_values, E)
                     if displayon
                         println("Energydensity: $E")
