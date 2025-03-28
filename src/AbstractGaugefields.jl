@@ -1619,6 +1619,7 @@ function evaluate_gaugelinks!(
     end
 
     substitute_U!(Unew, uout)
+    Ushift1 = similar(U[1])
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
         multiply_12!(uout, Unew, Bplaq, 0, false, false)
