@@ -9,9 +9,9 @@ mutable struct Storedlinkfields{TG,WL<:Wilsonline}
     _indices::Vector{Int64}
     Nmax::Int64
 
-    function Storedlinkfields(a::TG, l::WL; num=1, Nmax=1000) where {TG,WL<:Wilsonline}
+    function Storedlinkfields(a::TG; num=1, Nmax=1000) where {TG}
         _data = Vector{TG}(undef, num)
-        _link = Vector{WL}(undef, num)
+        _link = Vector{Wilsonline}(undef, num)
         _flagusing = zeros(Bool, num)
         _indices = zeros(Int64, num)
         similar_l = Wilsonline([])
@@ -119,8 +119,8 @@ function store_link!(t::Storedlinkfields{TG,WL}, a::TG, l::WL) where {TG,WL}
     if !is_storedlink(t,l)
         t._flagusing[index] = true
         t._indices[i] = index
-        t._data[index] = a
-        t._link[index] = l
+        t._data[index] = deepcopy(a)
+        t._link[index] = deepcopy(l)
     end
 end
 
