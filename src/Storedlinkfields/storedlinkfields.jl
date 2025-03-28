@@ -19,11 +19,11 @@ mutable struct Storedlinkfields{TG,WL<:Wilsonline}
             _data[i] = similar(a)
             _link[i] = similar_l
         end
-        return new{TG,WL}(_data, _link, _flagusing, _indices, Nmax)
+        return new{TG}(_data, _link, _flagusing, _indices, Nmax)
     end
 
     function Storedlinkfields(_data::Vector{TG}, _link::Vector{WL}, _flagusing, _indices, Nmax) where {TG,WL<:Wilsonline}
-        return new{TG,WL}(_data, _link, _flagusing, _indices, Nmax)
+        return new{TG}(_data, _link, _flagusing, _indices, Nmax)
     end
 
 end
