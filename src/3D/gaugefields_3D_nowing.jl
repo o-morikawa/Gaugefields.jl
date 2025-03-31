@@ -2398,7 +2398,7 @@ function test_map_U2nhs_g(x,y,t,m,n,rng,eps)
     return F.U * F.Vt
 end
 
-function TestmapGauges_3D_U2nhs(NC, m, n, NX, NY, NT; verbose_level = 2, randomnumber = "Random")
+function TestmapGauges_3D_U2nhs(NC, m, n, NX, NY, NT; verbose_level = 2, randomnumber = "Random", reps = 0.1)
     return test_map_U2nhsGaugefields_3D_nowing(NC, NX, NY, NT, m, n, verbose_level = verbose_level, randomnumber = randomnumber, reps = 0.1)
 end
 
