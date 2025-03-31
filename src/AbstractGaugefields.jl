@@ -1188,6 +1188,16 @@ function Initialize_3D_UN_Gaugefields(
             verbose_level=verbose_level,
             randomnumber=randomnumber,
         )
+    elseif condition == "test_U2nhs_rand"
+        u = TestmapGauges_3D_U2nhs(
+            NC,
+            m,
+            n_U2,
+            NN...,
+            verbose_level=verbose_level,
+            randomnumber=randomnumber,
+            reps = reps,
+        )
     elseif condition == "test_U8hs"
         u = TestmapGauges_3D_U8hs(
             NC,
