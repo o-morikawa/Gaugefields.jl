@@ -273,6 +273,8 @@ function Flux_update!(
     elseif condition=="normone"
         i = rand(1:6)
         flux[i] = Flux_normal_update(flux[i], NC, γ)
+    elseif condition=="zeros"
+        flux[:] = zeros(Int,6)
     elseif condition=="temporal"
         flux[3] = rand(0:NC-1)
         flux[5] = rand(0:NC-1)
@@ -293,6 +295,15 @@ function Flux_update!(
         flux[5] = rand(0:NC-1)
     elseif condition=="34"
         flux[6] = rand(0:NC-1)
+    elseif condition=="12_34"
+        flux[1] = rand(0:NC-1)
+        flux[6] = rand(0:NC-1)
+    elseif condition=="13_24"
+        flux[2] = rand(0:NC-1)
+        flux[5] = rand(0:NC-1)
+    elseif condition=="14_23"
+        flux[3] = rand(0:NC-1)
+        flux[4] = rand(0:NC-1)
     elseif condition=="norm_12"
         flux[1] = Flux_normal_update(flux[1], NC, γ)
     elseif condition=="norm_13"
@@ -305,6 +316,15 @@ function Flux_update!(
         flux[5] = Flux_normal_update(flux[5], NC, γ)
     elseif condition=="norm_34"
         flux[6] = Flux_normal_update(flux[6], NC, γ)
+    elseif condition=="norm_12_34"
+        flux[1] = Flux_normal_update(flux[1], NC, γ)
+        flux[6] = Flux_normal_update(flux[1], NC, γ)
+    elseif condition=="norm_13_24"
+        flux[2] = Flux_normal_update(flux[2], NC, γ)
+        flux[5] = Flux_normal_update(flux[1], NC, γ)
+    elseif condition=="norm_14_23"
+        flux[3] = Flux_normal_update(flux[1], NC, γ)
+        flux[4] = Flux_normal_update(flux[1], NC, γ)
     end
 
     B = Initialize_Bfields(NC,flux,NDW,NX,NY,NZ,NT,condition = "tflux")
