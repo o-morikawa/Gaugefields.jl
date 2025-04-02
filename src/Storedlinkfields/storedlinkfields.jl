@@ -92,7 +92,7 @@ end
 
 function Base.display(t::Storedlinkfields{TG,WL}) where {TG,WL}
     n = length(t._data)
-    println("The strage size of fields: $n")
+    println("The storage size of fields: $n")
     numused = sum(t._flagusing)
     println("The total number of fields used: $numused")
     for i = 1:n
@@ -102,7 +102,7 @@ function Base.display(t::Storedlinkfields{TG,WL}) where {TG,WL}
     end
     println("The flags: $(t._flagusing)")
     println("The indices: $(t._indices)")
-    println("The num of Storage used: $(t._numused)")
+    println("The num of using: $(t._numused)")
 end
 
 function is_storedlink(t::Storedlinkfields{TG,WL}, l::WL) where {TG,WL}
