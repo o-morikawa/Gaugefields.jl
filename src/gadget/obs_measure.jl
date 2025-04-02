@@ -1123,7 +1123,7 @@ function calc_Q_gradflow!(
                     end
                 elseif conditions[i]=="Qimproved"
                     Qclover = calculate_topological_charge_clover(U_copy,B_copy,Bps,temp_UμνTA,temps)
-                    Qimproved= calculate_topological_charge_improved(U_copy,B_copy,temp_UμνTA,Qclover,temps)
+                    Qimproved= calculate_topological_charge_improved(U_copy,B_copy,Bps,temp_UμνTA,Qclover,temps)
                     push!(topo_values_improved, Qimproved)
                     if displayon
                         println("Qimproved:     $Qimproved")
