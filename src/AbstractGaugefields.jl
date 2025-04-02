@@ -1301,7 +1301,7 @@ function evaluate_gaugelinks_evenodd!(
     temps::Array{T,1}, # length >= 3
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
-
+    @assert length(temps) >= 3 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 3."
     #Uold = temps[1]
     Unew = temps[1]
     #Utemp2 = temps[2]
@@ -1369,6 +1369,7 @@ function evaluate_gaugelinks_evenodd!(
     temps::Array{T,1}, # length >= 4+3
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 7."
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
     Ushift1 = temps[2]
@@ -1416,6 +1417,7 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     temps::Array{T,1}, # length >= 3
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 3 "evaluate_gaugelinks!: Num of temporal gauge fields >= 3."
     #println_verbose_level3(uout,"evaluating Wilson loops")
     #Uold = temps[1]
     #set_wing_U!(U)
@@ -1522,6 +1524,7 @@ function evaluate_gaugelinks!(
     B::Array{T,2},
     temps::Array{T,1}, # length >= 4+3
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "evaluate_gaugelinks!: Num of temporal gauge fields >= 7."
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
 
@@ -1581,6 +1584,7 @@ function evaluate_gaugelinks!(
     Bps::Pz,
     temps::Array{T,1}, # length >= 4+3 + 4
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
+    @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
 
@@ -1648,6 +1652,7 @@ function evaluate_Bplaquettes!(
     B::Array{T,2},
     temps::Array{T,1},
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "evaluate_Bplaquettes!: Num of temporal gauge fields >= 7."
     multiply_Bplaquettes!(uout, w, B, temps, true)
 end
 function multiply_Bplaquettes!(
@@ -1657,6 +1662,7 @@ function multiply_Bplaquettes!(
     temps::Array{T,1},
     unity=false,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "multiply_Bplaquettes!: Num of temporal gauge fields >= 7."
     if unity
         unit_U!(uout)
     end
@@ -1684,6 +1690,7 @@ function sweepaway_4D_Bplaquettes!(
     temps::Array{T,1}, # length(temps) >= 4+3
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 7."
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
@@ -1974,6 +1981,7 @@ function evaluate_Bplaquettes_evenodd!(
     temps::Array{T,1},
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "evaluate_Bplaquettes!: Num of temporal gauge fields >= 7."
     multiply_Bplaquettes_evenodd!(uout,w,B,temps,iseven,true)
 end
 function multiply_Bplaquettes_evenodd!(
@@ -1984,6 +1992,7 @@ function multiply_Bplaquettes_evenodd!(
     iseven::Bool,
     unity = false,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "multiply_Bplaquettes_evenodd!: Num of temporal gauge fields >= 7."
     if unity
         unit_U!(uout)
     end
@@ -2007,6 +2016,7 @@ function sweepaway_4D_Bplaquettes_evenodd!(
     iseven::Bool,
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 7 "sweepaway_4D_Bplaquettes_evenodd!: Num of temporal gauge fields >= 7."
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
