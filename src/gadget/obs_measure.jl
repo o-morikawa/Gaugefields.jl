@@ -461,7 +461,7 @@ function calculate_gauge_coupling_clover(
     temps::Temporalfields
 ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
     UμνTA = temp_UμνTA
-    numofloops = calc_UμνTA!(UμνTA, "clover", U, B, temps)
+    numofloops = calc_UμνTA!(UμνTA, "clover", U, B, Bps, temps)
     E = calc_E(UμνTA, numofloops, U)
     return E
 end
@@ -547,7 +547,7 @@ function make_energy_density!(
     temps_g::Temporalfields
 ) where {NC,Dim,T<:AbstractGaugefields{NC,Dim}}
     W_operator = cloverloops(Dim)
-    temps, it_temps = get_temp(temps_g, 9)
+    temps, it_temps = get_temp(temps_g, 12)
     calc_wilson_loop!(Wmat,W_operator,U,B,Bps,temps)
     unused!(temps_g, it_temps)
     return 
