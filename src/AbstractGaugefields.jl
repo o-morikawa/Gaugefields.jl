@@ -1919,9 +1919,9 @@ function sweepaway_4D_Bplaquettes_evenodd!(
     substitute_U!(Unew,uout)
     Ushift = shift_U(Unew, (0,0,0,0))
     if direction == 1
-        Bshift12 = temps[end]
-        Bshift13 = temps[end-1]
-        Bshift14 = temps[end-2]
+        Bshift12 = temps[7]
+        Bshift13 = temps[6]
+        Bshift14 = temps[5]
         if isU1dag
             Bshift12 = shift_U(B[1,2], (0,0,0,0))
             Bshift13 = shift_U(B[1,3], (0,0,0,0))
@@ -2011,8 +2011,8 @@ function sweepaway_4D_Bplaquettes_evenodd!(
             
         end
     elseif direction == 2
-        Bshift23 = temps[end]
-        Bshift24 = temps[end-1]
+        Bshift23 = temps[7]
+        Bshift24 = temps[6]
         if isU1dag
             Bshift23 = shift_U(B[2,3], (0,0,0,0))
             Bshift24 = shift_U(B[2,4], (0,0,0,0))
@@ -2083,7 +2083,7 @@ function sweepaway_4D_Bplaquettes_evenodd!(
             Ushift = shift_U(Unew, origin)
         end
     elseif direction == 3
-        Bshift34 = temps[end]
+        Bshift34 = temps[7]
         if isU1dag
             Bshift34 = shift_U(B[3,4], (0,0,0,0))
         else
