@@ -148,7 +148,7 @@ function calc_dSdUμ!(
     Bps::Pz,
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
     temp,  it_temp   = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 10)
+    temps, its_temps = get_temp(S._temp_U, 12)
     numterm = length(S.dataset)
 
     clear_U!(dSdUμ)
@@ -307,14 +307,14 @@ function evaluate_GaugeAction_untraced!(
 end
 function evaluate_GaugeAction_untraced!(
     uout,
-    S::GaugeAction, # length(temps) > 9 + 2
+    S::GaugeAction, # length(temps) > 9 + 4
     U::Vector{T},
     B::Array{T,2},
     Bps::Pz,
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
     numterm = length(S.dataset)
     temp, it_temp = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 10)
+    temps, its_temps = get_temp(S._temp_U, 12)
     clear_U!(uout)
 
     for i = 1:numterm
@@ -376,7 +376,7 @@ function GaugeAction(
     end
     dataset = GaugeAction_dataset{Dim}[]
 
-    num = 14
+    num = 16
     _temp_U = Temporalfields(U[1]; num=num)
 
     return GaugeAction{Dim,eltype(U),eltype(dataset)}(hascovnet, covneuralnet, dataset, _temp_U)
