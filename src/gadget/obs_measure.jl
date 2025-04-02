@@ -227,7 +227,7 @@ function calc_UμνTA!(
     UμνTA = temp_UμνTA
 
     temp, it_temp   = get_temp(temps_g)
-    temps, it_temps = get_temp(temps_g,8)
+    temps, it_temps = get_temp(temps_g,12)
     for μ = 1:Dim
         for ν = 1:Dim
             if ν == μ
