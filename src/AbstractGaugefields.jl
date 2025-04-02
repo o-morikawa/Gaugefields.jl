@@ -2307,6 +2307,7 @@ function evaluate_gaugelinks_evenodd!(
     temps::Array{T,1}, # length >= 4
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps)>=4 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 4."
     num = length(w)
     temp4 = temps[4]
 
@@ -2335,8 +2336,9 @@ function evaluate_gaugelinks_evenodd!(
     temps::Array{T,1}, # length >= 5+3
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps)>=8 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 8."
     num = length(w)
-    temp = temps[5]
+    temp = temps[8]
     #ix,iy,iz,it=(2,2,2,2)
     clear_U!(xout, iseven)
     for i = 1:num
@@ -2355,7 +2357,7 @@ function evaluate_gaugelinks!(
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
     @assert length(temps)>=4 "evaluate_gaugelinks!: Num of temporal gauge fields >= 4."
     num = length(w)
-    temp4 = temps[end]
+    temp4 = temps[4]
 
     #ix,iy,iz,it=(2,2,2,2)
     #ix,iy,iz,it=(1,1,1,1)
@@ -2363,7 +2365,7 @@ function evaluate_gaugelinks!(
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp4, glinks, U, temps[1:end-1]) # length >= 3
+        evaluate_gaugelinks!(temp4, glinks, U, temps[1:3]) # length >= 3
         #println("uout2 ", temp2[:,:,ix,iy,iz,it])
         add_U!(xout, temp4)
         #println("xout ", xout[:,:,ix,iy,iz,it])
@@ -2384,12 +2386,12 @@ function evaluate_gaugelinks!(
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
     @assert length(temps)>=8 "evaluate_gaugelinks!: Num of temporal gauge fields >= 8."
     num = length(w)
-    temp1 = temps[end]
+    temp1 = temps[8]
 
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:end-1]) # length >= 4+3
+        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:7]) # length >= 4+3
         add_U!(xout, temp1)
     end
 
@@ -2405,12 +2407,12 @@ function evaluate_gaugelinks!(
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields,Pz<:Storedlinkfields}
     @assert length(temps)>=10 "evaluate_gaugelinks!: Num of temporal gauge fields >= 10."
     num = length(w)
-    temp1 = temps[end]
+    temp1 = temps[10]
 
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, Bps, temps[1:end-1]) # length >= 4+3 + 2
+        evaluate_gaugelinks!(temp1, glinks, U, B, Bps, temps[1:9]) # length >= 4+3 + 2
         add_U!(xout, temp1)
     end
 
