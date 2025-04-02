@@ -1370,43 +1370,7 @@ function evaluate_gaugelinks_evenodd!(
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
     @assert length(temps) >= 7 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 7."
-    Unew = temps[1]
-    origin = Tuple(zeros(Int64, Dim))
-    Ushift1 = temps[2]
-    Ushift2 = temps[3]
-    glinks = w
-    numlinks = length(glinks)
-    if numlinks == 0
-        unit_U!(uout)
-        return
-    end
-    j = 1
-    U1link = glinks[1]
-    direction = get_direction(U1link)
-    position = get_position(U1link)
-    isU1dag = isdag(U1link)
-    if numlinks == 1
-        substitute_U!(Unew, U[direction])
-        Ushift1 = shift_U(Unew, position)
-        if isU1dag
-            substitute_U!(uout, Ushift1', iseven)
-        else
-            substitute_U!(uout, Ushift1, iseven)
-        end
-        return
-    end
-    substitute_U!(Unew, U[direction])
-    Ushift1 = shift_U(Unew, position)
-    for j = 2:numlinks
-        Ujlink = glinks[j]
-        isUkdag = isdag(Ujlink)
-        position = get_position(Ujlink)
-        direction = get_direction(Ujlink)
-        Ushift2 = shift_U(U[direction], position)
-        multiply_12!(uout, Ushift1, Ushift2, j, isUkdag, isU1dag, iseven)
-        substitute_U!(Unew, uout)
-        Ushift1 = shift_U(Unew, origin)
-    end
+    evaluate_gaugelinks_evenodd!(uout, w, U, temps, iseven)
     multiply_Bplaquettes_evenodd!(uout, w, B, temps, iseven)
 end
 
@@ -1525,55 +1489,8 @@ function evaluate_gaugelinks!(
     temps::Array{T,1}, # length >= 4+3
 ) where {T<:AbstractGaugefields,Dim}
     @assert length(temps) >= 7 "evaluate_gaugelinks!: Num of temporal gauge fields >= 7."
-    Unew = temps[1]
-    origin = Tuple(zeros(Int64, Dim))
-
-    Ushift1 = temps[2]
-    Ushift2 = temps[3]
-
-    glinks = w
-    numlinks = length(glinks)
-    if numlinks == 0
-        unit_U!(uout)
-        return
-    end
-
-    j = 1
-    U1link = glinks[1]
-    direction = get_direction(U1link)
-    position = get_position(U1link)
-    isU1dag = isdag(U1link)
-
-    if numlinks == 1
-        substitute_U!(Unew, U[direction])
-        Ushift1 = shift_U(Unew, position)
-        if isU1dag
-            substitute_U!(uout, Ushift1')
-        else
-            substitute_U!(uout, Ushift1)
-        end
-
-        return
-    end
-
-    substitute_U!(Unew, U[direction])
-    Ushift1 = shift_U(Unew, position)
-
-    for j = 2:numlinks
-        Ujlink = glinks[j]
-        isUkdag = isdag(Ujlink)
-        position = get_position(Ujlink)
-        direction = get_direction(Ujlink)
-        Ushift2 = shift_U(U[direction], position)
-
-        multiply_12!(uout, Ushift1, Ushift2, j, isUkdag, isU1dag)
-
-        substitute_U!(Unew, uout)
-        Ushift1 = shift_U(Unew, origin)
-    end
-
+    evaluate_gaugelinks!(uout, w, U, temps)
     multiply_Bplaquettes!(uout, w, B, temps)
-
 end
 
 function evaluate_gaugelinks!(
@@ -1582,67 +1499,20 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     B::Array{T,2},
     Bps::Pz,
-    temps::Array{T,1}, # length >= 4+3 + 4
+    temps::Array{T,1}, # length >= 4+3 + 2
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
-    @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
+    @assert length(temps) >= 9 "evaluate_gaugelinks!: Num of temporal gauge fields >= 9."
     Unew = temps[1]
-    origin = Tuple(zeros(Int64, Dim))
-
-    Ushift1 = temps[2]
-    Ushift2 = temps[3]
-
-    glinks = w
-    numlinks = length(glinks)
-    if numlinks == 0
-        unit_U!(uout)
-        return
-    end
-
-    j = 1
-    U1link = glinks[1]
-    direction = get_direction(U1link)
-    position = get_position(U1link)
-    isU1dag = isdag(U1link)
-
-    if numlinks == 1
-        substitute_U!(Unew, U[direction])
-        Ushift1 = shift_U(Unew, position)
-        if isU1dag
-            substitute_U!(uout, Ushift1')
-        else
-            substitute_U!(uout, Ushift1)
-        end
-
-        return
-    end
-
-    substitute_U!(Unew, U[direction])
-    Ushift1 = shift_U(Unew, position)
-
-    for j = 2:numlinks
-        Ujlink = glinks[j]
-        isUkdag = isdag(Ujlink)
-        position = get_position(Ujlink)
-        direction = get_direction(Ujlink)
-        Ushift2 = shift_U(U[direction], position)
-
-        multiply_12!(uout, Ushift1, Ushift2, j, isUkdag, isU1dag)
-
-        substitute_U!(Unew, uout)
-        Ushift1 = shift_U(Unew, origin)
-    end
-
-    substitute_U!(Unew, uout)
+    evaluate_gaugelinks!(Unew, w, U, temps[3:end])
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
         multiply_12!(uout, Unew, Bplaq, 0, false, false)
     else
-        Bplaq = temps[4]
-        evaluate_Bplaquettes!(Bplaq, w, B, temps[5:end])
+        Bplaq = temps[2]
+        evaluate_Bplaquettes!(Bplaq, w, B, temps[3:end])
         store_link!(Bps, Bplaq, w)
         multiply_12!(uout, Unew, Bplaq, 0, false, false)
     end
-
 end
 
 
@@ -2483,6 +2353,7 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     temps::Array{T,1}, # length >= 4
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
+    @assert length(temps)>=4 "evaluate_gaugelinks!: Num of temporal gauge fields >= 4."
     num = length(w)
     temp4 = temps[end]
 
@@ -2511,6 +2382,7 @@ function evaluate_gaugelinks!(
     B::Array{T,2},
     temps::Array{T,1}, # length >= 5+3
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
+    @assert length(temps)>=8 "evaluate_gaugelinks!: Num of temporal gauge fields >= 8."
     num = length(w)
     temp1 = temps[end]
 
@@ -2531,6 +2403,7 @@ function evaluate_gaugelinks!(
     Bps::Pz,
     temps::Array{T,1}, # length >= 5+3 + 2
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields,Pz<:Storedlinkfields}
+    @assert length(temps)>=10 "evaluate_gaugelinks!: Num of temporal gauge fields >= 10."
     num = length(w)
     temp1 = temps[end]
 
