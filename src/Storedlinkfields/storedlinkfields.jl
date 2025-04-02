@@ -7,6 +7,7 @@ mutable struct Storedlinkfields{TG,WL<:Wilsonline}
     _link::Vector{WL}
     _flagusing::Vector{Bool}
     _indices::Vector{Int64}
+    _numused::Vector{Int64}
     Nmax::Int64
 
     function Storedlinkfields(a::TG; num=1, Nmax=1000) where {TG}
@@ -14,16 +15,17 @@ mutable struct Storedlinkfields{TG,WL<:Wilsonline}
         _link = Vector{Wilsonline}(undef, num)
         _flagusing = zeros(Bool, num)
         _indices = zeros(Int64, num)
+        _numused = zeros(Int64, num)
         similar_l = Wilsonline([])
         for i = 1:num
             _data[i] = similar(a)
             _link[i] = similar_l
         end
-        return new{TG,Wilsonline}(_data, _link, _flagusing, _indices, Nmax)
+        return new{TG,Wilsonline}(_data, _link, _flagusing, _indices, _numused, Nmax)
     end
 
-    function Storedlinkfields(_data::Vector{TG}, _link::Vector{WL}, _flagusing, _indices, Nmax) where {TG,WL<:Wilsonline}
-        return new{TG,WL}(_data, _link, _flagusing, _indices, Nmax)
+    function Storedlinkfields(_data::Vector{TG}, _link::Vector{WL}, _flagusing, _indices, _numused, Nmax) where {TG,WL<:Wilsonline}
+        return new{TG,WL}(_data, _link, _flagusing, _indices, _numused, Nmax)
     end
 
 end
@@ -35,7 +37,8 @@ function Storedlinkfields_fromvector(a::Vector{TG}, l::Vector{WL}; Nmax=1000) wh
     end
     _flagusing = zeros(Bool, num)
     _indices = zeros(Int64, num)
-    return Storedlinkfields(a, l, _flagusing, _indices, Nmax)
+    _numused = zeros(Int64, num)
+    return Storedlinkfields(a, l, _flagusing, _indices, _numused, Nmax)
 end
 export Storedlinkfields_fromvector
 
@@ -99,6 +102,7 @@ function Base.display(t::Storedlinkfields{TG,WL}) where {TG,WL}
     end
     println("The flags: $(t._flagusing)")
     println("The indices: $(t._indices)")
+    println("The num of Storage used: $(t._numused)")
 end
 
 function is_storedlink(t::Storedlinkfields{TG,WL}, l::WL) where {TG,WL}
@@ -119,6 +123,7 @@ function store_link!(t::Storedlinkfields{TG,WL}, a::TG, l::WL) where {TG,WL}
     if !is_storedlink(t,l)
         t._flagusing[index] = true
         t._indices[i] = index
+        t._numused[index] += 1
         t._data[index] = deepcopy(a)
         t._link[index] = deepcopy(l)
     end
@@ -140,6 +145,7 @@ function get_storedlink(t::Storedlinkfields{TG,WL}, l::WL) where {TG,WL}
         error("No such a stored link.")
     end
     index = t._indices[i]
+    t._numused[index] += 1
     return t._data[index]
 end
 
