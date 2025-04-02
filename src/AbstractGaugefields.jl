@@ -1579,7 +1579,7 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     B::Array{T,2},
     Bps::Pz,
-    temps::Array{T,1}, # length >= 4+3 + 2
+    temps::Array{T,1}, # length >= 4+3 + 4
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
     Unew = temps[1]
     origin = Tuple(zeros(Int64, Dim))
@@ -1629,14 +1629,14 @@ function evaluate_gaugelinks!(
     end
 
     substitute_U!(Unew, uout)
-    Ushift1 = similar(U[1])
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
         multiply_12!(uout, Unew, Bplaq, 0, false, false)
     else
-        evaluate_Bplaquettes!(Ushift1, w, B, temps[3:end])
-        store_link!(Bps, Ushift1, w)
-        multiply_12!(uout, Unew, Ushift1, 0, false, false)
+        Bplaq = temps[4]
+        evaluate_Bplaquettes!(Bplaq, w, B, temps[5:end])
+        store_link!(Bps, Bplaq, w)
+        multiply_12!(uout, Unew, Bplaq, 0, false, false)
     end
 
 end
