@@ -1145,6 +1145,7 @@ function Initialize_3D_UN_Gaugefields(
     verbose_level=2,
     n_U2 = 4,
     randomnumber="Random",
+    randmat_cond="all",
     reps=0.1,
     randscale=1,
 )
@@ -1196,6 +1197,7 @@ function Initialize_3D_UN_Gaugefields(
             NN...,
             verbose_level=verbose_level,
             randomnumber=randomnumber,
+            randmat_cond=randmat_cond,
             reps = reps,
         )
     elseif condition == "test_U8hs"
