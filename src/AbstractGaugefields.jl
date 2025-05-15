@@ -1867,6 +1867,7 @@ function sweepaway_4D_Bplaquettes_origin!(
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
+    origin_minus = get_position(glinks[1])
     if isdag(glinks[1])
         origin_shift = [0, 0, 0, 0]
         origin_shift[get_direction(glinks[1])] += 1
