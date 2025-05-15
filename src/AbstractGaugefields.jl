@@ -1965,12 +1965,14 @@ function sweepaway_4D_Bplaquettes_origin!(
 
             substitute_U!(Unew, uout)
             #Ushift = shift_U(Unew, origin)
+            #=
             substitute_U!(Bshift12new, Bshift12)
             Bshift12 = shift_U(Bshift12new, origin_minus)
             substitute_U!(Bshift13new, Bshift13)
             Bshift13 = shift_U(Bshift13new, origin_minus)
             substitute_U!(Bshift14new, Bshift14)
             Bshift14 = shift_U(Bshift14new, origin_minus)
+            =#
 
         end
 
@@ -1995,10 +1997,12 @@ function sweepaway_4D_Bplaquettes_origin!(
 
             substitute_U!(Unew, uout)
             #Ushift = shift_U(Unew, origin)
+            #=
             substitute_U!(Bshift13new, Bshift13)
             Bshift13 = shift_U(Bshift13new, origin_minus)
             substitute_U!(Bshift14new, Bshift14)
             Bshift14 = shift_U(Bshift14new, origin_minus)
+            =#
 
         end
 
@@ -2019,8 +2023,10 @@ function sweepaway_4D_Bplaquettes_origin!(
 
             substitute_U!(Unew, uout)
             #Ushift = shift_U(Unew, origin)
+            #=
             substitute_U!(Bshift14new, Bshift14)
             Bshift14 = shift_U(Bshift14new, origin_minus)
+            =#
 
         end
     elseif direction == 2
@@ -2087,10 +2093,12 @@ function sweepaway_4D_Bplaquettes_origin!(
 
             substitute_U!(Unew, uout)
             #Ushift = shift_U(Unew, origin)
+            #=
             substitute_U!(Bshift23new, Bshift23)
             Bshift23 = shift_U(Bshift23new, origin_minus)
             substitute_U!(Bshift24new, Bshift24)
             Bshift24 = shift_U(Bshift24new, origin_minus)
+            =#
 
         end
 
@@ -2111,8 +2119,10 @@ function sweepaway_4D_Bplaquettes_origin!(
 
             substitute_U!(Unew, uout)
             #Ushift = shift_U(Unew, origin)
+            #=
             substitute_U!(Bshift24new, Bshift24)
             Bshift24 = shift_U(Bshift24new, origin_minus)
+            =#
         end
     elseif direction == 3
         Bshift34 = temps[7]
@@ -2172,8 +2182,10 @@ function sweepaway_4D_Bplaquettes_origin!(
 
             substitute_U!(Unew, uout)
             #Ushift = shift_U(Unew, origin)
+            #=
             substitute_U!(Bshift34new, Bshift34)
             Bshift34 = shift_U(Bshift34new, origin_minus)
+            =#
 
         end
     else
