@@ -4291,20 +4291,41 @@ function thooftLoop_4D_B_temporal_nowing_mpi(
                 comm = comm,
             )
         end
-        
+
+        ix_global_str = zeros(Int, 4)
+        ix_global_end = zeros(Int, 4)
+        for i=1:4
+            ix_global_str[i] = myrank_xyzt[i] * U.PN[i] + 1
+            ix_global_end[i] = myrank_xyzt[i] * U.PN[i] + U.PN[i]
+        end
+
         spatial_dir  = tloop_dir[1]
         temporal_dir = tloop_dir[2]
 
         if tloop_dis > 0
             spatial_strpos = tloop_pos[spatial_dir]
             spatial_endpos = spatial_strpos + tloop_dis
-            
+
             v = exp(-im * (2pi/NC) * FLUX)
         else
             spatial_endpos = tloop_pos[spatial_dir]
             spatial_strpos = spatial_endpos + tloop_dis
             
             v = exp(im * (2pi/NC) * FLUX)
+        end
+
+        if ix_global_end[spatial_dir] < spatial_strpos
+            set_wing_U!(U)
+            return U
+        elseif spatial_endpos < ix_global_str[spatial_dir]
+            set_wing_U!(U)
+            return U
+        else
+            spatial_strpos = max(ix_global_str[spatial_dir], spatial_strpos)
+            spatial_endpos = min(ix_global_end[spatial_dir], spatial_endpos)
+
+            spatial_strpos -= myrank_xyzt[spatial_dir] * U.PN[spatial_dir]
+            spatial_endpos -= myrank_xyzt[spatial_dir] * U.PN[spatial_dir]
         end
 
         if !overallminus
@@ -4315,136 +4336,94 @@ function thooftLoop_4D_B_temporal_nowing_mpi(
           if spatial_dir==3
               for it = 1:U.PN[4]
                   for iz = spatial_strpos:spatial_endpos
-                      #for iy = 1:U.PN[2]
-                      #for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,tloop_pos[1],tloop_pos[2],iz,it)
                       end
-                      #end
-                      #end
                   end
               end
           elseif spatial_dir==4
               for it = spatial_strpos:spatial_endpos
                   for iz = 1:U.PN[3]
-                      #for iy = 1:U.PN[2]
-                      #for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,tloop_pos[1],tloop_pos[2],iz,it)
                       end
-                      #end
-                      #end
                   end
               end
           end
       elseif FLUXNUM==2 && (tloop_dir==[2,4] || tloop_dir==[4,2])
           if spatial_dir==2
               for it = 1:U.PN[4]
-                  #for iz = 1:U.PN[3]
                   for iy = spatial_strpos:spatial_endpos
-                      #for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,tloop_pos[1],iy,tloop_pos[3],it)
                       end
-                      #end
                   end
-                  #end
               end
           elseif spatial_dir==4
               for it = spatial_strpos:spatial_endpos
-                  #for iz = 1:U.PN[3]
                   for iy = 1:U.PN[2]
-                      #for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,tloop_pos[1],iy,tloop_pos[3],it)
                       end
-                      #end
                   end
-                  #end
               end
           end
       elseif FLUXNUM==3 && (tloop_dir==[2,3] || tloop_dir==[3,2])
           if spatial_dir==2
-              #for it = 1:U.PN[4]
               for iz = 1:U.PN[3]
                   for iy = spatial_strpos:spatial_endpos
-                      #for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,tloop_pos[1],iy,iz,tloop_pos[4])
                       end
-                      #end
                   end
               end
-              #end
           elseif spatial_dir==3
-              #for it = 1:U.PN[4]
               for iz = spatial_strpos:spatial_endpos
                   for iy = 1:U.PN[2]
-                      #for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,tloop_pos[1],iy,iz,tloop_pos[4])
                       end
-                      #end
                   end
               end
-              #end
           end
       elseif FLUXNUM==4 && (tloop_dir==[1,4] || tloop_dir==[4,1])
           if spatial_dir==1
               for it = 1:U.PN[4]
-                  #for iz = 1:U.PN[3]
-                  #for iy = 1:U.PN[2]
                   for ix = spatial_strpos:spatial_endpos
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,ix,tloop_pos[2],tloop_pos[3],it)
                       end
                   end
-                  #end
-                  #end
               end
           elseif spatial_dir==4
               for it = spatial_strpos:spatial_endpos
-                  #for iz = 1:U.PN[3]
-                  #for iy = 1:U.PN[2]
                   for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,ix,tloop_pos[2],tloop_pos[3],it)
                       end
                   end
-                  #end
-                  #end
               end
           end
       elseif FLUXNUM==5 && (tloop_dir==[1,3] || tloop_dir==[3,1])
           if spatial_dir==1
-              #for it = 1:U.PN[4]
               for iz = 1:U.PN[3]
-                  #for iy = 1:U.PN[2]
                   for ix = spatial_strpos:spatial_endpos
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,ix,tloop_pos[2],iz,tloop_pos[4])
                       end
                   end
-                  #end
               end
-              #end
           elseif spatial_dir==3
-              #for it = 1:U.PN[4]
               for iz = spatial_strpos:spatial_endpos
-                  #for iy = 1:U.PN[2]
                   for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
                           setvalue!(U, v, ic,ic,ix,tloop_pos[2],iz,tloop_pos[4])
                       end
                   end
-                  #end
               end
-              #end
           end
       elseif FLUXNUM==6 && (tloop_dir==[1,2] || tloop_dir==[2,1])
           if spatial_dir==1
-              #for it = 1:U.PN[4]
-              #for iz = 1:U.PN[3]
               for iy = 1:U.PN[2]
                   for ix = spatial_strpos:spatial_endpos
                       @simd for ic = 1:NC
@@ -4452,11 +4431,7 @@ function thooftLoop_4D_B_temporal_nowing_mpi(
                       end
                   end
               end
-              #end
-              #end
           elseif spatial_dir==2
-              #for it = 1:U.PN[4]
-              #for iz = 1:U.PN[3]
               for iy = spatial_strpos:spatial_endpos
                   for ix = 1:U.PN[1]
                       @simd for ic = 1:NC
@@ -4464,8 +4439,6 @@ function thooftLoop_4D_B_temporal_nowing_mpi(
                       end
                   end
               end
-              #end
-              #end
           end
       end
       set_wing_U!(U)
