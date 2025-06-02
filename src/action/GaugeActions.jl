@@ -376,7 +376,7 @@ function GaugeAction(
     end
     dataset = GaugeAction_dataset{Dim}[]
 
-    num = 16
+    num = 18
     _temp_U = Temporalfields(U[1]; num=num)
 
     return GaugeAction{Dim,eltype(U),eltype(dataset)}(hascovnet, covneuralnet, dataset, _temp_U)
