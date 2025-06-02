@@ -1870,9 +1870,10 @@ function sweepaway_4D_Bplaquettes_origin!(
     origin_minus = get_position(glinks[1])
     if isdag(glinks[1])
         origin_shift = [0, 0, 0, 0]
-        origin_shift[get_direction(glinks[1])] += 1
-        origin_minus = Tuple(origin_shift .- collect(origin))
-        origin = Tuple(origin_shift .+ collect(origin))
+        origin_shift_p[get_direction(glinks[1])] += 1
+        origin_shift_m[get_direction(glinks[1])] -= 1
+        origin_minus = Tuple(origin_shift_m .+ collect(origin))
+        origin       = Tuple(origin_shift_p .+ collect(origin))
     end
 
     numlinks = length(glinks)
