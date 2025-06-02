@@ -284,13 +284,13 @@ function evaluate_GaugeAction_untraced!(
 end
 function evaluate_GaugeAction_untraced!(
     uout,
-    S::GaugeAction, # length(temps) > 9
+    S::GaugeAction, # length(temps) > 9+1
     U::Vector{T},
     B::Array{T,2}
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim}}
     numterm = length(S.dataset)
     temp, it_temp = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 8)
+    temps, its_temps = get_temp(S._temp_U, 9)
     clear_U!(uout)
 
     for i = 1:numterm
@@ -307,14 +307,14 @@ function evaluate_GaugeAction_untraced!(
 end
 function evaluate_GaugeAction_untraced!(
     uout,
-    S::GaugeAction, # length(temps) > 9 + 4
+    S::GaugeAction, # length(temps) > 9+2 + 4
     U::Vector{T},
     B::Array{T,2},
     Bps::Pz,
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
     numterm = length(S.dataset)
     temp, it_temp = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 12)
+    temps, its_temps = get_temp(S._temp_U, 14)
     clear_U!(uout)
 
     for i = 1:numterm
