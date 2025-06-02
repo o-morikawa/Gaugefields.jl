@@ -1488,9 +1488,9 @@ function evaluate_gaugelinks!(
     w::Wilsonline{Dim},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 4+3
+    temps::Array{T,1}, # length >= 4+3+1
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 7 "evaluate_gaugelinks!: Num of temporal gauge fields >= 7."
+    @assert length(temps) >= 8 "evaluate_gaugelinks!: Num of temporal gauge fields >= 8."
     evaluate_gaugelinks!(uout, w, U, temps)
     multiply_Bplaquettes!(uout, w, B, temps)
 end
@@ -1501,9 +1501,9 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     B::Array{T,2},
     Bps::Pz,
-    temps::Array{T,1}, # length >= 4+3 + 2
+    temps::Array{T,1}, # length >= 4+3+2 + 2
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
-    @assert length(temps) >= 9 "evaluate_gaugelinks!: Num of temporal gauge fields >= 9."
+    @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
     Unew = temps[1]
     evaluate_gaugelinks!(Unew, w, U, temps[3:end])
     if is_storedlink(Bps, w)
@@ -1524,7 +1524,7 @@ function multiply_Bplaquettes!(
     B::Array{T,2},
     temps::Array{T,1},
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 7 "multiply_Bplaquettes!: Num of temporal gauge fields >= 7."
+    @assert length(temps) >= 8 "multiply_Bplaquettes!: Num of temporal gauge fields >= 8."
     glinks = w
     numlinks = length(glinks)
     if numlinks < 3
@@ -1547,7 +1547,7 @@ function evaluate_Bplaquettes!(
     B::Array{T,2},
     temps::Array{T,1},
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 7 "evaluate_Bplaquettes!: Num of temporal gauge fields >= 7."
+    @assert length(temps) >= 9 "evaluate_Bplaquettes!: Num of temporal gauge fields >= 9."
     unit_U!(uout)
 
     glinks = w
@@ -1570,10 +1570,10 @@ function sweepaway_4D_Bplaquettes!(
     uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
-    temps::Array{T,1}, # length(temps) >= 4+3
+    temps::Array{T,1}, # length(temps) >= 4+3+1
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 7 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 7."
+    @assert length(temps) >= 8 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 8."
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
@@ -1609,6 +1609,7 @@ function sweepaway_4D_Bplaquettes!(
     end
 
     substitute_U!(Unew, uout)
+    Ushift = temps[8]
     Ushift = shift_U(Unew, (0, 0, 0, 0))
 
     if direction == 1
@@ -1857,6 +1858,301 @@ function sweepaway_4D_Bplaquettes!(
     end
 end
 function sweepaway_4D_Bplaquettes_origin!(
+    Uunit::T,
+    w::Wilsonline{Dim},
+    B::Array{T,2},
+    temps::Array{T,1}, # length(temps) >= 4+3+2
+    linknum,
+) where {T<:AbstractGaugefields,Dim}
+    @assert length(temps) >= 9 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 9."
+    Unew = temps[1]
+    glinks = w
+    origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
+    if isdag(glinks[1])
+        origin_shift = [0, 0, 0, 0]
+        origin_shift[get_direction(glinks[1])] += 1
+        origin = Tuple(origin_shift .+ collect(origin))
+    end
+
+    numlinks = length(glinks)
+    if numlinks < linknum
+        return
+    end
+
+    U1link = glinks[linknum]
+    direction = get_direction(U1link)
+    isU1dag = isdag(U1link)
+
+    coordinate = [0, 0, 0, 0] .+ collect(origin)
+    for j = 1:(linknum-1)
+        Ujlink = glinks[j]
+        j_direction = get_direction(Ujlink)
+        isUjdag = isdag(Ujlink)
+
+        if isUjdag
+            coordinate[j_direction] += -1
+        else
+            coordinate[j_direction] += +1
+        end
+    end
+    if isU1dag
+        coordinate[direction] += -1
+    end
+
+    substitute_U!(Unew, uout)
+    Ushift = temps[8]
+    Ushift = shift_U(Unew, (0, 0, 0, 0))
+
+    uout = temps[9]
+
+    if direction == 1
+        Bshift12 = temps[7]
+        Bshift13 = temps[6]
+        Bshift14 = temps[5]
+
+        if isU1dag
+            Bshift12 = shift_U(B[1, 2], (0, 0, 0, 0))
+            Bshift13 = shift_U(B[1, 3], (0, 0, 0, 0))
+            Bshift14 = shift_U(B[1, 4], (0, 0, 0, 0))
+        else
+            Bshift12 = shift_U(B[1, 2], (0, 0, 0, 0))'
+            Bshift13 = shift_U(B[1, 3], (0, 0, 0, 0))'
+            Bshift14 = shift_U(B[1, 4], (0, 0, 0, 0))'
+        end
+
+        Bshift12new = temps[2]
+        Bshift13new = temps[3]
+        Bshift14new = temps[4]
+
+        for ix = 1:abs(coordinate[1])
+            if coordinate[1] > 0
+                substitute_U!(Bshift12new, Bshift12)
+                Bshift12 = shift_U(Bshift12new, (1, 0, 0, 0))
+                substitute_U!(Bshift13new, Bshift13)
+                Bshift13 = shift_U(Bshift13new, (1, 0, 0, 0))
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (1, 0, 0, 0))
+            else # coordinate[1] < 0
+                substitute_U!(Bshift12new, Bshift12)
+                Bshift12 = shift_U(Bshift12new, (-1, 0, 0, 0))
+                substitute_U!(Bshift13new, Bshift13)
+                Bshift13 = shift_U(Bshift13new, (-1, 0, 0, 0))
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (-1, 0, 0, 0))
+            end
+        end
+
+        for iy = 1:abs(coordinate[2])
+            if coordinate[2] > 0
+                multiply_12!(uout, Ushift, Bshift12, 0, false, false)
+
+                substitute_U!(Bshift12new, Bshift12)
+                Bshift12 = shift_U(Bshift12new, (0, 1, 0, 0))
+                substitute_U!(Bshift13new, Bshift13)
+                Bshift13 = shift_U(Bshift13new, (0, 1, 0, 0))
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (0, 1, 0, 0))
+            else # coordinate[2] < 0
+                substitute_U!(Bshift12new, Bshift12)
+                Bshift12 = shift_U(Bshift12new, (0, -1, 0, 0))
+                substitute_U!(Bshift13new, Bshift13)
+                Bshift13 = shift_U(Bshift13new, (0, -1, 0, 0))
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (0, -1, 0, 0))
+
+                multiply_12!(uout, Ushift, Bshift12, 0, true, false)
+            end
+
+            substitute_U!(Unew, uout)
+            Ushift = shift_U(Unew, origin)
+
+        end
+
+        for iz = 1:abs(coordinate[3])
+            if coordinate[3] > 0
+                multiply_12!(uout, Ushift, Bshift13, 0, false, false)
+
+                substitute_U!(Bshift13new, Bshift13)
+                Bshift13 = shift_U(Bshift13new, (0, 0, 1, 0))
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (0, 0, 1, 0))
+            else # coordinate[3] < 0
+                substitute_U!(Bshift13new, Bshift13)
+                Bshift13 = shift_U(Bshift13new, (0, 0, -1, 0))
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (0, 0, -1, 0))
+
+                multiply_12!(uout, Ushift, Bshift13, 0, true, false)
+            end
+
+            substitute_U!(Unew, uout)
+            Ushift = shift_U(Unew, origin)
+
+        end
+
+        for it = 1:abs(coordinate[4])
+            if coordinate[4] > 0
+                multiply_12!(uout, Ushift, Bshift14, 0, false, false)
+
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (0, 0, 0, 1))
+            else # coordinate[4] < 0
+                substitute_U!(Bshift14new, Bshift14)
+                Bshift14 = shift_U(Bshift14new, (0, 0, 0, -1))
+
+                multiply_12!(uout, Ushift, Bshift14, 0, true, false)
+            end
+
+            substitute_U!(Unew, uout)
+            Ushift = shift_U(Unew, origin)
+
+        end
+    elseif direction == 2
+        Bshift23 = temps[7]
+        Bshift24 = temps[6]
+
+        if isU1dag
+            Bshift23 = shift_U(B[2, 3], (0, 0, 0, 0))
+            Bshift24 = shift_U(B[2, 4], (0, 0, 0, 0))
+        else
+            Bshift23 = shift_U(B[2, 3], (0, 0, 0, 0))'
+            Bshift24 = shift_U(B[2, 4], (0, 0, 0, 0))'
+        end
+
+        Bshift23new = temps[2]
+        Bshift24new = temps[3]
+
+        for ix = 1:abs(coordinate[1])
+            if coordinate[1] > 0
+                substitute_U!(Bshift23new, Bshift23)
+                Bshift23 = shift_U(Bshift23new, (1, 0, 0, 0))
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (1, 0, 0, 0))
+            else # coordinate[1] < 0
+                substitute_U!(Bshift23new, Bshift23)
+                Bshift23 = shift_U(Bshift23new, (-1, 0, 0, 0))
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (-1, 0, 0, 0))
+            end
+        end
+
+        for iy = 1:abs(coordinate[2])
+            if coordinate[2] > 0
+                substitute_U!(Bshift23new, Bshift23)
+                Bshift23 = shift_U(Bshift23new, (0, 1, 0, 0))
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (0, 1, 0, 0))
+            else # coordinate[2] < 0
+                substitute_U!(Bshift23new, Bshift23)
+                Bshift23 = shift_U(Bshift23new, (0, -1, 0, 0))
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (0, -1, 0, 0))
+            end
+        end
+
+        for iz = 1:abs(coordinate[3])
+            if coordinate[3] > 0
+                multiply_12!(uout, Ushift, Bshift23, 0, false, false)
+
+                substitute_U!(Bshift23new, Bshift23)
+                Bshift23 = shift_U(Bshift23new, (0, 0, 1, 0))
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (0, 0, 1, 0))
+            else # coordinate[3] < 0
+                substitute_U!(Bshift23new, Bshift23)
+                Bshift23 = shift_U(Bshift23new, (0, 0, -1, 0))
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (0, 0, -1, 0))
+
+                multiply_12!(uout, Ushift, Bshift23, 0, true, false)
+            end
+
+            substitute_U!(Unew, uout)
+            Ushift = shift_U(Unew, origin)
+
+        end
+
+        for it = 1:abs(coordinate[4])
+            if coordinate[4] > 0
+                multiply_12!(uout, Ushift, Bshift24, 0, false, false)
+
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (0, 0, 0, 1))
+            else # coordinate[4] < 0
+                substitute_U!(Bshift24new, Bshift24)
+                Bshift24 = shift_U(Bshift24new, (0, 0, 0, -1))
+
+                multiply_12!(uout, Ushift, Bshift24, 0, true, false)
+            end
+
+            substitute_U!(Unew, uout)
+            Ushift = shift_U(Unew, origin)
+        end
+    elseif direction == 3
+        Bshift34 = temps[7]
+
+        if isU1dag
+            Bshift34 = shift_U(B[3, 4], (0, 0, 0, 0))
+        else
+            Bshift34 = shift_U(B[3, 4], (0, 0, 0, 0))'
+        end
+
+        Bshift34new = temps[2]
+
+        for ix = 1:abs(coordinate[1])
+            if coordinate[1] > 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (1, 0, 0, 0))
+            else # coordinate[1] < 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (-1, 0, 0, 0))
+            end
+        end
+
+        for iy = 1:abs(coordinate[2])
+            if coordinate[2] > 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (0, 1, 0, 0))
+            else # coordinate[2] < 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (0, -1, 0, 0))
+            end
+        end
+
+        for iz = 1:abs(coordinate[3])
+            if coordinate[3] > 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (0, 0, 1, 0))
+            else # coordinate[3] < 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (0, 0, -1, 0))
+            end
+        end
+
+        for it = 1:abs(coordinate[4])
+            if coordinate[4] > 0
+                multiply_12!(uout, Ushift, Bshift34, 0, false, false)
+
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (0, 0, 0, 1))
+            else # coordinate[4] < 0
+                substitute_U!(Bshift34new, Bshift34)
+                Bshift34 = shift_U(Bshift34new, (0, 0, 0, -1))
+
+                multiply_12!(uout, Ushift, Bshift34, 0, true, false)
+            end
+
+            substitute_U!(Unew, uout)
+            Ushift = shift_U(Unew, origin)
+
+        end
+    else
+        # direction==4: no multiplications
+    end
+    substitute_U!(Uunit, uout)
+
+end
+function sweepaway_4D_Bplaquettes_origin2!(
     uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
@@ -2201,7 +2497,7 @@ function multiply_Bplaquettes_evenodd!(
     iseven::Bool,
     unity = false,
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 7 "multiply_Bplaquettes_evenodd!: Num of temporal gauge fields >= 7."
+    @assert length(temps) >= 8 "multiply_Bplaquettes_evenodd!: Num of temporal gauge fields >= 8."
     if unity
         unit_U!(uout)
     end
@@ -2221,11 +2517,11 @@ function sweepaway_4D_Bplaquettes_evenodd!(
     uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
-    temps::Array{T,1}, # length(temps) >= 4+3
+    temps::Array{T,1}, # length(temps) >= 4+3+1
     iseven::Bool,
     linknum,
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 7 "sweepaway_4D_Bplaquettes_evenodd!: Num of temporal gauge fields >= 7."
+    @assert length(temps) >= 8 "sweepaway_4D_Bplaquettes_evenodd!: Num of temporal gauge fields >= 8."
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
@@ -2256,6 +2552,7 @@ function sweepaway_4D_Bplaquettes_evenodd!(
         coordinate[direction] += -1
     end
     substitute_U!(Unew,uout)
+    Ushift = temps[8]
     Ushift = shift_U(Unew, (0,0,0,0))
     if direction == 1
         Bshift12 = temps[7]
@@ -2672,17 +2969,17 @@ function evaluate_gaugelinks_evenodd!(
     w::Array{<:Wilsonline{Dim},1},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 5+3
+    temps::Array{T,1}, # length >= 5+3+1
     iseven,
 ) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps)>=8 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 8."
+    @assert length(temps)>=9 "evaluate_gaugelinks_evenodd!: Num of temporal gauge fields >= 9."
     num = length(w)
-    temp = temps[8]
+    temp = temps[9]
     #ix,iy,iz,it=(2,2,2,2)
     clear_U!(xout, iseven)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks_evenodd!(temp, glinks, U, temps[1:7], iseven) # length >= 4+3
+        evaluate_gaugelinks_evenodd!(temp, glinks, U, temps[1:8], iseven) # length >= 4+3
         add_U!(xout, temp, iseven)
     end
     return
@@ -2721,16 +3018,16 @@ function evaluate_gaugelinks!(
     w::Array{WL,1},
     U::Array{T,1},
     B::Array{T,2},
-    temps::Array{T,1}, # length >= 5+3
+    temps::Array{T,1}, # length >= 5+3+1
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields}
-    @assert length(temps)>=8 "evaluate_gaugelinks!: Num of temporal gauge fields >= 8."
+    @assert length(temps)>=9 "evaluate_gaugelinks!: Num of temporal gauge fields >= 9."
     num = length(w)
-    temp1 = temps[8]
+    temp1 = temps[9]
 
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:7]) # length >= 4+3
+        evaluate_gaugelinks!(temp1, glinks, U, B, temps[1:8]) # length >= 4+3+1
         add_U!(xout, temp1)
     end
 
@@ -2742,16 +3039,16 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     B::Array{T,2},
     Bps::Pz,
-    temps::Array{T,1}, # length >= 5+3 + 2
+    temps::Array{T,1}, # length >= 5+3+2 + 2
 ) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields,Pz<:Storedlinkfields}
-    @assert length(temps)>=10 "evaluate_gaugelinks!: Num of temporal gauge fields >= 10."
+    @assert length(temps)>=12 "evaluate_gaugelinks!: Num of temporal gauge fields >= 12."
     num = length(w)
-    temp1 = temps[10]
+    temp1 = temps[12]
 
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, Bps, temps[1:9]) # length >= 4+3 + 2
+        evaluate_gaugelinks!(temp1, glinks, U, B, Bps, temps[1:11]) # length >= 4+3+2 + 2
         add_U!(xout, temp1)
     end
 
