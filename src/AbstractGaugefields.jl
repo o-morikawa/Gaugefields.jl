@@ -1899,6 +1899,7 @@ function sweepaway_4D_Bplaquettes_origin!(
         coordinate[direction] += -1
     end
 
+    unit_U!(Uunit)
     substitute_U!(Unew, Uunit)
     Ushift = temps[8]
     Ushift = shift_U(Unew, (0, 0, 0, 0))
