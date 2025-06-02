@@ -1967,7 +1967,7 @@ function sweepaway_4D_Bplaquettes_origin!(
                 multiply_12!(uout, Ushift, Bshift12, 0, true, false)
             end
 
-            n+=1
+            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -1990,7 +1990,7 @@ function sweepaway_4D_Bplaquettes_origin!(
                 multiply_12!(uout, Ushift, Bshift13, 0, true, false)
             end
 
-            n+=1
+            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2009,7 +2009,7 @@ function sweepaway_4D_Bplaquettes_origin!(
                 multiply_12!(uout, Ushift, Bshift14, 0, true, false)
             end
 
-            n+=1
+            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2074,7 +2074,7 @@ function sweepaway_4D_Bplaquettes_origin!(
                 multiply_12!(uout, Ushift, Bshift23, 0, true, false)
             end
 
-            n+=1
+            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2093,7 +2093,7 @@ function sweepaway_4D_Bplaquettes_origin!(
                 multiply_12!(uout, Ushift, Bshift24, 0, true, false)
             end
 
-            n+=1
+            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
         end
@@ -2151,7 +2151,7 @@ function sweepaway_4D_Bplaquettes_origin!(
                 multiply_12!(uout, Ushift, Bshift34, 0, true, false)
             end
 
-            n+=1
+            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
