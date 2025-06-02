@@ -122,7 +122,7 @@ function calc_dSdUμ!(
     B::Array{T,2},
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim}}
     temp,  it_temp   = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 8)
+    temps, its_temps = get_temp(S._temp_U, 9)
     numterm = length(S.dataset)
 
     clear_U!(dSdUμ)
@@ -148,7 +148,7 @@ function calc_dSdUμ!(
     Bps::Pz,
 ) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
     temp,  it_temp   = get_temp(S._temp_U)
-    temps, its_temps = get_temp(S._temp_U, 12)
+    temps, its_temps = get_temp(S._temp_U, 14)
     numterm = length(S.dataset)
 
     clear_U!(dSdUμ)
