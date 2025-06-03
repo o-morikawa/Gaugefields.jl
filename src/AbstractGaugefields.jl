@@ -1508,7 +1508,7 @@ function evaluate_gaugelinks!(
     evaluate_gaugelinks!(Unew, w, U, temps[2:end])
 
     f! = get_f_Bplaquettes(w, B)
-    f!(uout,temps)
+    f!(uout,temps[2:end])
     
     #multiply_Bplaquettes!(uout, w, B, Bps, temps[2:end])
     #=
