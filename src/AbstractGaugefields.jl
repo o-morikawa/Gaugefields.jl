@@ -1509,7 +1509,7 @@ function evaluate_gaugelinks!(
 
     f! = get_f_Bplaquettes(w, B)
     f!(uout,temps[2:end])
-    
+
     #=
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
@@ -1560,7 +1560,7 @@ function make_f_Bplaquettes(
     return multiply_Bplaquettes_fixed!
 end
 
-const f_Bplaquettes_dict = Dict{Wilsonline, Function}(undef, 1000)
+const f_Bplaquettes_dict = Dict{Wilsonline, Function}()
 
 function register_f_Bplaquettes!(
     w::Wilsonline{Dim},
@@ -2200,10 +2200,7 @@ function sweepaway_4D_Bplaquettes_origin!(
     else
         # direction==4: no multiplications
     end
-    for n = 1:num_org
-        Uunit = shift_U(uout,origin_minus)
-        substitute_U!(uout,Uunit)
-    end
+    return num_org, origin
 end
 
 function evaluate_Bplaquettes_evenodd!(
