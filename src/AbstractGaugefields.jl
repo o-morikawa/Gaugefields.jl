@@ -1501,11 +1501,17 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     B::Array{T,2},
     Bps::Pz,
-    temps::Array{T,1}, # length >= 4+3+2 + 2
+    temps::Array{T,1}, # length >= 4+3+2 + 2(-1)
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
     @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
     Unew = temps[1]
-    evaluate_gaugelinks!(Unew, w, U, temps[3:end])
+    evaluate_gaugelinks!(Unew, w, U, temps[2:end])
+
+    f! = get_f_Bplaquettes(w, B)
+    f!(uout,temps)
+    
+    #multiply_Bplaquettes!(uout, w, B, Bps, temps[2:end])
+    #=
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
         multiply_12!(uout, Unew, Bplaq, 0, false, false)
@@ -1515,6 +1521,7 @@ function evaluate_gaugelinks!(
         store_link!(Bps, Bplaq, w)
         multiply_12!(uout, Unew, Bplaq, 0, false, false)
     end
+    =#
 end
 
 
@@ -1541,6 +1548,42 @@ function multiply_Bplaquettes!(
 
 end
 
+function make_f_Bplaquettes(
+    w::Wilsonline{Dim},
+    B::Array{T,2}
+) where {T<:AbstractGaugefields,Dim}
+    function multiply_Bplaquettes_fixed!(
+        uout::T,
+        temps::Array{T,1},
+    ) where {T<:AbstractGaugefields}
+        return multiply_Bplaquettes!(uout,w,B,temps)
+    end
+    return multiply_Bplaquettes_fixed!
+end
+
+const f_Bplaquettes_dict = Dict{Wilsonline, Function}()
+
+function register_f_Bplaquettes!(
+    w::Wilsonline{Dim},
+    B::Array{T,2}
+) where {T<:AbstractGaugefields,Dim}
+    f_Bplaquettes_dict[w] = make_f_Bplaquettes(w, B)
+end
+
+function get_f_Bplaquettes(
+    w::Wilsonline{Dim},
+    B::Array{T,2}
+) where {T<:AbstractGaugefields,Dim}
+    if haskey(f_Bplaquettes_dict, w)
+        return f_Bplaquettes_dict[w]
+    else
+        f = make_f_Bplaquettes(w,B)
+        f_Bplaquettes_dict[w] = f
+        return f
+    end
+end
+
+#=
 function evaluate_Bplaquettes!(
     uout::T,
     w::Wilsonline{Dim},
@@ -1565,6 +1608,7 @@ function evaluate_Bplaquettes!(
     end
 
 end
+=#
 
 function sweepaway_4D_Bplaquettes!(
     uout::T,
