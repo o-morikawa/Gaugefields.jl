@@ -1505,7 +1505,7 @@ function evaluate_gaugelinks!(
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
     @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
     Unew = temps[1]
-    evaluate_gaugelinks!(Unew, w, U, temps[2:end])
+    evaluate_gaugelinks!(uout, w, U, temps[2:end])
 
     f! = get_f_Bplaquettes(w, B)
     f!(uout,temps[2:end])
@@ -1583,7 +1583,6 @@ function get_f_Bplaquettes(
     end
 end
 
-#=
 function evaluate_Bplaquettes!(
     uout::T,
     w::Wilsonline{Dim},
@@ -1608,7 +1607,6 @@ function evaluate_Bplaquettes!(
     end
 
 end
-=#
 
 function sweepaway_4D_Bplaquettes!(
     uout::T,
