@@ -1504,13 +1504,13 @@ function evaluate_gaugelinks!(
     temps::Array{T,1}, # length >= 4+3+2 + 2(-1)
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
     @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
-    Unew = temps[1]
+    #Unew = temps[1]
     evaluate_gaugelinks!(uout, w, U, temps[2:end])
 
-    f! = get_f_Bplaquettes(w, B)
-    f!(uout,temps[2:end])
+    #f! = get_f_Bplaquettes(w, B)
+    #f!(uout,temps[2:end])
     
-    #multiply_Bplaquettes!(uout, w, B, Bps, temps[2:end])
+    multiply_Bplaquettes!(uout, w, B, Bps, temps[2:end])
     #=
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
@@ -1561,7 +1561,7 @@ function make_f_Bplaquettes(
     return multiply_Bplaquettes_fixed!
 end
 
-const f_Bplaquettes_dict = Dict{Wilsonline, Function}()
+const f_Bplaquettes_dict = Dict{Wilsonline, Function}(undef,1000)
 
 function register_f_Bplaquettes!(
     w::Wilsonline{Dim},
