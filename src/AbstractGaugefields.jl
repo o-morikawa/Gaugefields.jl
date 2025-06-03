@@ -1507,10 +1507,9 @@ function evaluate_gaugelinks!(
     #Unew = temps[1]
     evaluate_gaugelinks!(uout, w, U, temps[2:end])
 
-    #f! = get_f_Bplaquettes(w, B)
-    #f!(uout,temps[2:end])
+    f! = get_f_Bplaquettes(w, B)
+    f!(uout,temps[2:end])
     
-    multiply_Bplaquettes!(uout, w, B, Bps, temps[2:end])
     #=
     if is_storedlink(Bps, w)
         Bplaq = get_storedlink(Bps, w)
@@ -1561,7 +1560,7 @@ function make_f_Bplaquettes(
     return multiply_Bplaquettes_fixed!
 end
 
-const f_Bplaquettes_dict = Dict{Wilsonline, Function}()
+const f_Bplaquettes_dict = Dict{Wilsonline, Function}(undef, 1000)
 
 function register_f_Bplaquettes!(
     w::Wilsonline{Dim},
