@@ -1561,7 +1561,7 @@ function make_f_Bplaquettes(
     return multiply_Bplaquettes_fixed!
 end
 
-const f_Bplaquettes_dict = Dict{Wilsonline, Function}(undef,1000)
+const f_Bplaquettes_dict = Dict{Wilsonline, Function}()
 
 function register_f_Bplaquettes!(
     w::Wilsonline{Dim},
