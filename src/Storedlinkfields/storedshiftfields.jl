@@ -2,9 +2,9 @@ module Storedshiftfields_module
 
 import Gaugefields: shift_U
 
-mutable struct Storedshiftfields{TG}
+mutable struct Storedshiftfields{TG,D}
     _data::Vector{TG}
-    _disp::Vector{(NTuple{Dim, Int}, Bool)}
+    _disp::Vector{(NTuple{D, Int}, Bool)}
     _flagusing::Vector{Bool}
     _indices::Vector{Int64}
     _numused::Vector{Int64}
@@ -43,21 +43,21 @@ function Storedshiftfields_fromvector(a::Vector{TG}, l::Vector{(NTuple{D, Int}, 
 end
 export Storedshiftfields_fromvector
 
-Base.eltype(::Type{Storedshiftfields{TG}}) where {TG} = TG
+Base.eltype(::Type{Storedshiftfields{TG,D}}) where {TG,D} = TG
 
-Base.length(t::Storedshiftfields{TG}) where {TG} = length(t._data)
+Base.length(t::Storedshiftfields{TG,D}) where {TG,D} = length(t._data)
 
-Base.size(t::Storedshiftfields{TG}) where {TG} = size(t._data)
+Base.size(t::Storedshiftfields{TG,D}) where {TG,D} = size(t._data)
 
-function Base.firstindex(t::Storedshiftfields{TG}) where {TG}
+function Base.firstindex(t::Storedshiftfields{TG,D}) where {TG,D}
     return 1
 end
 
-function Base.lastindex(t::Storedshiftfields{TG}) where {TG}
+function Base.lastindex(t::Storedshiftfields{TG,D}) where {TG,D}
     return length(t._data)
 end
 
-function Base.getindex(t::Storedshiftfields{TG}, i::Int) where {TG}
+function Base.getindex(t::Storedshiftfields{TG,D}, i::Int) where {TG,D}
     @assert i <= length(t._data) "The length of the storedlinkfields is shorter than the index $i."
     @assert i <= t.Nmax "The number of the storedlinkfields $i is larger than the maximum number $(Nmax). Change Nmax."
     if t._indices[i] == 0
@@ -69,7 +69,7 @@ function Base.getindex(t::Storedshiftfields{TG}, i::Int) where {TG}
     return t._data[t._indices[i]], t._disp[t._indices[i]]
 end
 
-function Base.getindex(t::Storedshiftfields{TG}, I::Vararg{Int,N}) where {TG,N}
+function Base.getindex(t::Storedshiftfields{TG,D}, I::Vararg{Int,N}) where {TG,D,N}
     data = TG[]
     disp = []
     for i in I
@@ -80,7 +80,7 @@ function Base.getindex(t::Storedshiftfields{TG}, I::Vararg{Int,N}) where {TG,N}
     return data, disp
 end
 
-function Base.getindex(t::Storedshiftfields{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
+function Base.getindex(t::Storedshiftfields{TG,D}, I::AbstractVector{T}) where {TG,D,T<:Integer}
     data = TG[]
     disp = []
     for i in I
@@ -91,7 +91,7 @@ function Base.getindex(t::Storedshiftfields{TG}, I::AbstractVector{T}) where {TG
     return data, disp
 end
 
-function Base.display(t::Storedshiftfields{TG}) where {TG}
+function Base.display(t::Storedshiftfields{TG,D}) where {TG,D}
     n = length(t._data)
     println("The storage size of fields: $n")
     numused = sum(t._flagusing)
@@ -106,7 +106,8 @@ function Base.display(t::Storedshiftfields{TG}) where {TG}
     println("The num of using: $(t._numused)")
 end
 
-function is_stored_shiftfield(t::Storedshiftfields{TG}, l::(NTuple{Dim, Int}, Bool)) where {TG,Dim}
+function is_stored_shiftfield(t::Storedshiftfields{TG,D}, l::(NTuple{Dim, Int}, Bool)) where {TG,D,Dim}
+    @assert D==Dim "Dimensions are not matched!"
     if l in t._link
         return true
     else
@@ -114,7 +115,8 @@ function is_stored_shiftfield(t::Storedshiftfields{TG}, l::(NTuple{Dim, Int}, Bo
     end
 end
 
-function store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{Dim, Int}, Bool)) where {TG,Dim}
+function store_shiftfield!(t::Storedshiftfields{TG,D}, a::TG, l::(NTuple{Dim, Int}, Bool)) where {TG,D,Dim}
+    @assert D==Dim "Dimensions are not matched!"
     n = length(t._data)
     i = findfirst(x -> x == 0, t._indices)
     if i == nothing
@@ -130,7 +132,8 @@ function store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{Dim, Int}
     end
 end
 
-function store_shiftfield!(t::Storedshiftfields{TG}, as::Vector{TG}, ls::Vector{(NTuple{Dim, Int}, Bool)}) where {TG,Dim}
+function store_shiftfield!(t::Storedshiftfields{TG,D}, as::Vector{TG}, ls::Vector{(NTuple{Dim, Int}, Bool)}) where {TG,D,Dim}
+    @assert D==Dim "Dimensions are not matched!"
     n = length(as)
     if n != length(ls)
         error("Lengths of TG and WL vectors are mismatched.")
@@ -140,7 +143,8 @@ function store_shiftfield!(t::Storedshiftfields{TG}, as::Vector{TG}, ls::Vector{
     end
 end
 
-function get_stored_shiftfield(t::Storedshiftfields{TG}, l::(NTuple{Dim, Int}, Bool)) where {TG,Dim}
+function get_stored_shiftfield(t::Storedshiftfields{TG,D}, l::(NTuple{Dim, Int}, Bool)) where {TG,D,Dim}
+    @assert D==Dim "Dimensions are not matched!"
     i = findfirst(x -> x == l, t._link)
     if i == nothing
         error("not matched shiftfields.")
@@ -155,7 +159,8 @@ function increment_tuple(t::(NTuple{N, Int}, Bool), n::Int, delta::Int = 1) wher
     return ntuple(i -> i == n ? t[i] + delta : t[i], N)
 end
 
-function iterative_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{Dim, Int}, Bool)) where {TG,Dim}
+function iterative_store_shiftfield!(t::Storedshiftfields{TG,D}, a::TG, l::(NTuple{Dim, Int}, Bool)) where {TG,D,Dim}
+    @assert D==Dim "Dimensions are not matched!"
     coordinate = collect(l[1])
     isdag = l[2]
 
@@ -200,7 +205,8 @@ function iterative_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple
     return c
 end
 
-function get_and_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{Dim, Int}, Bool)) where {TG,Dim}
+function get_and_store_shiftfield!(t::Storedshiftfields{TG,D}, a::TG, l::(NTuple{Dim, Int}, Bool)) where {TG,D,Dim}
+    @assert D==Dim "Dimensions are not matched!"
     i = findfirst(x -> x == l, t._link)
     if i == nothing
         return iterative_store_shiftfield!(t, a, l)
