@@ -2,7 +2,7 @@ module Storedshiftfields_module
 
 mutable struct Storedshiftfields{TG}
     _data::Vector{TG}
-    _disp::Vector{(NTuple{4,Int}, Bool)}
+    _disp::Vector{(Tuple, Bool)}
     _flagusing::Vector{Bool}
     _indices::Vector{Int64}
     _numused::Vector{Int64}
