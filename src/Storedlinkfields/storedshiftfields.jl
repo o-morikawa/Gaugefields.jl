@@ -109,7 +109,7 @@ function Base.display(t::Storedshiftfields{TG}) where {TG}
 end
 
 function is_stored_shiftfield(t::Storedshiftfields{TG}, l::(NTuple{4, Int}, Bool)) where {TG}
-    if l in t._link
+    if l in t._disp
         return true
     else
         return false
@@ -143,7 +143,7 @@ function store_shiftfield!(t::Storedshiftfields{TG}, as::Vector{TG}, ls::Vector{
 end
 
 function get_stored_shiftfield(t::Storedshiftfields{TG}, l::(NTuple{4, Int}, Bool)) where {TG}
-    i = findfirst(x -> x == l, t._link)
+    i = findfirst(x -> x == l, t._disp)
     if i == nothing
         error("not matched shiftfields.")
     end
@@ -203,7 +203,7 @@ function iterative_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple
 end
 
 function get_and_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{4, Int}, Bool)) where {TG}
-    i = findfirst(x -> x == l, t._link)
+    i = findfirst(x -> x == l, t._disp)
     if i == nothing
         return iterative_store_shiftfield!(t, a, l)
     end
