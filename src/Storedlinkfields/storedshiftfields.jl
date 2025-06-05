@@ -1,9 +1,6 @@
 module Storedshiftfields_module
 
-function shift_U(x, disp)
-    # 仮の処理
-    return "Shifted: $x by $disp"
-end
+shift_U
 
 mutable struct Storedshiftfields{TG}
     _data::Vector{TG}
