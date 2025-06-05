@@ -4,7 +4,7 @@ import Gaugefields: shift_U
 
 mutable struct Storedshiftfields{TG}
     _data::Vector{TG}
-    _disp::Vector{(Tuple, Bool)}
+    _disp::Vector{(NTuple, Bool)}
     _flagusing::Vector{Bool}
     _indices::Vector{Int64}
     _numused::Vector{Int64}
@@ -12,7 +12,7 @@ mutable struct Storedshiftfields{TG}
 
     function Storedshiftfields(a::TG; num=1, Nmax=1000) where {TG}
         _data = Vector{TG}(undef, num)
-        _disp = Vector{(Tuple, Bool)}(undef, num)
+        _disp = Vector{(NTuple, Bool)}(undef, num)
         _flagusing = zeros(Bool, num)
         _indices = zeros(Int64, num)
         _numused = zeros(Int64, num)
@@ -24,13 +24,13 @@ mutable struct Storedshiftfields{TG}
         return new{TG}(_data, _disp, _flagusing, _indices, _numused, Nmax)
     end
 
-    function Storedshiftfields(_data::Vector{TG}, _disp::Vector{(Tuple, Bool)}, _flagusing, _indices, _numused, Nmax) where {TG}
+    function Storedshiftfields(_data::Vector{TG}, _disp::Vector{(NTuple, Bool)}, _flagusing, _indices, _numused, Nmax) where {TG}
         return new{TG}(_data, _disp, _flagusing, _indices, _numused, Nmax)
     end
 
 end
 
-function Storedshiftfields_fromvector(a::Vector{TG}, l::Vector{(Tuple, Bool)}; Nmax=1000) where {TG}
+function Storedshiftfields_fromvector(a::Vector{TG}, l::Vector{(NTuple, Bool)}; Nmax=1000) where {TG}
     num = length(a)
     if num != length(l)
         error("Lengths of TG and Disp vectors are mismatched.")
