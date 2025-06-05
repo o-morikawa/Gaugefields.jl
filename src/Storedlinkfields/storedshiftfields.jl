@@ -149,66 +149,6 @@ function get_stored_shiftfield(t::Storedshiftfields{TG}, l::(NTuple{4, Int}, Boo
     return t._data[index]
 end
 
-function increment_tuple(t::(NTuple{N, Int}, Bool), n::Int, delta::Int = 1) where N
-    @assert 1 ≤ n ≤ N
-    return ntuple(i -> i == n ? t[i] + delta : t[i], N)
-end
-
-function iterative_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{4, Int}, Bool)) where {TG}
-    coordinate = collect(l[1])
-    isdag = l[2]
-
-    l_t = ntuple(_->0,4)
-    l_t2 = ntuple(_->0,4)
-
-    b = similar(a)
-    c = similar(a)
-
-    # At origin
-    if is_stored_shiftfield(t, (l_t, isdag))
-        #
-    else
-        if isdag
-            b = shift_U(a, l_t)'
-        else
-            b = shift_U(a, l_t)
-        end
-        store_shiftfield!(t, b, (l_t, isdag))
-    end
-
-    # Shifted places
-    for i = 1:4
-        for j = 1:abs(coordinate[i])
-            if coordinate[i] > 0
-                l_t2 = increment_tuple(l_t, i, +1)
-                l_s = increment_tuple(ntuple(_->0,4), i, +1)
-            else #coordinate[i] < 0
-                l_t2 = increment_tuple(l_t2, i, -1)
-                l_s = increment_tuple(ntuple(_->0,4), i, -1)
-            end
-            if is_stored_shiftfield(t, (l_t2, isdag))
-                l_t = l_t2
-            else
-                b = get_stored_shiftfield(t, (l_t, isdag))
-                c = shift_U(b, l_s)
-                store_shiftfield!(t, c, (l_t2, isdag))
-                l_t = l_t2
-            end
-        end
-    end
-    return c
-end
-
-function get_and_store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::(NTuple{4, Int}, Bool)) where {TG}
-    i = findfirst(x -> x == l, t._disp)
-    if i == nothing
-        return iterative_store_shiftfield!(t, a, l)
-    end
-    index = t._indices[i]
-    t._numused[index] += 1
-    return t._data[index]
-end
-
-export Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield, get_and_store_shiftfield!
+export Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield
 
 end
