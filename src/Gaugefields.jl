@@ -3,6 +3,7 @@ module Gaugefields
 using Requires
 include("./Temporalfields/temporalfields.jl")
 include("./Storedlinkfields/storedlinkfields.jl")
+include("./Storedlinkfields/storedshiftfields.jl")
 include("./output/verboseprint_mpi.jl")
 #include("./output/verboseprint.jl")
 include("./SUN_generator.jl")
