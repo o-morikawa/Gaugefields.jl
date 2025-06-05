@@ -25,7 +25,7 @@ import ..Verboseprint_mpi:
 using InteractiveUtils
 
 import ..Temporalfields_module: Temporalfields, unused!, get_temp
-import ..Storedlinkfields_module: Storedlinkfields, is_storedlink, store_link!, get_storedlink
+import ..Storedshiftfields_module: Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield, get_and_store_shiftfield!
 
 
 abstract type Abstractfields end
@@ -1500,15 +1500,16 @@ function evaluate_gaugelinks!(
     w::Wilsonline{Dim},
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temps::Array{T,1}, # length >= 4+3+2 + 2(-1)
-) where {T<:AbstractGaugefields,Pz<:Storedlinkfields,Dim}
+) where {T<:AbstractGaugefields,Pz<:Storedshiftfields,Dim}
     @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
     #Unew = temps[1]
-    evaluate_gaugelinks!(uout, w, U, temps[2:end])
+    evaluate_gaugelinks!(uout, w, U, temps)
+    multiply_Bplaquettes!(uout, w, B, Bps, temps)
 
-    f! = get_f_Bplaquettes(w, B)
-    f!(uout,temps[2:end])
+    #f! = get_f_Bplaquettes(w, B)
+    #f!(uout,temps[2:end])
 
     #=
     if is_storedlink(Bps, w)
@@ -1543,6 +1544,30 @@ function multiply_Bplaquettes!(
 
     for j = 1:numlinks
         sweepaway_4D_Bplaquettes!(uout, glinks, B, temps, j)
+    end
+
+end
+
+function multiply_Bplaquettes!(
+    uout::T,
+    w::Wilsonline{Dim},
+    B::Array{T,2},
+    Bps::Array{Pz,1},
+    temps::Array{T,1},
+) where {T<:AbstractGaugefields,Pz<:Storedshiftfields,Dim}
+    @assert length(temps) >= 5 "multiply_Bplaquettes!: Num of temporal gauge fields >= 5."
+    glinks = w
+    numlinks = length(glinks)
+    if numlinks < 3
+        return
+    end
+
+    if !(isLoopwithB(glinks) || isStaplewithB(glinks))
+        return
+    end
+
+    for j = 1:numlinks
+        sweepaway_4D_Bplaquettes!(uout, glinks, B, Bps, temps, j)
     end
 
 end
@@ -1602,7 +1627,7 @@ function evaluate_Bplaquettes!(
     end
 
     for j = 1:numlinks
-        sweepaway_4D_Bplaquettes_origin!(uout, glinks, B, temps, j)
+        sweepaway_4D_Bplaquettes(uout, glinks, B, temps, j)
     end
 
 end
@@ -1898,14 +1923,16 @@ function sweepaway_4D_Bplaquettes!(
         # direction==4: no multiplications
     end
 end
-function sweepaway_4D_Bplaquettes_origin!(
-    Uunit::T,
+
+function sweepaway_4D_Bplaquettes!(
+    uout::T,
     w::Wilsonline{Dim},
     B::Array{T,2},
-    temps::Array{T,1}, # length(temps) >= 4+3+2
+    Bps::Array{Pz,1},
+    temps::Array{T,1}, # length(temps) >= 5
     linknum,
-) where {T<:AbstractGaugefields,Dim}
-    @assert length(temps) >= 9 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 9."
+) where {T<:AbstractGaugefields,Pz<:Storedshiftfields,Dim}
+    @assert length(temps) >= 5 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 5."
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
@@ -1914,8 +1941,6 @@ function sweepaway_4D_Bplaquettes_origin!(
         origin_shift[get_direction(glinks[1])] += 1
         origin = Tuple(origin_shift .+ collect(origin))
     end
-
-    origin_minus = Tuple([0,0,0,0] .- collect(origin))
 
     numlinks = length(glinks)
     if numlinks < linknum
@@ -1942,73 +1967,32 @@ function sweepaway_4D_Bplaquettes_origin!(
         coordinate[direction] += -1
     end
 
-    unit_U!(Unew)
-    Ushift = temps[8]
+    substitute_U!(Unew, uout)
+    Ushift = temps[5]
     Ushift = shift_U(Unew, (0, 0, 0, 0))
 
-    uout = temps[9]
-
-    num_org = 0
-
     if direction == 1
-        Bshift12 = temps[7]
-        Bshift13 = temps[6]
-        Bshift14 = temps[5]
+        Bshift12 = temps[2]
+        Bshift13 = temps[3]
+        Bshift14 = temps[4]
 
-        if isU1dag
-            Bshift12 = shift_U(B[1, 2], (0, 0, 0, 0))
-            Bshift13 = shift_U(B[1, 3], (0, 0, 0, 0))
-            Bshift14 = shift_U(B[1, 4], (0, 0, 0, 0))
-        else
-            Bshift12 = shift_U(B[1, 2], (0, 0, 0, 0))'
-            Bshift13 = shift_U(B[1, 3], (0, 0, 0, 0))'
-            Bshift14 = shift_U(B[1, 4], (0, 0, 0, 0))'
-        end
+        iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), !isU1dag))
+        iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), !isU1dag))
+        iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), !isU1dag))
 
-        Bshift12new = temps[2]
-        Bshift13new = temps[3]
-        Bshift14new = temps[4]
-
-        for ix = 1:abs(coordinate[1])
-            if coordinate[1] > 0
-                substitute_U!(Bshift12new, Bshift12)
-                Bshift12 = shift_U(Bshift12new, (1, 0, 0, 0))
-                substitute_U!(Bshift13new, Bshift13)
-                Bshift13 = shift_U(Bshift13new, (1, 0, 0, 0))
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (1, 0, 0, 0))
-            else # coordinate[1] < 0
-                substitute_U!(Bshift12new, Bshift12)
-                Bshift12 = shift_U(Bshift12new, (-1, 0, 0, 0))
-                substitute_U!(Bshift13new, Bshift13)
-                Bshift13 = shift_U(Bshift13new, (-1, 0, 0, 0))
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (-1, 0, 0, 0))
-            end
-        end
+        temp_X = [coordinate[1],0,0,0]
 
         for iy = 1:abs(coordinate[2])
             if coordinate[2] > 0
+                Bshift12 = get_stored_shiftfield(Bps[1], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift12, 0, false, false)
-
-                substitute_U!(Bshift12new, Bshift12)
-                Bshift12 = shift_U(Bshift12new, (0, 1, 0, 0))
-                substitute_U!(Bshift13new, Bshift13)
-                Bshift13 = shift_U(Bshift13new, (0, 1, 0, 0))
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (0, 1, 0, 0))
+                temp_X[2] += 1
             else # coordinate[2] < 0
-                substitute_U!(Bshift12new, Bshift12)
-                Bshift12 = shift_U(Bshift12new, (0, -1, 0, 0))
-                substitute_U!(Bshift13new, Bshift13)
-                Bshift13 = shift_U(Bshift13new, (0, -1, 0, 0))
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (0, -1, 0, 0))
-
+                temp_X[2] -= 1
+                Bshift12 = get_stored_shiftfield(Bps[1], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift12, 0, true, false)
             end
 
-            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2016,22 +2000,15 @@ function sweepaway_4D_Bplaquettes_origin!(
 
         for iz = 1:abs(coordinate[3])
             if coordinate[3] > 0
+                Bshift13 = get_stored_shiftfield(Bps[2], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift13, 0, false, false)
-
-                substitute_U!(Bshift13new, Bshift13)
-                Bshift13 = shift_U(Bshift13new, (0, 0, 1, 0))
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (0, 0, 1, 0))
+                temp_X[3] += 1
             else # coordinate[3] < 0
-                substitute_U!(Bshift13new, Bshift13)
-                Bshift13 = shift_U(Bshift13new, (0, 0, -1, 0))
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (0, 0, -1, 0))
-
+                temp_X[3] -= 1
+                Bshift13 = get_stored_shiftfield(Bps[2], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift13, 0, true, false)
             end
 
-            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2039,83 +2016,39 @@ function sweepaway_4D_Bplaquettes_origin!(
 
         for it = 1:abs(coordinate[4])
             if coordinate[4] > 0
+                Bshift14 = get_stored_shiftfield(Bps[3], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift14, 0, false, false)
-
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (0, 0, 0, 1))
+                temp_X[4] += 1
             else # coordinate[4] < 0
-                substitute_U!(Bshift14new, Bshift14)
-                Bshift14 = shift_U(Bshift14new, (0, 0, 0, -1))
-
+                temp_X[4] += 1
+                Bshift14 = get_stored_shiftfield(Bps[3], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift14, 0, true, false)
             end
 
-            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
         end
     elseif direction == 2
-        Bshift23 = temps[7]
-        Bshift24 = temps[6]
+        Bshift23 = temps[2]
+        Bshift24 = temps[3]
 
-        if isU1dag
-            Bshift23 = shift_U(B[2, 3], (0, 0, 0, 0))
-            Bshift24 = shift_U(B[2, 4], (0, 0, 0, 0))
-        else
-            Bshift23 = shift_U(B[2, 3], (0, 0, 0, 0))'
-            Bshift24 = shift_U(B[2, 4], (0, 0, 0, 0))'
-        end
+        iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), !isU1dag))
+        iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), !isU1dag))
 
-        Bshift23new = temps[2]
-        Bshift24new = temps[3]
-
-        for ix = 1:abs(coordinate[1])
-            if coordinate[1] > 0
-                substitute_U!(Bshift23new, Bshift23)
-                Bshift23 = shift_U(Bshift23new, (1, 0, 0, 0))
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (1, 0, 0, 0))
-            else # coordinate[1] < 0
-                substitute_U!(Bshift23new, Bshift23)
-                Bshift23 = shift_U(Bshift23new, (-1, 0, 0, 0))
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (-1, 0, 0, 0))
-            end
-        end
-
-        for iy = 1:abs(coordinate[2])
-            if coordinate[2] > 0
-                substitute_U!(Bshift23new, Bshift23)
-                Bshift23 = shift_U(Bshift23new, (0, 1, 0, 0))
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (0, 1, 0, 0))
-            else # coordinate[2] < 0
-                substitute_U!(Bshift23new, Bshift23)
-                Bshift23 = shift_U(Bshift23new, (0, -1, 0, 0))
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (0, -1, 0, 0))
-            end
-        end
+        temp_X = [coordinate[1],coordinate[2],0,0]
 
         for iz = 1:abs(coordinate[3])
             if coordinate[3] > 0
+                Bshift23 = get_stored_shiftfield(Bps[4], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift23, 0, false, false)
-
-                substitute_U!(Bshift23new, Bshift23)
-                Bshift23 = shift_U(Bshift23new, (0, 0, 1, 0))
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (0, 0, 1, 0))
+                temp_X[3] += 1
             else # coordinate[3] < 0
-                substitute_U!(Bshift23new, Bshift23)
-                Bshift23 = shift_U(Bshift23new, (0, 0, -1, 0))
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (0, 0, -1, 0))
-
+                temp_X[3] -= 1
+                Bshift23 = get_stored_shiftfield(Bps[4], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift23, 0, true, false)
             end
 
-            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2123,76 +2056,36 @@ function sweepaway_4D_Bplaquettes_origin!(
 
         for it = 1:abs(coordinate[4])
             if coordinate[4] > 0
+                Bshift24 = get_stored_shiftfield(Bps[5], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift24, 0, false, false)
-
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (0, 0, 0, 1))
+                temp_X[4] += 1
             else # coordinate[4] < 0
-                substitute_U!(Bshift24new, Bshift24)
-                Bshift24 = shift_U(Bshift24new, (0, 0, 0, -1))
-
+                temp_X[4] -= 1
+                Bshift24 = get_stored_shiftfield(Bps[5], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift24, 0, true, false)
             end
 
-            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
         end
     elseif direction == 3
-        Bshift34 = temps[7]
+        Bshift34 = temps[2]
 
-        if isU1dag
-            Bshift34 = shift_U(B[3, 4], (0, 0, 0, 0))
-        else
-            Bshift34 = shift_U(B[3, 4], (0, 0, 0, 0))'
-        end
+        iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), !isU1dag))
 
-        Bshift34new = temps[2]
-
-        for ix = 1:abs(coordinate[1])
-            if coordinate[1] > 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (1, 0, 0, 0))
-            else # coordinate[1] < 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (-1, 0, 0, 0))
-            end
-        end
-
-        for iy = 1:abs(coordinate[2])
-            if coordinate[2] > 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (0, 1, 0, 0))
-            else # coordinate[2] < 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (0, -1, 0, 0))
-            end
-        end
-
-        for iz = 1:abs(coordinate[3])
-            if coordinate[3] > 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (0, 0, 1, 0))
-            else # coordinate[3] < 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (0, 0, -1, 0))
-            end
-        end
+        temp_X = [coordinate[1],coordinate[2],coordinate[3],0]
 
         for it = 1:abs(coordinate[4])
             if coordinate[4] > 0
+                Bshift34 = get_stored_shiftfield(Bps[6], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift34, 0, false, false)
-
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (0, 0, 0, 1))
+                temp_X[4] += 1
             else # coordinate[4] < 0
-                substitute_U!(Bshift34new, Bshift34)
-                Bshift34 = shift_U(Bshift34new, (0, 0, 0, -1))
-
+                temp_X[4] -= 1
+                Bshift34 = get_stored_shiftfield(Bps[6], (Tuple(temp_X), !isU1dag))
                 multiply_12!(uout, Ushift, Bshift34, 0, true, false)
             end
 
-            num_org+=1
             substitute_U!(Unew, uout)
             Ushift = shift_U(Unew, origin)
 
@@ -2200,7 +2093,6 @@ function sweepaway_4D_Bplaquettes_origin!(
     else
         # direction==4: no multiplications
     end
-    return num_org, origin
 end
 
 function evaluate_Bplaquettes_evenodd!(
@@ -2762,17 +2654,17 @@ function evaluate_gaugelinks!(
     w::Array{WL,1},
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
-    temps::Array{T,1}, # length >= 5+3+2 + 2
-) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields,Pz<:Storedlinkfields}
-    @assert length(temps)>=12 "evaluate_gaugelinks!: Num of temporal gauge fields >= 12."
+    Bps::Array{Pz,1},
+    temps::Array{T,1}, # ###length >= 5+3+2 + 2
+) where {Dim,WL<:Wilsonline{Dim},T<:AbstractGaugefields,Pz<:Storedshiftfields}
+    @assert length(temps)>=9 "evaluate_gaugelinks!: Num of temporal gauge fields >= 9."
     num = length(w)
-    temp1 = temps[12]
+    temp1 = temps[9]
 
     clear_U!(xout)
     for i = 1:num
         glinks = w[i]
-        evaluate_gaugelinks!(temp1, glinks, U, B, Bps, temps[1:11]) # length >= 4+3+2 + 2
+        evaluate_gaugelinks!(temp1, glinks, U, B, Bps, temps[1:8]) # length >= 4+3+2 + 2
         add_U!(xout, temp1)
     end
 
@@ -3364,7 +3256,7 @@ function evaluate_wilson_loops!(
     w::Wilson_loop_set,
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temps::Array{T,1},
 ) where {T<:AbstractGaugefields,Pz<:Storedlinkfields}
     num = length(w)
@@ -3478,15 +3370,7 @@ function evaluate_wilson_loops_inside!(
         Unew, Uold = Uold, Unew
         Ushift1 = shift_U(Uold, (0, 0, 0, 0))
     end
-    substitute_U!(Uold, Unew)
-    if is_storedlink(Bps, wi)
-        Bplaq = get_storedlink(Bps, wi)
-        multiply_12!(Unew, Uold, Bplaq, 0, false, false)
-    else
-        evaluate_Bplaquettes!(Ushift1, wi, B, temps)
-        store_link!(Bps, Ushift1, wi)
-        multiply_12!(Unew, Uold, Ushift1, 0, false, false)
-    end
+    multiply_Bplaquettes!(Unew, wi, B, Bps, temps)
 end
 
 
@@ -3530,8 +3414,8 @@ end
 function calculate_Plaquette(
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
-) where {T<:AbstractGaugefields,Pz<:Storedlinkfields}
+    Bps::Array{Pz,1},
+) where {T<:AbstractGaugefields,Pz<:Storedshiftfields}
     error("calculate_Plaquette is not implemented in type $(typeof(U)) ")
 end
 
@@ -3561,9 +3445,9 @@ end
 function calculate_Plaquette(
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temps::Temporalfields,
-) where {T<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {T<:AbstractGaugefields,Pz<:Storedshiftfields}
     temp1, it_temp1 = get_temp(temps)
     temp2, it_temp2 = get_temp(temps)
     p = calculate_Plaquette(U, B, Bps, temp1, temp2)
@@ -3588,9 +3472,9 @@ end
 function calculate_Plaquette(
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temps::Array{T1,1},
-) where {T<:AbstractGaugefields,T1<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {T<:AbstractGaugefields,T1<:AbstractGaugefields,Pz<:Storedshiftfields}
     return calculate_Plaquette(U, B, Bps, temps[1], temps[2])
 end
 
@@ -3628,10 +3512,10 @@ end
 function calculate_Plaquette(
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temp::AbstractGaugefields{NC,Dim},
     staple::AbstractGaugefields{NC,Dim},
-) where {NC,Dim,T<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {NC,Dim,T<:AbstractGaugefields,Pz<:Storedshiftfields}
     plaq = 0
     V = staple
     for μ = 1:Dim
@@ -3680,13 +3564,13 @@ function add_force!(
     F::Array{T1,1},
     U::Array{T2,1},
     B::Array{T2,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temps::Temporalfields{<:AbstractGaugefields{NC,Dim}};
     #temps::Array{<:AbstractGaugefields{NC,Dim},1};
     plaqonly=false,
     staplefactors::Union{Array{<:Number,1},Nothing}=nothing,
     factor=1,
-) where {NC,Dim,T1<:AbstractGaugefields,T2<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {NC,Dim,T1<:AbstractGaugefields,T2<:AbstractGaugefields,Pz<:Storedshiftfields}
     error("add_force! is not implemented in type $(typeof(F)) ")
 end
 
@@ -3772,12 +3656,12 @@ function add_force!(
     F::Array{T1,1},
     U::Array{T2,1},
     B::Array{T2,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     temps::Array{<:AbstractGaugefields{NC,Dim},1};
     plaqonly=false,
     staplefactors::Union{Array{<:Number,1},Nothing}=nothing,
     factor=1,
-) where {NC,Dim,T1<:TA_Gaugefields,T2<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {NC,Dim,T1<:TA_Gaugefields,T2<:AbstractGaugefields,Pz<:Storedshiftfields}
     @assert length(temps) >= 3 "length(temps) should be >= 3. But $(length(temps))"
 
     V = temps[3]
@@ -4134,10 +4018,10 @@ function construct_double_staple!(
     staple::AbstractGaugefields{NC,Dim},
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     μ,
     temps::Array{<:AbstractGaugefields{NC,Dim},1},
-) where {NC,Dim,T<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {NC,Dim,T<:AbstractGaugefields,Pz<:Storedshiftfields}
     loops = loops_staple_prime[(Dim, μ)]
     evaluate_gaugelinks!(staple, loops, U, B, Bps, temps)
 end
@@ -4230,10 +4114,10 @@ function construct_staple!(
     staple::AbstractGaugefields{NC,Dim},
     U::Array{T,1},
     B::Array{T,2},
-    Bps::Pz,
+    Bps::Array{Pz,1},
     μ,
     temp::AbstractGaugefields{NC,Dim},
-) where {NC,Dim,T<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {NC,Dim,T<:AbstractGaugefields,Pz<:Storedshiftfields}
     U1U2 = temp
     firstterm = true
 

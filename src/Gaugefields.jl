@@ -238,9 +238,9 @@ import .Obs_measure_module:
 import .HMC_core_module: MDstep!
 
 import .Temporalfields_module: Temporalfields, unused!, get_temp
-import .Storedlinkfields_module: Storedlinkfields, is_storedlink, store_link!, get_storedlink
+import .Storedshiftfields_module: Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield, get_and_store_shiftfield!
 export Temporalfields, unused!, get_temp
-export Storedlinkfields, is_storedlink, store_link!, get_storedlink
+export Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield, get_and_store_shiftfield!
 
 export IdentityGauges,
     RandomGauges, Oneinstanton, calculate_Plaquette, calculate_Polyakov_loop
