@@ -2095,7 +2095,7 @@ function sweepaway_4D_Bplaquettes!(
     end
 end
 
-function increment_tuple(t::(NTuple{N, Int}, Bool), n::Int, delta::Int = 1) where N
+function increment_tuple(t::Tuple{NTuple{N, Int}, Bool}, n::Int, delta::Int = 1) where N
     @assert 1 ≤ n ≤ N
     return ntuple(i -> i == n ? t[i] + delta : t[i], N)
 end
