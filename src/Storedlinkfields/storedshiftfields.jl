@@ -1,7 +1,5 @@
 module Storedshiftfields_module
 
-shift_U
-
 mutable struct Storedshiftfields{TG}
     _data::Vector{TG}
     _disp::Vector{(NTuple{4,Int}, Bool)}
