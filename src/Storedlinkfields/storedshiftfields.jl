@@ -1,6 +1,6 @@
 module Storedshiftfields_module
 
-import Gaugefields: shift_U
+import ..Gaugefields: shift_U
 
 mutable struct Storedshiftfields{TG}
     _data::Vector{TG}
