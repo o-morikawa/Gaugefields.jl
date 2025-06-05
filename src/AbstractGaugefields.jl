@@ -3321,7 +3321,7 @@ function evaluate_wilson_loops!(
     B::Array{T,2},
     Bps::Array{Pz,1},
     temps::Array{T,1},
-) where {T<:AbstractGaugefields,Pz<:Storedlinkfields}
+) where {T<:AbstractGaugefields,Pz<:Storedshiftfields}
     num = length(w)
     clear_U!(xout)
     Uold = temps[1]
