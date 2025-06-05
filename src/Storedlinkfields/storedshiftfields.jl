@@ -22,11 +22,11 @@ mutable struct Storedshiftfields{TG,D}
             _data[i] = similar(a)
             _disp[i] = similar_l
         end
-        return new{TG}(_data, _disp, _flagusing, _indices, _numused, Nmax)
+        return new{TG,Dim}(_data, _disp, _flagusing, _indices, _numused, Nmax)
     end
 
     function Storedshiftfields(_data::Vector{TG}, _disp::Vector{(NTuple{D, Int}, Bool)}, _flagusing, _indices, _numused, Nmax, Dim) where {TG,D}
-        return new{TG}(_data, _disp, _flagusing, _indices, _numused, Nmax, Dim)
+        return new{TG,D}(_data, _disp, _flagusing, _indices, _numused, Nmax, Dim)
     end
 
 end
