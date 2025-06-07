@@ -16,7 +16,7 @@ mutable struct Storedshiftfields{TG}
         _numused = zeros(Int64, num)
         similar_l = (ntuple(_->0, 4), false)
         for i = 1:num
-            _data[i] = similar(a)
+            _data[i] = similar(a, ntuple(_->4, 0))
             _disp[i] = similar_l
         end
         return new{TG}(_data, _disp, _flagusing, _indices, _numused, Nmax)
