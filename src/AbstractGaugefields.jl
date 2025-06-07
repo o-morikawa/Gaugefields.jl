@@ -1976,33 +1976,27 @@ function sweepaway_4D_Bplaquettes!(
         Bshift13 = temps[3]
         Bshift14 = temps[4]
 
-        if isU1dag
-            iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), !isU1dag))
-            iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), !isU1dag))
-            iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), !isU1dag))
-        else
-            iterative_store_shiftfield!(Bps[7], B[1, 2], (Tuple(coordinate), !isU1dag))
-            iterative_store_shiftfield!(Bps[8], B[1, 3], (Tuple(coordinate), !isU1dag))
-            iterative_store_shiftfield!(Bps[9], B[1, 4], (Tuple(coordinate), !isU1dag))
-        end
+        iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), false))
+        iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), false))
+        iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), false))
 
         temp_X = [coordinate[1],0,0,0]
 
         for iy = 1:abs(coordinate[2])
             if coordinate[2] > 0
                 if isU1dag
-                    Bshift12 = get_stored_shiftfield(Bps[1], (Tuple(temp_X), !isU1dag))
+                    Bshift12 = get_stored_shiftfield(Bps[1],(Tuple(temp_X),false))
                 else
-                    Bshift12 = get_stored_shiftfield(Bps[7], (Tuple(temp_X), !isU1dag))
+                    Bshift12 = get_stored_shiftfield(Bps[1],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift12, 0, false, false)
                 temp_X[2] += 1
             else # coordinate[2] < 0
                 temp_X[2] -= 1
                 if isU1dag
-                    Bshift12 = get_stored_shiftfield(Bps[1], (Tuple(temp_X), !isU1dag))
+                    Bshift12 = get_stored_shiftfield(Bps[1],(Tuple(temp_X),false))
                 else
-                    Bshift12 = get_stored_shiftfield(Bps[7], (Tuple(temp_X), !isU1dag))
+                    Bshift12 = get_stored_shiftfield(Bps[1],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift12, 0, true, false)
             end
@@ -2015,18 +2009,18 @@ function sweepaway_4D_Bplaquettes!(
         for iz = 1:abs(coordinate[3])
             if coordinate[3] > 0
                 if isU1dag
-                    Bshift13 = get_stored_shiftfield(Bps[2], (Tuple(temp_X), !isU1dag))
+                    Bshift13 = get_stored_shiftfield(Bps[2],(Tuple(temp_X),false))
                 else
-                    Bshift13 = get_stored_shiftfield(Bps[8], (Tuple(temp_X), !isU1dag))
+                    Bshift13 = get_stored_shiftfield(Bps[2],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift13, 0, false, false)
                 temp_X[3] += 1
             else # coordinate[3] < 0
                 temp_X[3] -= 1
                 if isU1dag
-                    Bshift13 = get_stored_shiftfield(Bps[2], (Tuple(temp_X), !isU1dag))
+                    Bshift13 = get_stored_shiftfield(Bps[2],(Tuple(temp_X),false))
                 else
-                    Bshift13 = get_stored_shiftfield(Bps[8], (Tuple(temp_X), !isU1dag))
+                    Bshift13 = get_stored_shiftfield(Bps[2],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift13, 0, true, false)
             end
@@ -2039,18 +2033,18 @@ function sweepaway_4D_Bplaquettes!(
         for it = 1:abs(coordinate[4])
             if coordinate[4] > 0
                 if isU1dag
-                    Bshift14 = get_stored_shiftfield(Bps[3], (Tuple(temp_X), !isU1dag))
+                    Bshift14 = get_stored_shiftfield(Bps[3],(Tuple(temp_X),false))
                 else
-                    Bshift14 = get_stored_shiftfield(Bps[9], (Tuple(temp_X), !isU1dag))
+                    Bshift14 = get_stored_shiftfield(Bps[3],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift14, 0, false, false)
                 temp_X[4] += 1
             else # coordinate[4] < 0
                 temp_X[4] += 1
                 if isU1dag
-                    Bshift14 = get_stored_shiftfield(Bps[3], (Tuple(temp_X), !isU1dag))
+                    Bshift14 = get_stored_shiftfield(Bps[3],(Tuple(temp_X),false))
                 else
-                    Bshift14 = get_stored_shiftfield(Bps[9], (Tuple(temp_X), !isU1dag))
+                    Bshift14 = get_stored_shiftfield(Bps[3],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift14, 0, true, false)
             end
@@ -2063,31 +2057,26 @@ function sweepaway_4D_Bplaquettes!(
         Bshift23 = temps[2]
         Bshift24 = temps[3]
 
-        if isU1dag
-            iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), !isU1dag))
-            iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), !isU1dag))
-        else
-            iterative_store_shiftfield!(Bps[10], B[2, 3], (Tuple(coordinate), !isU1dag))
-            iterative_store_shiftfield!(Bps[11], B[2, 4], (Tuple(coordinate), !isU1dag))
-        end
+        iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), false))
+        iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), false))
 
         temp_X = [coordinate[1],coordinate[2],0,0]
 
         for iz = 1:abs(coordinate[3])
             if coordinate[3] > 0
                 if isU1dag
-                    Bshift23 = get_stored_shiftfield(Bps[4], (Tuple(temp_X), !isU1dag))
+                    Bshift23 = get_stored_shiftfield(Bps[4],(Tuple(temp_X),false))
                 else
-                    Bshift23 = get_stored_shiftfield(Bps[10], (Tuple(temp_X), !isU1dag))
+                    Bshift23 = get_stored_shiftfield(Bps[4],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift23, 0, false, false)
                 temp_X[3] += 1
             else # coordinate[3] < 0
                 temp_X[3] -= 1
                 if isU1dag
-                    Bshift23 = get_stored_shiftfield(Bps[4], (Tuple(temp_X), !isU1dag))
+                    Bshift23 = get_stored_shiftfield(Bps[4],(Tuple(temp_X),false))
                 else
-                    Bshift23 = get_stored_shiftfield(Bps[10], (Tuple(temp_X), !isU1dag))
+                    Bshift23 = get_stored_shiftfield(Bps[4],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift23, 0, true, false)
             end
@@ -2100,18 +2089,18 @@ function sweepaway_4D_Bplaquettes!(
         for it = 1:abs(coordinate[4])
             if coordinate[4] > 0
                 if isU1dag
-                    Bshift24 = get_stored_shiftfield(Bps[5], (Tuple(temp_X), !isU1dag))
+                    Bshift24 = get_stored_shiftfield(Bps[5],(Tuple(temp_X),false))
                 else
-                    Bshift24 = get_stored_shiftfield(Bps[11], (Tuple(temp_X), !isU1dag))
+                    Bshift24 = get_stored_shiftfield(Bps[5],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift24, 0, false, false)
                 temp_X[4] += 1
             else # coordinate[4] < 0
                 temp_X[4] -= 1
                 if isU1dag
-                    Bshift24 = get_stored_shiftfield(Bps[5], (Tuple(temp_X), !isU1dag))
+                    Bshift24 = get_stored_shiftfield(Bps[5],(Tuple(temp_X),false))
                 else
-                    Bshift24 = get_stored_shiftfield(Bps[11], (Tuple(temp_X), !isU1dag))
+                    Bshift24 = get_stored_shiftfield(Bps[5],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift24, 0, true, false)
             end
@@ -2122,29 +2111,25 @@ function sweepaway_4D_Bplaquettes!(
     elseif direction == 3
         Bshift34 = temps[2]
 
-        if isU1dag
-            iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), !isU1dag))
-        else
-            iterative_store_shiftfield!(Bps[12], B[3, 4], (Tuple(coordinate), !isU1dag))
-        end
+        iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), false))
 
         temp_X = [coordinate[1],coordinate[2],coordinate[3],0]
 
         for it = 1:abs(coordinate[4])
             if coordinate[4] > 0
                 if isU1dag
-                    Bshift34 = get_stored_shiftfield(Bps[6], (Tuple(temp_X), !isU1dag))
+                    Bshift34 = get_stored_shiftfield(Bps[6],(Tuple(temp_X),false))
                 else
-                    Bshift34 = get_stored_shiftfield(Bps[12], (Tuple(temp_X), !isU1dag))
+                    Bshift34 = get_stored_shiftfield(Bps[6],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift34, 0, false, false)
                 temp_X[4] += 1
             else # coordinate[4] < 0
                 temp_X[4] -= 1
                 if isU1dag
-                    Bshift34 = get_stored_shiftfield(Bps[6], (Tuple(temp_X), !isU1dag))
+                    Bshift34 = get_stored_shiftfield(Bps[6],(Tuple(temp_X),false))
                 else
-                    Bshift34 = get_stored_shiftfield(Bps[12], (Tuple(temp_X), !isU1dag))
+                    Bshift34 = get_stored_shiftfield(Bps[6],(Tuple(temp_X),false))'
                 end
                 multiply_12!(uout, Ushift, Bshift34, 0, true, false)
             end
@@ -2167,13 +2152,7 @@ function make_storage_shiftfields(
     p23 = Storedshiftfields(shift_U(B[2,3], (0,0,0,0)) , num=num)
     p24 = Storedshiftfields(shift_U(B[2,4], (0,0,0,0)) , num=num)
     p34 = Storedshiftfields(shift_U(B[3,4], (0,0,0,0)) , num=num)
-    q12 = Storedshiftfields(shift_U(B[1,2], (0,0,0,0))', num=num)
-    q13 = Storedshiftfields(shift_U(B[1,3], (0,0,0,0))', num=num)
-    q14 = Storedshiftfields(shift_U(B[1,4], (0,0,0,0))', num=num)
-    q23 = Storedshiftfields(shift_U(B[2,3], (0,0,0,0))', num=num)
-    q24 = Storedshiftfields(shift_U(B[2,4], (0,0,0,0))', num=num)
-    q34 = Storedshiftfields(shift_U(B[3,4], (0,0,0,0))', num=num)
-    return [p12, p13, p14, p23, p24, p34, q12, q13, q14, q23, q24, q34]
+    return [p12, p13, p14, p23, p24, p34]
 end
 
 function increment_tuple(t::NTuple{N, Int}, n::Int, delta::Int = 1) where N
