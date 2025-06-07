@@ -1976,9 +1976,9 @@ function sweepaway_4D_Bplaquettes!(
         Bshift13 = temps[3]
         Bshift14 = temps[4]
 
-        iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), false), temps[5:6])
-        iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), false), temps[5:6])
-        iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), false), temps[5:6])
+        iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), false), temps[6:7])
+        iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), false), temps[6:7])
+        iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), false), temps[6:7])
 
         temp_X = [coordinate[1],0,0,0]
 
@@ -2057,8 +2057,8 @@ function sweepaway_4D_Bplaquettes!(
         Bshift23 = temps[2]
         Bshift24 = temps[3]
 
-        iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), false), temps[5:6])
-        iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), false), temps[5:6])
+        iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), false), temps[6:7])
+        iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), false), temps[6:7])
 
         temp_X = [coordinate[1],coordinate[2],0,0]
 
@@ -2111,7 +2111,7 @@ function sweepaway_4D_Bplaquettes!(
     elseif direction == 3
         Bshift34 = temps[2]
 
-        iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), false), temps[5:6])
+        iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), false), temps[6:7])
 
         temp_X = [coordinate[1],coordinate[2],coordinate[3],0]
 
