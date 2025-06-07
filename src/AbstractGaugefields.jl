@@ -2146,12 +2146,12 @@ end
 function make_storage_shiftfields(
     B::Array{T,2}; num=100
 ) where {T<:AbstractGaugefields}
-    p12 = Storedshiftfields(shift_U(B[1,2], (0,0,0,0)) , num=num)
-    p13 = Storedshiftfields(shift_U(B[1,3], (0,0,0,0)) , num=num)
-    p14 = Storedshiftfields(shift_U(B[1,4], (0,0,0,0)) , num=num)
-    p23 = Storedshiftfields(shift_U(B[2,3], (0,0,0,0)) , num=num)
-    p24 = Storedshiftfields(shift_U(B[2,4], (0,0,0,0)) , num=num)
-    p34 = Storedshiftfields(shift_U(B[3,4], (0,0,0,0)) , num=num)
+    p12 = Storedshiftfields(B[1,2], num=num)
+    p13 = Storedshiftfields(B[1,3], num=num)
+    p14 = Storedshiftfields(B[1,4], num=num)
+    p23 = Storedshiftfields(B[2,3], num=num)
+    p24 = Storedshiftfields(B[2,4], num=num)
+    p34 = Storedshiftfields(B[3,4], num=num)
     return [p12, p13, p14, p23, p24, p34]
 end
 
