@@ -2161,18 +2161,18 @@ end
 function make_storage_shiftfields(
     B::Array{T,2}; num=100
 ) where {T<:AbstractGaugefields}
-    p12 = Storedlinkfields(shift_U(B[1,2], (0,0,0,0)) , num=num)
-    p13 = Storedlinkfields(shift_U(B[1,3], (0,0,0,0)) , num=num)
-    p14 = Storedlinkfields(shift_U(B[1,4], (0,0,0,0)) , num=num)
-    p23 = Storedlinkfields(shift_U(B[2,3], (0,0,0,0)) , num=num)
-    p24 = Storedlinkfields(shift_U(B[2,4], (0,0,0,0)) , num=num)
-    p34 = Storedlinkfields(shift_U(B[3,4], (0,0,0,0)) , num=num)
-    q12 = Storedlinkfields(shift_U(B[1,2], (0,0,0,0))', num=num)
-    q13 = Storedlinkfields(shift_U(B[1,3], (0,0,0,0))', num=num)
-    q14 = Storedlinkfields(shift_U(B[1,4], (0,0,0,0))', num=num)
-    q23 = Storedlinkfields(shift_U(B[2,3], (0,0,0,0))', num=num)
-    q24 = Storedlinkfields(shift_U(B[2,4], (0,0,0,0))', num=num)
-    q34 = Storedlinkfields(shift_U(B[3,4], (0,0,0,0))', num=num)
+    p12 = Storedshiftfields(shift_U(B[1,2], (0,0,0,0)) , num=num)
+    p13 = Storedshiftfields(shift_U(B[1,3], (0,0,0,0)) , num=num)
+    p14 = Storedshiftfields(shift_U(B[1,4], (0,0,0,0)) , num=num)
+    p23 = Storedshiftfields(shift_U(B[2,3], (0,0,0,0)) , num=num)
+    p24 = Storedshiftfields(shift_U(B[2,4], (0,0,0,0)) , num=num)
+    p34 = Storedshiftfields(shift_U(B[3,4], (0,0,0,0)) , num=num)
+    q12 = Storedshiftfields(shift_U(B[1,2], (0,0,0,0))', num=num)
+    q13 = Storedshiftfields(shift_U(B[1,3], (0,0,0,0))', num=num)
+    q14 = Storedshiftfields(shift_U(B[1,4], (0,0,0,0))', num=num)
+    q23 = Storedshiftfields(shift_U(B[2,3], (0,0,0,0))', num=num)
+    q24 = Storedshiftfields(shift_U(B[2,4], (0,0,0,0))', num=num)
+    q34 = Storedshiftfields(shift_U(B[3,4], (0,0,0,0))', num=num)
     return [p12, p13, p14, p23, p24, p34, q12, q13, q14, q23, q24, q34]
 end
 
