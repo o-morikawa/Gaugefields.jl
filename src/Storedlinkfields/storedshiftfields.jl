@@ -139,7 +139,7 @@ end
 
 function get_stored_shiftfield(t::Storedshiftfields{TG}, l::Tuple{NTuple{4, Int}, Bool}) where {TG}
     i = findfirst(x -> x == l, t._disp)
-    if i == nothing
+    if i == nothing || i == 0
         error("not matched shiftfields.")
     end
     index = t._indices[i]
