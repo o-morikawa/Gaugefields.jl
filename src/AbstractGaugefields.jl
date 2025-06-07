@@ -2100,7 +2100,11 @@ function increment_tuple(t::Tuple{NTuple{N, Int}, Bool}, n::Int, delta::Int = 1)
     return ntuple(i -> i == n ? t[i] + delta : t[i], N)
 end
 
-function iterative_store_shiftfield!(t::Storedshiftfields{T1}, a::T2, l::Tuple{NTuple{4, Int}, Bool}) where {T1<:AbstractGaugefields,T2<:AbstractGaugefields}
+function iterative_store_shiftfield!(
+    t::Storedshiftfields{<:AbstractGaugefields},
+    a::AbstractGaugefields,
+    l::Tuple{NTuple{4, Int}, Bool}
+)
     coordinate = collect(l[1])
     isdag = l[2]
 
