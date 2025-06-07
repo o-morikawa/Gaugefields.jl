@@ -2209,7 +2209,7 @@ function iterative_store_shiftfield!(
             end
         end
     end
-    return c
+    return b
 end
 
 #=
