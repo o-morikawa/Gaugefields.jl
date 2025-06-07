@@ -1501,9 +1501,9 @@ function evaluate_gaugelinks!(
     U::Array{T,1},
     B::Array{T,2},
     Bps::Array{Pz,1},
-    temps::Array{T,1}, # length >= 4+3+2 + 2(-1)
+    temps::Array{T,1}, # ###length >= 4+3+2 + 2(-1)
 ) where {T<:AbstractGaugefields,Pz<:Storedshiftfields,Dim}
-    @assert length(temps) >= 11 "evaluate_gaugelinks!: Num of temporal gauge fields >= 11."
+    @assert length(temps) >= 8 "evaluate_gaugelinks!: Num of temporal gauge fields >= 8."
     #Unew = temps[1]
     evaluate_gaugelinks!(uout, w, U, temps)
     multiply_Bplaquettes!(uout, w, B, Bps, temps)
