@@ -28,7 +28,7 @@ mutable struct Storedshiftfields{TG}
 
 end
 
-function Storedshiftfields_fromvector(a::Vector{TG}, l::Vector{Tuple{NTuple{4,Int}, Bool}}; Nmax=1000) where {TG}
+function Storedshiftfields_fromvector(a::Vector{T}, l::Vector{Tuple{NTuple{4,Int}, Bool}}; Nmax=1000) where {T}
     num = length(a)
     if num != length(l)
         error("Lengths of TG and Disp vectors are mismatched.")
@@ -111,7 +111,7 @@ function is_stored_shiftfield(t::Storedshiftfields{TG}, l::Tuple{NTuple{4, Int},
     end
 end
 
-function store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::Tuple{NTuple{4, Int}, Bool}) where {TG}
+function store_shiftfield!(t::Storedshiftfields{TG}, a::T, l::Tuple{NTuple{4, Int}, Bool}) where {TG,T}
     n = length(t._data)
     i = findfirst(x -> x == 0, t._indices)
     if i == nothing
@@ -127,7 +127,7 @@ function store_shiftfield!(t::Storedshiftfields{TG}, a::TG, l::Tuple{NTuple{4, I
     end
 end
 
-function store_shiftfield!(t::Storedshiftfields{TG}, as::Vector{TG}, ls::Vector{Tuple{NTuple{4, Int}, Bool}}) where {TG}
+function store_shiftfield!(t::Storedshiftfields{TG}, as::Vector{T}, ls::Vector{Tuple{NTuple{4, Int}, Bool}}) where {TG,T}
     n = length(as)
     if n != length(ls)
         error("Lengths of TG and WL vectors are mismatched.")
