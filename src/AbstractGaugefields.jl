@@ -2176,7 +2176,7 @@ function make_storage_shiftfields(
     return [p12, p13, p14, p23, p24, p34, q12, q13, q14, q23, q24, q34]
 end
 
-function increment_tuple(t::Tuple{NTuple{N, Int}, Bool}, n::Int, delta::Int = 1) where N
+function increment_tuple(t::NTuple{N, Int}, n::Int, delta::Int = 1) where N
     @assert 1 ≤ n ≤ N
     return ntuple(i -> i == n ? t[i] + delta : t[i], N)
 end
