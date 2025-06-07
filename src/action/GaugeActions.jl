@@ -14,7 +14,7 @@ using LinearAlgebra
 using InteractiveUtils
 
 import ..Temporalfields_module: Temporalfields, unused!, get_temp, set_reusemode!
-import ..Storedlinkfields_module: Storedlinkfields, is_storedlink, store_link!, get_storedlink
+import ..Storedlinkfields_module: Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield
 
 
 
@@ -81,8 +81,8 @@ function calc_dSdUμ(
     μ,
     U::Vector{T},
     B::Array{T,2},
-    Bps::Pz,
-) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    Bps::Array{Pz,1},
+) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
     dSdUμ = similar(U[1])
     calc_dSdUμ!(dSdUμ, S, μ, U, B, Bps)
     return dSdUμ
@@ -145,8 +145,8 @@ function calc_dSdUμ!(
     μ,
     U::Vector{T},
     B::Array{T,2},
-    Bps::Pz,
-) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    Bps::Array{Pz,1},
+) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
     temp,  it_temp   = get_temp(S._temp_U)
     temps, its_temps = get_temp(S._temp_U, 14)
     numterm = length(S.dataset)
@@ -191,8 +191,8 @@ function evaluate_GaugeAction(
     S::GaugeAction,
     U::Vector{T},
     B::Array{T,2},
-    Bps::Pz,
-) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    Bps::Array{Pz,1},
+) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
     temp1, it_temp1 = get_temp(S._temp_U)
     evaluate_GaugeAction_untraced!(temp1, S, U, B, Bps)
     value = tr(temp1)
@@ -227,8 +227,8 @@ function evaluate_GaugeAction_untraced(
     S::GaugeAction,
     U::Vector{T},
     B::Array{T,2},
-    Bps::Pz,
-) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    Bps::Array{Pz,1},
+) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
     uout = similar(U[1])
     clear_U!(uout)
 
@@ -307,11 +307,11 @@ function evaluate_GaugeAction_untraced!(
 end
 function evaluate_GaugeAction_untraced!(
     uout,
-    S::GaugeAction, # length(temps) > 9+2 + 4
+    S::GaugeAction, # ###length(temps) > 9+2 + 4
     U::Vector{T},
     B::Array{T,2},
-    Bps::Pz,
-) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    Bps::Array{Pz,1},
+) where {Dim,NC,T<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
     numterm = length(S.dataset)
     temp, it_temp = get_temp(S._temp_U)
     temps, its_temps = get_temp(S._temp_U, 14)
@@ -366,9 +366,9 @@ end
 function GaugeAction(
     U::Vector{T},
     B::Array{T,2},
-    Bps::Pz;
+    Bps::Array{Pz,1};
     hascovnet=false,
-) where {NC,Dim,T<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+) where {NC,Dim,T<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
     if hascovnet
         covneuralnet = CovNeuralnet(Dim=Dim)
     else
@@ -376,7 +376,7 @@ function GaugeAction(
     end
     dataset = GaugeAction_dataset{Dim}[]
 
-    num = 18
+    num = 12
     _temp_U = Temporalfields(U[1]; num=num)
 
     return GaugeAction{Dim,eltype(U),eltype(dataset)}(hascovnet, covneuralnet, dataset, _temp_U)
