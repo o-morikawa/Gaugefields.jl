@@ -27,7 +27,7 @@ import Wilsonloop: make_loops_fromname, Wilsonline
 using LinearAlgebra
 import Wilsonloop: LinearAlgebra.adjoint
 import ..Temporalfields_module: Temporalfields, unused!, get_temp
-import ..Storedlinkfields_module: Storedlinkfields, is_storedlink, store_link!, get_storedlink
+import ..Storedshiftfields_module: Storedshiftfields, is_stored_shiftfield, store_shiftfield!, get_stored_shiftfield
 
 
 struct Gradientflow_general{Dim,TA,T} <: Abstractsmearing
@@ -75,12 +75,12 @@ struct Gradientflow_general{Dim,TA,T} <: Abstractsmearing
     function Gradientflow_general(
         U::Array{T1,1},
         B::Array{T1,2},
-        Bps::Pz,
+        Bps::Array{Pz,1},
         linknames,
         linkvalues;
         Nflow=1,
         eps=0.01,
-    ) where {NC,Dim,T1<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    ) where {NC,Dim,T1<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
         @assert length(linknames) == length(linkvalues)
         numlinks = length(linknames)
         links = Vector{Vector{Wilsonline{Dim}}}(undef, numlinks)
@@ -187,12 +187,12 @@ struct Gradientflow_general{Dim,TA,T} <: Abstractsmearing
     function Gradientflow_general(
         U::Array{T1,1},
         B::Array{T1,2},
-        Bps::Pz,
+        Bps::Array{Pz,1},
         links::Vector{Vector{Wilsonline{Dim}}},
         linkvalues;
         Nflow=1,
         eps=0.01,
-    ) where {NC,Dim,T1<:AbstractGaugefields{NC,Dim},Pz<:Storedlinkfields}
+    ) where {NC,Dim,T1<:AbstractGaugefields{NC,Dim},Pz<:Storedshiftfields}
         F0 = initialize_TA_Gaugefields(U)
         Ftemps = Array{typeof(F0),1}(undef, 4)
         Ftemps[1] = F0
