@@ -1929,10 +1929,10 @@ function sweepaway_4D_Bplaquettes!(
     w::Wilsonline{Dim},
     B::Array{T,2},
     Bps::Array{Pz,1},
-    temps::Array{T,1}, # length(temps) >= 5
+    temps::Array{T,1}, # length(temps) >= 5+2
     linknum,
 ) where {T<:AbstractGaugefields,Pz<:Storedshiftfields,Dim}
-    @assert length(temps) >= 5 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 5."
+    @assert length(temps) >= 7 "sweepaway_4D_Bplaquettes!: Num of temporal gauge fields >= 7."
     Unew = temps[1]
     glinks = w
     origin = get_position(glinks[1])  #Tuple(zeros(Int64, Dim))
@@ -1976,9 +1976,9 @@ function sweepaway_4D_Bplaquettes!(
         Bshift13 = temps[3]
         Bshift14 = temps[4]
 
-        iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), false))
-        iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), false))
-        iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), false))
+        iterative_store_shiftfield!(Bps[1], B[1, 2], (Tuple(coordinate), false), temps[5:6])
+        iterative_store_shiftfield!(Bps[2], B[1, 3], (Tuple(coordinate), false), temps[5:6])
+        iterative_store_shiftfield!(Bps[3], B[1, 4], (Tuple(coordinate), false), temps[5:6])
 
         temp_X = [coordinate[1],0,0,0]
 
@@ -2057,8 +2057,8 @@ function sweepaway_4D_Bplaquettes!(
         Bshift23 = temps[2]
         Bshift24 = temps[3]
 
-        iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), false))
-        iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), false))
+        iterative_store_shiftfield!(Bps[4], B[2, 3], (Tuple(coordinate), false), temps[5:6])
+        iterative_store_shiftfield!(Bps[5], B[2, 4], (Tuple(coordinate), false), temps[5:6])
 
         temp_X = [coordinate[1],coordinate[2],0,0]
 
@@ -2111,7 +2111,7 @@ function sweepaway_4D_Bplaquettes!(
     elseif direction == 3
         Bshift34 = temps[2]
 
-        iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), false))
+        iterative_store_shiftfield!(Bps[6], B[3, 4], (Tuple(coordinate), false), temps[5:6])
 
         temp_X = [coordinate[1],coordinate[2],coordinate[3],0]
 
@@ -2163,7 +2163,8 @@ end
 function iterative_store_shiftfield!(
     t::Storedshiftfields,
     a::AbstractGaugefields,
-    l::Tuple{NTuple{4, Int}, Bool}
+    l::Tuple{NTuple{4, Int}, Bool},
+    temps,
 )
     coordinate = collect(l[1])
     isdag = l[2]
@@ -2171,18 +2172,19 @@ function iterative_store_shiftfield!(
     l_t = ntuple(_->0,4)
     l_t2 = ntuple(_->0,4)
 
-    b = similar(a)
-    c = similar(a)
+    b = temps[1]
+    bshift = temps[2]
 
     # At origin
     if is_stored_shiftfield(t, (l_t, isdag))
         #
     else
         if isdag
-            b = shift_U(a, l_t)'
+            bshift = shift_U(a, l_t)'
         else
-            b = shift_U(a, l_t)
+            bshift = shift_U(a, l_t)
         end
+        substitute_U!(b, bshift)
         store_shiftfield!(t, b, (l_t, isdag))
     end
 
@@ -2200,8 +2202,9 @@ function iterative_store_shiftfield!(
                 l_t = l_t2
             else
                 b = get_stored_shiftfield(t, (l_t, isdag))
-                c = shift_U(b, l_s)
-                store_shiftfield!(t, c, (l_t2, isdag))
+                bshift = shift_U(b, l_s)
+                substitute_U!(b, bshift)
+                store_shiftfield!(t, b, (l_t2, isdag))
                 l_t = l_t2
             end
         end
