@@ -2101,7 +2101,7 @@ function increment_tuple(t::Tuple{NTuple{N, Int}, Bool}, n::Int, delta::Int = 1)
 end
 
 function iterative_store_shiftfield!(
-    t::Storedshiftfields{<:AbstractGaugefields},
+    t::Storedshiftfields,
     a::AbstractGaugefields,
     l::Tuple{NTuple{4, Int}, Bool}
 )
