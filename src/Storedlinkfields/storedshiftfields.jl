@@ -14,7 +14,7 @@ mutable struct Storedshiftfields{TG}
         _flagusing = zeros(Bool, num)
         _indices = zeros(Int64, num)
         _numused = zeros(Int64, num)
-        similar_l = (ntuple(_->0, 4), false)
+        similar_l = (ntuple(_->0, 4), true)
         for i = 1:num
             _data[i] = deepcopy(a)
             _disp[i] = similar_l
