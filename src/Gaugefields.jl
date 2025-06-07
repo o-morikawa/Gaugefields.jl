@@ -215,7 +215,8 @@ import .AbstractGaugefields_module:
     getvalue,
     get_nprocs,
     write_to_numpyarray,
-    map_U_sequential!
+    map_U_sequential!,
+    make_storage_shiftfields
 import Wilsonloop: make_loops_fromname
 import .GaugeAction_module:
     GaugeAction,
@@ -254,7 +255,7 @@ export evaluate_gaugelinks_evenodd!, normalize!, normalize3!, normalizeN!
 export loops_staple
 export save_textdata, load_BridgeText!, save_textdata_B, load_BridgeText_B!
 export shift_U, evaluate_gaugelinks!, Gradientflow, flow!
-export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calc_gdgaction_3D, calc_gdgactiondensity_3D, det_unitary
+export evaluate_Bplaquettes!, multiply_Bplaquettes!, sweepaway_4D_Bplaquettes!, isLoopwithB, isStaplewithB, calc_gdgaction_3D, calc_gdgactiondensity_3D, det_unitary, make_storage_shiftfields
 export heatbath!, Heatbath
 export STOUT_Layer, CovNeuralnet, calc_smearedU, make_loops_fromname, STOUT_Layer_fast
 export GaugeAction,
