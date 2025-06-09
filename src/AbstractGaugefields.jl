@@ -2146,12 +2146,12 @@ end
 function make_storage_shiftfields(
     B::Array{T,2}; num=100
 ) where {T<:AbstractGaugefields}
-    p12 = Storedshiftfields(B[1,2], num=num)
-    p13 = Storedshiftfields(B[1,3], num=num)
-    p14 = Storedshiftfields(B[1,4], num=num)
-    p23 = Storedshiftfields(B[2,3], num=num)
-    p24 = Storedshiftfields(B[2,4], num=num)
-    p34 = Storedshiftfields(B[3,4], num=num)
+    p12 = Storedshiftfields(B[1,2], false, num=num)
+    p13 = Storedshiftfields(B[1,3], false, num=num)
+    p14 = Storedshiftfields(B[1,4], false, num=num)
+    p23 = Storedshiftfields(B[2,3], false, num=num)
+    p24 = Storedshiftfields(B[2,4], false, num=num)
+    p34 = Storedshiftfields(B[3,4], false, num=num)
     return [p12, p13, p14, p23, p24, p34]
 end
 
@@ -2195,7 +2195,7 @@ function iterative_store_shiftfield!(
                 l_t2 = increment_tuple(l_t, i, +1)
                 l_s = increment_tuple(ntuple(_->0,4), i, +1)
             else #coordinate[i] < 0
-                l_t2 = increment_tuple(l_t2, i, -1)
+                l_t2 = increment_tuple(l_t, i, -1)
                 l_s = increment_tuple(ntuple(_->0,4), i, -1)
             end
             if is_stored_shiftfield(t, (l_t2, isdag))
