@@ -8,13 +8,13 @@ mutable struct Storedshiftfields{TG}
     _numused::Vector{Int64}
     Nmax::Int64
 
-    function Storedshiftfields(a::TG; num=1, Nmax=1000) where {TG}
+    function Storedshiftfields(a::TG, isdag::Bool; num=1, Nmax=1000) where {TG}
         _data = Vector{TG}(undef, num)
         _disp = Vector{Tuple{NTuple{4,Int}, Bool}}(undef, num)
         _flagusing = zeros(Bool, num)
         _indices = zeros(Int64, num)
         _numused = zeros(Int64, num)
-        similar_l = (ntuple(_->0, 4), nothing)
+        similar_l = (ntuple(_->0, 4), !isdag)
         for i = 1:num
             _data[i] = deepcopy(a)
             _disp[i] = similar_l
