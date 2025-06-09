@@ -2040,7 +2040,7 @@ function sweepaway_4D_Bplaquettes!(
                 multiply_12!(uout, Ushift, Bshift14, 0, false, false)
                 temp_X[4] += 1
             else # coordinate[4] < 0
-                temp_X[4] += 1
+                temp_X[4] -= 1
                 if isU1dag
                     Bshift14 = get_stored_shiftfield(Bps[3],(Tuple(temp_X),false))
                 else
